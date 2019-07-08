@@ -83,7 +83,9 @@ public class GameService {
 		for (int i = 0; i < 26; i++) {
 			for (int j = 0; j < 15; j++) {
 				Tile t = pitch[i][j];
-				System.out.printf("%5d %2d ", t.getCostToReach(), t.getTackleZones());
+				int tackleZones = t.getTackleZones();
+				if(t.getCostToReach() == 99) tackleZones = 0;
+				System.out.printf("%5d %2d ", t.getCostToReach(), tackleZones);
 			}
 			System.out.println();
 		}
@@ -94,7 +96,7 @@ public class GameService {
 		if (cost == p.getMA() + 2) {
 			return;
 		}
-
+        addTackleZones(p);
 		for (Tile t : location.getNeighbours()) {
 			if (!t.containsPlayer()) {
 				int currentCost = t.getCostToReach();
@@ -111,8 +113,6 @@ public class GameService {
 				}
 			} else if (t.getPlayer() == p) {
 				t.setCostToReach(0);
-			} else if (t.getPlayer().getTeam() != p.getTeam() && t.getPlayer().hasTackleZones()) {
-				addTackleZones(t.getPlayer(), p);
 			}
 		}
 	}
@@ -120,6 +120,7 @@ public class GameService {
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
 	public void getOptimisedPath(PlayerInGame p, int[] goal) throws IllegalArgumentException {
+		addTackleZones(p);
 		Tile origin = p.getTile();
 		// Tile origin = selectedPlayer.getTile();
 		Tile target = pitch[goal[0]][goal[1]];
@@ -216,12 +217,14 @@ public class GameService {
 		}
 	}
 
-	// need to ensure calculating tackle zones when asking for route data
-	public void addTackleZones(PlayerInGame opponent, PlayerInGame selected) {
-		Tile opponentLocation = opponent.getTile();
-		for (Tile t : opponentLocation.getNeighbours()) {
-			if (!t.containsPlayer() || t.getPlayer() == selected) {
-				t.addTackler(opponent);
+	public void addTackleZones(PlayerInGame activePlayer) {
+		List<PlayerInGame> opponents;
+		opponents = activePlayer.getTeam() == 1 ? team2 : team1;
+		for (PlayerInGame p : opponents) {
+			for (Tile t : p.getTile().getNeighbours()) {
+				if (!t.containsPlayer() || t.getPlayer() == activePlayer) {
+					t.addTackler(p);
+				}
 			}
 		}
 	}
