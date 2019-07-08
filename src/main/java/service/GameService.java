@@ -236,11 +236,21 @@ public class GameService {
 			}
 		}
 	}
+	
+	public int calculateDodge(PlayerInGame p, Tile from) {
+		int AG = p.getAG();
+		int modifier = from.getTackleZones();
+		int result = 7 - AG  -1 -modifier;
+		if(result < 1) result = 1;
+		if(result > 6) result = 6;
+		return result;
+	}
 
 	public static void main(String[] args) {
 		Player p = new PlayerInGame();
 		p.setName("Billy");
 		p.setMA(1);
+		p.setAG(5);
 		p.setTeam(1);
 		Player p2 = new PlayerInGame();
 		p2.setName("Bobby");
@@ -260,5 +270,6 @@ public class GameService {
 		gs.showPossibleMovement((PlayerInGame) p);
 		int[] goal = { 5, 6 };
 		gs.getOptimisedPath((PlayerInGame) p, goal);
+		System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+"); 
 	}
 }
