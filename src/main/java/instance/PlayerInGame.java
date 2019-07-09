@@ -6,6 +6,7 @@ public class PlayerInGame extends Player {
 	
 	private int remainingMA;
 	private boolean actedThisTurn;
+	private boolean actionOver;
 	private String status;
 	private boolean hasTackleZones;
 	private Tile tile;
@@ -19,6 +20,7 @@ public class PlayerInGame extends Player {
 	public void newTurn() {
 		remainingMA = this.getMA();
 		actedThisTurn = false;
+		actionOver = false;
 	}
 	
 	@Override
@@ -33,6 +35,10 @@ public class PlayerInGame extends Player {
 
 	public void setRemainingMA(int remainingMA) {
 		this.remainingMA = remainingMA;
+	}
+	
+	public void decrementMA() {
+		this.remainingMA--;
 	}
 
 	public boolean isActedThisTurn() {
@@ -49,6 +55,13 @@ public class PlayerInGame extends Player {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+	
+	public void setProne() {
+		status = "prone";
+		hasTackleZones = false;
+		actedThisTurn = true;
+		actionOver = true;
 	}
 
 	public boolean hasTackleZones() {

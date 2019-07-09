@@ -3,6 +3,7 @@ package service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -32,8 +33,10 @@ public class GameService {
 	private int team2Turn;
 	private Tile[][] pitch;
 	private boolean waitingForPlayers;
+    private Queue<Runnable> queue;
 
 	public GameService(Game game) {
+		queue = new LinkedList<>();
 		this.game = game;
 		setUpTeams();
 		pitch = new Tile[26][15];
@@ -242,7 +245,64 @@ public class GameService {
 		for(Tile t : forReset) {
 			t.removePlayer();
 		}
+		queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		return totalRoute;
+	}
+	
+	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
+		addTackleZones(p);
+		if(p.getTile() != route.get(0)) {
+			throw new IllegalArgumentException("Route does not start from player's current position");
+		}
+		route.remove(0);
+		for(Tile t : route) {
+			if(t.containsPlayer()) {
+				throw new IllegalArgumentException("Can't move to occupied square");
+			}
+			Tile tempT = p.getTile();
+			t.addPlayer(p);
+			tempT.removePlayer();
+			p.decrementMA();
+			if(tempT.getTackleZones()!= 0) {
+				if(!dodgeAction(p, tempT, t)){
+			        rerollCheck();
+					return;
+				}
+			} else {
+			System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + 
+					          t.getPosition()[1]);
+			}
+		}
+	}
+
+	public boolean dodgeAction(PlayerInGame p, Tile from, Tile to) {
+		int roll = calculateDodge(p, from);
+		int result = diceRoller(1, 6)[0];
+		System.out.println("Needed " + roll + "+" + " Rolled: " + result);
+		if(result>=roll) {
+			System.out.println(p.getName() + " dodged from " +
+		                       from.getPosition()[0] + " " + 
+		                       from.getPosition()[1] + " to " +
+		                       to.getPosition()[0] + " " + 
+		                       to.getPosition()[1] + " with a roll of " + roll);
+			return true;
+		}
+		else {
+			System.out.println(p.getName() + "failed to dodge and was tripped into " +
+					                       to.getPosition()[0] + " " + 
+                                           to.getPosition()[1]); 
+			knockDown(p);
+			return false;
+		}
+	}
+	
+	public void knockDown(PlayerInGame p) {
+		p.setProne();
+		// placeholder
+	}
+	
+	public void rerollCheck() {
+		// placeholder
 	}
 
 	public void addTackleZones(PlayerInGame activePlayer) {
@@ -288,6 +348,12 @@ public class GameService {
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
 	public int[] calculateBlock(PlayerInGame attacker, PlayerInGame defender) {
+		if(!attacker.getTile().getNeighbours().contains(defender.getTile())){
+			throw new IllegalArgumentException("Can only block an adjacent player");
+		};
+		if(attacker.getTeam() == defender.getTeam()){
+			throw new IllegalArgumentException("Cannot block player on same team");
+		}
 		int[] assists = calculateAssists(attacker, defender);
 		int attStr = attacker.getST() + assists[0];
 		int defStr = defender.getST() + assists[1];
@@ -379,10 +445,12 @@ public class GameService {
 	    //gs.getOptimisedPath((PlayerInGame) p, goal);
 		int[][] waypoints = {{5,6}, {7,7}};
 		List<Tile> route = gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
-		for(Tile t : route) {
-			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
-		}
-	    gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
+//		for(Tile t : route) {
+//			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
+//		}
+		gs.movePlayerRoute((PlayerInGame) p, route);
+	    //gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
+	   // gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
 		int[] results = diceRoller(2, 3);
 		System.out.println();
@@ -393,5 +461,7 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
+		
+		
 	}
 }
