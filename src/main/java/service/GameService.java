@@ -122,12 +122,12 @@ public class GameService {
 
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
-	public void getOptimisedPath(PlayerInGame p, int[] goal) throws IllegalArgumentException {
+	public List<Tile> getOptimisedPath(PlayerInGame p, int[] goal) throws IllegalArgumentException {
 		addTackleZones(p);
 		Tile origin = p.getTile();
 		// Tile origin = selectedPlayer.getTile();
 		Tile target = pitch[goal[0]][goal[1]];
-		int MA = origin.getPlayer().getMA();
+		int MA = p.getRemainingMA();
 
 		Comparator<Tile> comp = new Comparator<Tile>() {
 			@Override
@@ -142,7 +142,10 @@ public class GameService {
 			for (Tile t : array) {
 				t.setWeightedDistance(1000);
 				t.setTotalDistance(1000.0);
+				t.setHeuristicDistance(0.0);
+				t.setMovementUsed(0);
 				t.setParent(null);
+				t.setVisited(false);
 			}
 		}
 		origin.setWeightedDistance(0.0);
@@ -157,8 +160,7 @@ public class GameService {
 				current.setVisited(true);
 				// if last element in PQ reached
 				if (current.equals(target)) {
-					showTravelPath(p, origin, target);
-					return;
+					return showTravelPath(p, origin, target);
 				}
 
 				List<Tile> neighbours = getNeighbours(current);
@@ -199,7 +201,7 @@ public class GameService {
 		throw new IllegalArgumentException("Selected player cannot reach that point");
 	}
 
-	public void showTravelPath(PlayerInGame p, Tile origin, Tile goal) {
+	public List<Tile> showTravelPath(PlayerInGame p, Tile origin, Tile goal) {
 		List<Tile> route = new ArrayList<Tile>();
 		Tile current = goal;
 		route.add(goal);
@@ -216,6 +218,31 @@ public class GameService {
 					System.out.print(" Dodge: " + calculateDodge(p, t.getParent()) + "+");
 			}
 		}
+		return route;
+	}
+	
+	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
+		List<Tile> totalRoute = new ArrayList<>();
+		Tile origin = p.getTile();
+		List<Tile> forReset = new ArrayList<>();
+		for(int[] i : waypoints) {
+			totalRoute.addAll(getOptimisedPath(p, i));
+			totalRoute.remove(totalRoute.size()-1);
+			p.setRemainingMA(p.getMA()-totalRoute.size());
+			Tile t = pitch[i[0]][i[1]];
+			if(!t.containsPlayer()) {
+				t.addPlayer(p);
+				forReset.add(t);
+			}
+			
+		}
+		totalRoute.addAll(getOptimisedPath(p, goal));
+		p.setRemainingMA(p.getMA());
+		origin.addPlayer(p);
+		for(Tile t : forReset) {
+			t.removePlayer();
+		}
+		return totalRoute;
 	}
 
 	public void addTackleZones(PlayerInGame activePlayer) {
@@ -287,9 +314,6 @@ public class GameService {
 	public List<PlayerInGame> getAssists(PlayerInGame p1, PlayerInGame p2) {
 		addTackleZones(p2);
 		List<PlayerInGame>support = new ArrayList<>(p2.getTile().getTacklers());
-		for(PlayerInGame p : support) {
-			System.out.println(p.getName());
-		}
 		for (PlayerInGame p : support) {
 			addTackleZones(p);
 			Set<PlayerInGame> tacklers = p.getTile().getTacklers();
@@ -315,7 +339,7 @@ public class GameService {
 	public static void main(String[] args) {
 		Player p = new PlayerInGame();
 		p.setName("Billy");
-		p.setMA(1);
+		p.setMA(10);
 		p.setAG(5);
 		p.setTeam(1);
 		p.setST(6);
@@ -349,9 +373,16 @@ public class GameService {
 		gs.pitch[5][5].addPlayer((PlayerInGame) p2);
 		gs.pitch[5][3].addPlayer((PlayerInGame) p3);
 		gs.pitch[17][5].addPlayer((PlayerInGame) p4);
-		//gs.showPossibleMovement((PlayerInGame) p);
-		int[] goal = { 5, 6 };
-//		gs.getOptimisedPath((PlayerInGame) p, goal);
+		gs.showPossibleMovement((PlayerInGame) p);
+		int[] goal = {9,9};
+	    //gs.getOptimisedPath((PlayerInGame) p, goal);
+	    //gs.getOptimisedPath((PlayerInGame) p, goal);
+		int[][] waypoints = {{5,6}, {7,7}};
+		List<Tile> route = gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
+		for(Tile t : route) {
+			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
+		}
+	    gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
 		int[] results = diceRoller(2, 3);
 		System.out.println();
@@ -362,7 +393,5 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
-		System.out.println(gs.calculateAssists((PlayerInGame) p, (PlayerInGame) p2)[0]);
-		System.out.println(gs.calculateAssists((PlayerInGame) p, (PlayerInGame) p2)[1]);
 	}
 }

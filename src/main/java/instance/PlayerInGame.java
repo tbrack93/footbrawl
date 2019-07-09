@@ -20,6 +20,12 @@ public class PlayerInGame extends Player {
 		remainingMA = this.getMA();
 		actedThisTurn = false;
 	}
+	
+	@Override
+	public void setMA(int MA) {
+		super.setMA(MA);;
+		this.remainingMA = MA;
+	}
 
 	public int getRemainingMA() {
 		return remainingMA;
