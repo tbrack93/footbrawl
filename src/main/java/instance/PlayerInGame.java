@@ -37,7 +37,7 @@ public class PlayerInGame extends Player {
 		this.remainingMA = remainingMA;
 	}
 	
-	public void decrementMA() {
+	public void decrementRemainingMA() {
 		this.remainingMA--;
 	}
 

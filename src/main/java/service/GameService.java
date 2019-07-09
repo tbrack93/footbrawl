@@ -29,14 +29,16 @@ public class GameService {
 	private int activeTeam;
 	private List<PlayerInGame> team1;
 	private List<PlayerInGame> team2;
+	private List<PlayerInGame> dugout;
 	private int team1Turn;
 	private int team2Turn;
 	private Tile[][] pitch;
 	private boolean waitingForPlayers;
-    private Queue<Runnable> queue;
+	private Queue<Runnable> queue;
 
 	public GameService(Game game) {
 		queue = new LinkedList<>();
+		dugout = new ArrayList<>();
 		this.game = game;
 		setUpTeams();
 		pitch = new Tile[26][15];
@@ -213,65 +215,82 @@ public class GameService {
 			route.add(current);
 		}
 		Collections.reverse(route);
-		for (Tile t : route) {
-			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
-			System.out.print(t.getMovementUsed() > p.getMA() ? " Going For It: 2+" : "");
-			if (t.getParent() != null) {
-				if (t.getParent().getTackleZones() != 0)
-					System.out.print(" Dodge: " + calculateDodge(p, t.getParent()) + "+");
-			}
-		}
+//		for (Tile t : route) {
+//			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
+//			System.out.print(t.getMovementUsed() > p.getMA() ? " Going For It: 2+" : "");
+//			if (t.getParent() != null) {
+//				if (t.getParent().getTackleZones() != 0)
+//					System.out.print(" Dodge: " + calculateDodge(p, t.getParent()) + "+");
+//			}
+//		}
 		return route;
 	}
-	
+
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
 		List<Tile> totalRoute = new ArrayList<>();
 		Tile origin = p.getTile();
 		List<Tile> forReset = new ArrayList<>();
-		for(int[] i : waypoints) {
+		for (int[] i : waypoints) {
 			totalRoute.addAll(getOptimisedPath(p, i));
-			totalRoute.remove(totalRoute.size()-1);
-			p.setRemainingMA(p.getMA()-totalRoute.size());
+			totalRoute.remove(totalRoute.size() - 1);
+			p.setRemainingMA(p.getMA() - totalRoute.size());
 			Tile t = pitch[i[0]][i[1]];
-			if(!t.containsPlayer()) {
+			if (!t.containsPlayer()) {
 				t.addPlayer(p);
 				forReset.add(t);
 			}
-			
+
 		}
 		totalRoute.addAll(getOptimisedPath(p, goal));
 		p.setRemainingMA(p.getMA());
 		origin.addPlayer(p);
-		for(Tile t : forReset) {
+		for (Tile t : forReset) {
 			t.removePlayer();
 		}
-		queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
+		//queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		return totalRoute;
 	}
-	
+
 	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
-		if(p.getTile() != route.get(0)) {
+		if (p.getTile() != route.get(0)) {
 			throw new IllegalArgumentException("Route does not start from player's current position");
 		}
 		route.remove(0);
-		for(Tile t : route) {
-			if(t.containsPlayer()) {
+		for (Tile t : route) {
+			if (t.containsPlayer()) {
 				throw new IllegalArgumentException("Can't move to occupied square");
 			}
 			Tile tempT = p.getTile();
 			t.addPlayer(p);
 			tempT.removePlayer();
-			p.decrementMA();
-			if(tempT.getTackleZones()!= 0) {
-				if(!dodgeAction(p, tempT, t)){
-			        rerollCheck();
+			p.decrementRemainingMA();
+			if(p.getRemainingMA()< 0) {
+				if(!goingForItAction(p, tempT, t)) {
+					rerollCheck();
+					return;
+				}
+			}
+			if (tempT.getTackleZones() != 0) {
+				if (!dodgeAction(p, tempT, t)) {
+					rerollCheck();
 					return;
 				}
 			} else {
-			System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + 
-					          t.getPosition()[1]);
+				System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 			}
+		}
+	}
+
+	private boolean goingForItAction(PlayerInGame p, Tile tempT, Tile t) {
+		int result = diceRoller(1, 6)[0];
+		if(result>=2) {
+			System.out.println(p.getName() + " went for it!");
+			return true;
+		} else {
+			System.out.println(p.getName() + " went for it and tripped!");
+			knockDown(p);
+			return false;
 		}
 	}
 
@@ -279,28 +298,48 @@ public class GameService {
 		int roll = calculateDodge(p, from);
 		int result = diceRoller(1, 6)[0];
 		System.out.println("Needed " + roll + "+" + " Rolled: " + result);
-		if(result>=roll) {
-			System.out.println(p.getName() + " dodged from " +
-		                       from.getPosition()[0] + " " + 
-		                       from.getPosition()[1] + " to " +
-		                       to.getPosition()[0] + " " + 
-		                       to.getPosition()[1] + " with a roll of " + roll);
+		if (result >= roll) {
+			System.out.println(p.getName() + " dodged from " + from.getPosition()[0] + " " + from.getPosition()[1]
+					+ " to " + to.getPosition()[0] + " " + to.getPosition()[1] + " with a roll of " + result);
 			return true;
-		}
-		else {
-			System.out.println(p.getName() + "failed to dodge and was tripped into " +
-					                       to.getPosition()[0] + " " + 
-                                           to.getPosition()[1]); 
+		} else {
+			System.out.println(p.getName() + " failed to dodge and was tripped into " + to.getPosition()[0] + " "
+					+ to.getPosition()[1]);
 			knockDown(p);
 			return false;
 		}
 	}
-	
+
 	public void knockDown(PlayerInGame p) {
 		p.setProne();
-		// placeholder
+		int armour = p.getAV();
+		int[] rolls = diceRoller(2, 6);
+		int total = rolls[0] + rolls[1];
+		if (total > armour) {
+			System.out.println(p.getName() + "'s armour was broken");
+			rolls = diceRoller(2, 6);
+			total = rolls[0] + rolls[1];
+			if (total <= 7) {
+				System.out.println(p.getName() + " is stunned");
+				p.setStatus("stunned");
+			} else {
+				// possibility to use apothecary, etc. here
+				p.getTile().removePlayer();
+				dugout.add(p);
+				if (total <= 9) {
+					System.out.println(p.getName() + " is KO'd");
+					p.setStatus("KO");
+				} else {
+					System.out.println(p.getName() + " is injured");
+					p.setStatus("injured");
+				}
+			} 
+		} else {
+			System.out.println("Armour held");
+			return;
+		}
 	}
-	
+
 	public void rerollCheck() {
 		// placeholder
 	}
@@ -311,9 +350,9 @@ public class GameService {
 		opponents = activePlayer.getTeam() == game.getTeam1().getId() ? team2 : team1;
 		for (PlayerInGame p : opponents) {
 			if (p.hasTackleZones()) {
-			  for (Tile t : p.getTile().getNeighbours()) {
-			    t.addTackler(p);
-			  }
+				for (Tile t : p.getTile().getNeighbours()) {
+					t.addTackler(p);
+				}
 			}
 		}
 	}
@@ -325,7 +364,7 @@ public class GameService {
 			}
 		}
 	}
-	
+
 	public void resetTackleZones() {
 		for (Tile[] array : pitch) {
 			for (Tile t : array) {
@@ -338,20 +377,21 @@ public class GameService {
 		int AG = p.getAG();
 		int modifier = from.getTackleZones();
 		int result = 7 - AG - 1 - modifier;
-		if (result < 1)
-			result = 1;
+		if (result <= 1) 
+			result = 2; // roll of 1 always fails, no matter what
 		if (result > 6)
-			result = 6;
+			result = 6; // roll of 6 always passes, no matter what
 		return result;
 	}
 
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
 	public int[] calculateBlock(PlayerInGame attacker, PlayerInGame defender) {
-		if(!attacker.getTile().getNeighbours().contains(defender.getTile())){
+		if (!attacker.getTile().getNeighbours().contains(defender.getTile())) {
 			throw new IllegalArgumentException("Can only block an adjacent player");
-		};
-		if(attacker.getTeam() == defender.getTeam()){
+		}
+		;
+		if (attacker.getTeam() == defender.getTeam()) {
 			throw new IllegalArgumentException("Cannot block player on same team");
 		}
 		int[] assists = calculateAssists(attacker, defender);
@@ -365,7 +405,6 @@ public class GameService {
 			dice = 2;
 		return new int[] { dice, strongerTeam };
 	}
-	
 
 	public int[] calculateAssists(PlayerInGame attacker, PlayerInGame defender) {
 		attacker.setHasTackleZones(false);
@@ -379,7 +418,7 @@ public class GameService {
 
 	public List<PlayerInGame> getAssists(PlayerInGame p1, PlayerInGame p2) {
 		addTackleZones(p2);
-		List<PlayerInGame>support = new ArrayList<>(p2.getTile().getTacklers());
+		List<PlayerInGame> support = new ArrayList<>(p2.getTile().getTacklers());
 		for (PlayerInGame p : support) {
 			addTackleZones(p);
 			Set<PlayerInGame> tacklers = p.getTile().getTacklers();
@@ -405,7 +444,7 @@ public class GameService {
 	public static void main(String[] args) {
 		Player p = new PlayerInGame();
 		p.setName("Billy");
-		p.setMA(10);
+		p.setMA(4);
 		p.setAG(5);
 		p.setTeam(1);
 		p.setST(6);
@@ -439,20 +478,20 @@ public class GameService {
 		gs.pitch[5][5].addPlayer((PlayerInGame) p2);
 		gs.pitch[5][3].addPlayer((PlayerInGame) p3);
 		gs.pitch[17][5].addPlayer((PlayerInGame) p4);
-		gs.showPossibleMovement((PlayerInGame) p);
-		int[] goal = {9,9};
-	    //gs.getOptimisedPath((PlayerInGame) p, goal);
-	    //gs.getOptimisedPath((PlayerInGame) p, goal);
-		int[][] waypoints = {{5,6}, {7,7}};
+		//gs.showPossibleMovement((PlayerInGame) p);
+		int[] goal = { 9, 9 };
+		// gs.getOptimisedPath((PlayerInGame) p, goal);
+		// gs.getOptimisedPath((PlayerInGame) p, goal);
+		int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		List<Tile> route = gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
 		gs.movePlayerRoute((PlayerInGame) p, route);
-	    //gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
-	   // gs.queue.remove().run();
+		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
+		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
-		int[] results = diceRoller(2, 3);
+		//int[] results = diceRoller(2, 3);
 		System.out.println();
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(results[i] + " ");
@@ -461,7 +500,6 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
-		
-		
+
 	}
 }
