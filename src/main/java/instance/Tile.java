@@ -115,6 +115,18 @@ public class Tile {
 	public void addTackler(PlayerInGame p) {
 		tacklers.add(p);
 	}
+	
+	public void removeTackler(PlayerInGame p) {
+		tacklers.remove(p);
+	}
+	
+	public void clearTacklers() {
+		tacklers.clear();
+	}
+	
+	public Set<PlayerInGame> getTacklers(){
+		return tacklers;
+	}
 
 	public int getTackleZones() {
 		return -tacklers.size();

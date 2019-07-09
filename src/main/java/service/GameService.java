@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
 
 import entity.Game;
 import entity.Player;
@@ -84,7 +86,8 @@ public class GameService {
 			for (int j = 0; j < 15; j++) {
 				Tile t = pitch[i][j];
 				int tackleZones = t.getTackleZones();
-				if(t.getCostToReach() == 99) tackleZones = 0;
+				if (t.getCostToReach() == 99)
+					tackleZones = 0;
 				System.out.printf("%5d %2d ", t.getCostToReach(), tackleZones);
 			}
 			System.out.println();
@@ -96,7 +99,7 @@ public class GameService {
 		if (cost == p.getMA() + 2) {
 			return;
 		}
-        addTackleZones(p);
+		addTackleZones(p);
 		for (Tile t : location.getNeighbours()) {
 			if (!t.containsPlayer()) {
 				int currentCost = t.getCostToReach();
@@ -135,7 +138,6 @@ public class GameService {
 		};
 		Queue<Tile> priorityQueue = new PriorityQueue<>(comp);
 
-		// enque StartNode, with distance 0
 		for (Tile array[] : pitch) {
 			for (Tile t : array) {
 				t.setWeightedDistance(1000);
@@ -163,7 +165,6 @@ public class GameService {
 				for (Tile neighbour : neighbours) {
 					if (!neighbour.isVisited()) {
 
-						// calculate predicted distance to the end node
 						double predictedDistance = Math.abs((neighbour.getPosition()[0] - target.getPosition()[0]))
 								+ Math.abs((neighbour.getPosition()[1] - target.getPosition()[1]));
 
@@ -198,7 +199,7 @@ public class GameService {
 		throw new IllegalArgumentException("Selected player cannot reach that point");
 	}
 
-	public void showTravelPath(Player p, Tile origin, Tile goal) {
+	public void showTravelPath(PlayerInGame p, Tile origin, Tile goal) {
 		List<Tile> route = new ArrayList<Tile>();
 		Tile current = goal;
 		route.add(goal);
@@ -208,23 +209,24 @@ public class GameService {
 		}
 		Collections.reverse(route);
 		for (Tile t : route) {
-			System.out.print(t.getPosition()[0] + " " + t.getPosition()[1]);
-			System.out.println(t.getMovementUsed() > p.getMA() ? " Going For It" : "");
+			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
+			System.out.print(t.getMovementUsed() > p.getMA() ? " Going For It: 2+" : "");
 			if (t.getParent() != null) {
 				if (t.getParent().getTackleZones() != 0)
-					System.out.println("Dodge");
+					System.out.print(" Dodge: " + calculateDodge(p, t.getParent()) + "+");
 			}
 		}
 	}
 
 	public void addTackleZones(PlayerInGame activePlayer) {
+		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = activePlayer.getTeam() == 1 ? team2 : team1;
+		opponents = activePlayer.getTeam() == game.getTeam1().getId() ? team2 : team1;
 		for (PlayerInGame p : opponents) {
-			for (Tile t : p.getTile().getNeighbours()) {
-				if (!t.containsPlayer() || t.getPlayer() == activePlayer) {
-					t.addTackler(p);
-				}
+			if (p.hasTackleZones()) {
+			  for (Tile t : p.getTile().getNeighbours()) {
+			    t.addTackler(p);
+			  }
 			}
 		}
 	}
@@ -237,12 +239,76 @@ public class GameService {
 		}
 	}
 	
+	public void resetTackleZones() {
+		for (Tile[] array : pitch) {
+			for (Tile t : array) {
+				t.clearTacklers();
+			}
+		}
+	}
+
 	public int calculateDodge(PlayerInGame p, Tile from) {
 		int AG = p.getAG();
 		int modifier = from.getTackleZones();
-		int result = 7 - AG  -1 -modifier;
-		if(result < 1) result = 1;
-		if(result > 6) result = 6;
+		int result = 7 - AG - 1 - modifier;
+		if (result < 1)
+			result = 1;
+		if (result > 6)
+			result = 6;
+		return result;
+	}
+
+	// result: first element is dice to roll, second element id of team (user) to
+	// choose result
+	public int[] calculateBlock(PlayerInGame attacker, PlayerInGame defender) {
+		int[] assists = calculateAssists(attacker, defender);
+		int attStr = attacker.getST() + assists[0];
+		int defStr = defender.getST() + assists[1];
+		int strongerTeam = attStr >= defStr ? attacker.getTeam() : defender.getTeam();
+		int dice = 1;
+		if (attStr >= defStr * 2 || defStr >= attStr * 2)
+			dice = 3;
+		if (attStr > defStr || defStr > attStr)
+			dice = 2;
+		return new int[] { dice, strongerTeam };
+	}
+	
+
+	public int[] calculateAssists(PlayerInGame attacker, PlayerInGame defender) {
+		attacker.setHasTackleZones(false);
+		defender.setHasTackleZones(false);
+		List<PlayerInGame> attSupport = getAssists(attacker, defender);
+		List<PlayerInGame> defSupport = getAssists(defender, attacker);
+		attacker.setHasTackleZones(true);
+		defender.setHasTackleZones(true);
+		return new int[] { attSupport.size(), defSupport.size() };
+	}
+
+	public List<PlayerInGame> getAssists(PlayerInGame p1, PlayerInGame p2) {
+		addTackleZones(p2);
+		List<PlayerInGame>support = new ArrayList<>(p2.getTile().getTacklers());
+		for(PlayerInGame p : support) {
+			System.out.println(p.getName());
+		}
+		for (PlayerInGame p : support) {
+			addTackleZones(p);
+			Set<PlayerInGame> tacklers = p.getTile().getTacklers();
+			for (PlayerInGame q : tacklers) {
+				addTackleZones(q);
+				if (q.getTile().getTacklers().isEmpty()) {
+					support.remove(p);
+				}
+			}
+		}
+		return support;
+	}
+
+	public static int[] diceRoller(int quantity, int number) {
+		Random rand = new Random();
+		int[] result = new int[quantity];
+		for (int i = 0; i < quantity; i++) {
+			result[i] = rand.nextInt(number) + 1;
+		}
 		return result;
 	}
 
@@ -252,14 +318,28 @@ public class GameService {
 		p.setMA(1);
 		p.setAG(5);
 		p.setTeam(1);
+		p.setST(6);
 		Player p2 = new PlayerInGame();
 		p2.setName("Bobby");
 		p2.setMA(3);
 		p2.setTeam(2);
+		p2.setST(3);
+		Player p3 = new PlayerInGame();
+		p3.setName("Sam");
+		p3.setMA(3);
+		p3.setTeam(2);
+		p3.setST(3);
+		Player p4 = new PlayerInGame();
+		p3.setName("Sarah");
+		p3.setMA(3);
+		p3.setTeam(1);
+		p3.setST(3);
 		Team team1 = new Team("bobcats");
 		Team team2 = new Team("murderers");
 		team1.addPlayer(p);
 		team2.addPlayer(p2);
+		team2.addPlayer(p3);
+		team1.addPlayer(p4);
 		Game g = new Game();
 		g.setTeam1(team1);
 		g.setTeam2(team2);
@@ -267,9 +347,22 @@ public class GameService {
 		p = (PlayerInGame) p;
 		gs.pitch[5][4].addPlayer((PlayerInGame) p);
 		gs.pitch[5][5].addPlayer((PlayerInGame) p2);
-		gs.showPossibleMovement((PlayerInGame) p);
+		gs.pitch[5][3].addPlayer((PlayerInGame) p3);
+		gs.pitch[17][5].addPlayer((PlayerInGame) p4);
+		//gs.showPossibleMovement((PlayerInGame) p);
 		int[] goal = { 5, 6 };
-		gs.getOptimisedPath((PlayerInGame) p, goal);
-		System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+"); 
+//		gs.getOptimisedPath((PlayerInGame) p, goal);
+		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
+		int[] results = diceRoller(2, 3);
+		System.out.println();
+//		for(int i = 0; i<results.length; i++) {
+//			System.out.print(results[i] + " ");
+//		}
+//		int[] block = gs.calculateBlock((PlayerInGame)p, (PlayerInGame) p2);
+//		for(int i = 0; i<results.length; i++) {
+//			System.out.print(block[i] + " ");
+//		}
+		System.out.println(gs.calculateAssists((PlayerInGame) p, (PlayerInGame) p2)[0]);
+		System.out.println(gs.calculateAssists((PlayerInGame) p, (PlayerInGame) p2)[1]);
 	}
 }
