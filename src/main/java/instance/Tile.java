@@ -205,5 +205,9 @@ public class Tile {
 	public boolean getGoForIt() {
 		return costToReach == 77;
 	}
+	
+	public void setContainsBall(boolean ball) {
+		this.containsBall = ball;
+	}
 
 }

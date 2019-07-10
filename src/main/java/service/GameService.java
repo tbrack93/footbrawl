@@ -247,7 +247,7 @@ public class GameService {
 		for (Tile t : forReset) {
 			t.removePlayer();
 		}
-		//queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
+		// queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		return totalRoute;
 	}
 
@@ -265,8 +265,8 @@ public class GameService {
 			t.addPlayer(p);
 			tempT.removePlayer();
 			p.decrementRemainingMA();
-			if(p.getRemainingMA()< 0) {
-				if(!goingForItAction(p, tempT, t)) {
+			if (p.getRemainingMA() < 0) {
+				if (!goingForItAction(p, tempT, t)) {
 					rerollCheck();
 					return;
 				}
@@ -284,7 +284,7 @@ public class GameService {
 
 	private boolean goingForItAction(PlayerInGame p, Tile tempT, Tile t) {
 		int result = diceRoller(1, 6)[0];
-		if(result>=2) {
+		if (result >= 2) {
 			System.out.println(p.getName() + " went for it!");
 			return true;
 		} else {
@@ -312,6 +312,10 @@ public class GameService {
 
 	public void knockDown(PlayerInGame p) {
 		p.setProne();
+		if (p.hasBall()) {
+			scatterBall(p.getTile());
+			p.setHasBall(false);
+		}
 		int armour = p.getAV();
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
@@ -333,7 +337,7 @@ public class GameService {
 					System.out.println(p.getName() + " is injured");
 					p.setStatus("injured");
 				}
-			} 
+			}
 		} else {
 			System.out.println("Armour held");
 			return;
@@ -342,6 +346,35 @@ public class GameService {
 
 	public void rerollCheck() {
 		// placeholder
+	}
+
+	public void scatterBall(Tile origin) {
+		int value = diceRoller(1, 8)[0];
+		int[] direction = ADJACENT[value];
+		int[] position = new int[] { origin.getPosition()[0] + direction[0], origin.getPosition()[1] + direction[1] };
+		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
+			Tile target = pitch[position[0]][position[1]];
+			if (target.containsPlayer()) {
+				if (target.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
+					catchBallAction(target.getPlayer());
+				} else {
+					scatterBall(target); // if player can't catch, will scatter again
+				}
+			} else {
+				origin.setContainsBall(false);
+				target.setContainsBall(true); // will need a message to inform front end of this ball movement
+			}
+		} else {
+			ballOffPitch(origin);
+		}
+	}
+
+	public void catchBallAction(PlayerInGame player) {
+
+	}
+	
+	public void ballOffPitch(Tile origin) {
+		
 	}
 
 	public void addTackleZones(PlayerInGame activePlayer) {
@@ -377,7 +410,7 @@ public class GameService {
 		int AG = p.getAG();
 		int modifier = from.getTackleZones();
 		int result = 7 - AG - 1 - modifier;
-		if (result <= 1) 
+		if (result <= 1)
 			result = 2; // roll of 1 always fails, no matter what
 		if (result > 6)
 			result = 6; // roll of 6 always passes, no matter what
@@ -478,7 +511,7 @@ public class GameService {
 		gs.pitch[5][5].addPlayer((PlayerInGame) p2);
 		gs.pitch[5][3].addPlayer((PlayerInGame) p3);
 		gs.pitch[17][5].addPlayer((PlayerInGame) p4);
-		//gs.showPossibleMovement((PlayerInGame) p);
+		// gs.showPossibleMovement((PlayerInGame) p);
 		int[] goal = { 9, 9 };
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
@@ -491,7 +524,7 @@ public class GameService {
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
-		//int[] results = diceRoller(2, 3);
+		// int[] results = diceRoller(2, 3);
 		System.out.println();
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(results[i] + " ");

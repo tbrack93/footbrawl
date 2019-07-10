@@ -9,6 +9,7 @@ public class PlayerInGame extends Player {
 	private boolean actionOver;
 	private String status;
 	private boolean hasTackleZones;
+	private boolean hasBall;
 	private Tile tile;
 	
 	
@@ -78,6 +79,14 @@ public class PlayerInGame extends Player {
 
 	public void setTile(Tile tile) {
 		this.tile = tile;
+	}
+	
+	public void setHasBall(boolean ball) {
+		this.hasBall = ball;
+	}
+	
+	public boolean hasBall() {
+		return hasBall;
 	}
 	
 	
