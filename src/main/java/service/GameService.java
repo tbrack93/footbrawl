@@ -309,6 +309,18 @@ public class GameService {
 			return false;
 		}
 	}
+	
+	public int calculateDodge(PlayerInGame p, Tile from) {
+		addTackleZones(p);
+		int AG = p.getAG();
+		int modifier = from.getTackleZones();
+		int result = 7 - AG - 1 - modifier;
+		if (result <= 1)
+			result = 2; // roll of 1 always fails, no matter what
+		if (result > 6)
+			result = 6; // roll of 6 always passes, no matter what
+		return result;
+	}
 
 	public void knockDown(PlayerInGame p) {
 		p.setProne();
@@ -356,7 +368,7 @@ public class GameService {
 			Tile target = pitch[position[0]][position[1]];
 			if (target.containsPlayer()) {
 				if (target.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
-					catchBallAction(target.getPlayer());
+					catchBallAction(target.getPlayer(), false);
 				} else {
 					scatterBall(target); // if player can't catch, will scatter again
 				}
@@ -369,8 +381,30 @@ public class GameService {
 		}
 	}
 
-	public void catchBallAction(PlayerInGame player) {
-
+	public void catchBallAction(PlayerInGame player, boolean accuratePass) {
+      int needed = calculateCatch(player, accuratePass);
+      int roll = diceRoller(1, 6)[0];
+      if(needed >= roll) {
+    	  System.out.println(player.getName() + " caught the ball!");
+    	  player.setHasBall(true);
+      } else {
+    	  System.out.println(player.getName() + " failed to catch the ball!");
+    	  rerollCheck();
+    	  scatterBall(player.getTile());
+      }
+	}
+	
+	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
+		addTackleZones(p);
+		int AG = p.getAG();
+		int modifier = p.getTile().getTackleZones();
+		if(accuratePass) modifier++;
+		int result = 7 - AG - modifier;
+		if (result <= 1)
+			result = 2; // roll of 1 always fails, no matter what
+		if (result > 6)
+			result = 6; // roll of 6 always passes, no matter what
+		return result;
 	}
 	
 	public void ballOffPitch(Tile origin) {
@@ -406,16 +440,7 @@ public class GameService {
 		}
 	}
 
-	public int calculateDodge(PlayerInGame p, Tile from) {
-		int AG = p.getAG();
-		int modifier = from.getTackleZones();
-		int result = 7 - AG - 1 - modifier;
-		if (result <= 1)
-			result = 2; // roll of 1 always fails, no matter what
-		if (result > 6)
-			result = 6; // roll of 6 always passes, no matter what
-		return result;
-	}
+
 
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
