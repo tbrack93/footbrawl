@@ -1,9 +1,13 @@
 package instance;
 
-import entity.Player;
+import java.util.List;
 
-public class PlayerInGame extends Player {
+import entity.Player;
+import entity.Skill;
+
+public class PlayerInGame{
 	
+	private Player player;
 	private int remainingMA;
 	private boolean actedThisTurn;
 	private boolean actionOver;
@@ -13,20 +17,19 @@ public class PlayerInGame extends Player {
 	private Tile tile;
 	
 	
-	public PlayerInGame() {
-		super();
+	public PlayerInGame(Player player) {
+		this.player = player;
 		hasTackleZones = true;
 	}
 	
 	public void newTurn() {
-		remainingMA = this.getMA();
+		remainingMA = player.getMA();
 		actedThisTurn = false;
 		actionOver = false;
 	}
 	
-	@Override
 	public void setMA(int MA) {
-		super.setMA(MA);;
+		player.setMA(MA);;
 		this.remainingMA = MA;
 	}
 
@@ -89,6 +92,39 @@ public class PlayerInGame extends Player {
 		return hasBall;
 	}
 	
-	
+	public int getId() {
+		return player.getId();
+	}
+
+
+	public String getName() {
+		return player.getName();
+	}
+
+
+	public int getMA() {
+		return player.getMA();
+	}
+
+	public int getST() {
+		return player.getST();
+	}
+
+	public int getAG() {
+		return player.getAG();
+	}
+
+	public int getAV() {
+		return player.getAV();
+	}
+
+
+	public List<Skill> getSkills() {
+		return player.getSkills();
+	}
+
+	public int getTeam() {
+		return player.getTeam();
+	}
 	
 }

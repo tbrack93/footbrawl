@@ -9,6 +9,7 @@ public class Team {
 	private int id;
 	private String name;
 	private List<Player> players;
+	private int teamRerolls;
 	
 	public Team() {
       this.id = ++idCounter;
@@ -65,6 +66,16 @@ public class Team {
 	public void addPlayer(Player p) {
 		players.add(p);
 	}
+
+	public int getTeamRerolls() {
+		return teamRerolls;
+	}
+
+	public void setTeamRerolls(int teamRerolls) {
+		this.teamRerolls = teamRerolls;
+	}
+	
+	
 	
 
 }
