@@ -1,7 +1,7 @@
 package service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Arrays; 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -17,6 +17,7 @@ import entity.Game;
 import entity.Player;
 import entity.Team;
 import instance.PlayerInGame;
+import instance.TeamInGame;
 import instance.Tile;
 
 // controls a game's logic and progress
@@ -34,8 +35,8 @@ public class GameService {
 	private int half;
 	private String phase;
 	private int activeTeam;
-	private List<PlayerInGame> team1;
-	private List<PlayerInGame> team2;
+	private TeamInGame team1;
+	private TeamInGame team2;
 	private List<PlayerInGame> dugout;
 	private int team1Turn;
 	private int team2Turn;
@@ -47,7 +48,8 @@ public class GameService {
 		queue = new LinkedList<>();
 		dugout = new ArrayList<>();
 		this.game = game;
-		setUpTeams();
+		team1 = new TeamInGame(game.getTeam1());
+		team2 = new TeamInGame(game.getTeam2());
 		pitch = new Tile[26][15];
 		for (int row = 0; row < 26; row++) {
 			for (int column = 0; column < 15; column++) {
@@ -56,18 +58,7 @@ public class GameService {
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
 	}
-
-	public void setUpTeams() {
-		team1 = new ArrayList<>();
-		team2 = new ArrayList<>();
-		for (Player p : game.getTeam1().getPlayers()) {
-			team1.add((PlayerInGame) p);
-		}
-		for (Player p : game.getTeam2().getPlayers()) {
-			team2.add((PlayerInGame) p);
-		}
-	}
-
+		
 	public List<Tile> getNeighbours(Tile t) {
 		List<Tile> neighbours = new ArrayList<Tile>();
 		int row = t.getPosition()[0];
@@ -499,7 +490,7 @@ public class GameService {
 	public void addTackleZones(PlayerInGame activePlayer) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = activePlayer.getTeam() == game.getTeam1().getId() ? team2 : team1;
+		opponents = activePlayer.getTeam() == game.getTeam1().getId() ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
 		for (PlayerInGame p : opponents) {
 			if (p.hasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
@@ -585,23 +576,23 @@ public class GameService {
 	}
 
 	public static void main(String[] args) {
-		Player p = new PlayerInGame();
+		Player p = new Player();
 		p.setName("Billy");
 		p.setMA(4);
 		p.setAG(5);
 		p.setTeam(1);
 		p.setST(6);
-		Player p2 = new PlayerInGame();
+		Player p2 = new Player();
 		p2.setName("Bobby");
 		p2.setMA(3);
 		p2.setTeam(2);
 		p2.setST(3);
-		Player p3 = new PlayerInGame();
+		Player p3 = new Player();
 		p3.setName("Sam");
 		p3.setMA(3);
 		p3.setTeam(2);
 		p3.setST(3);
-		Player p4 = new PlayerInGame();
+		Player p4 = new Player();
 		p3.setName("Sarah");
 		p3.setMA(3);
 		p3.setTeam(1);
@@ -616,21 +607,24 @@ public class GameService {
 		g.setTeam1(team1);
 		g.setTeam2(team2);
 		GameService gs = new GameService(g);
-		p = (PlayerInGame) p;
-		gs.pitch[5][4].addPlayer((PlayerInGame) p);
-		gs.pitch[5][5].addPlayer((PlayerInGame) p2);
-		gs.pitch[5][3].addPlayer((PlayerInGame) p3);
-		gs.pitch[17][5].addPlayer((PlayerInGame) p4);
-		// gs.showPossibleMovement((PlayerInGame) p);
+		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
+		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
+		gs.pitch[5][4].addPlayer(team1Players.get(0));
+		gs.pitch[17][5].addPlayer(team1Players.get(1));
+		gs.pitch[5][5].addPlayer(team2Players.get(0));
+		gs.pitch[5][3].addPlayer(team2Players.get(1));
+		
+		
+		 gs.showPossibleMovement(team1Players.get(0));
 		int[] goal = { 9, 9 };
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		int[][] waypoints = { { 5, 6 }, { 7, 7 } };
-		List<Tile> route = gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
+		List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
-		//gs.movePlayerRoute((PlayerInGame) p, route);
+		gs.movePlayerRoute(team1Players.get(0), route);
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
