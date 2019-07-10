@@ -1,6 +1,7 @@
 package service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -9,6 +10,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+
+import javax.print.attribute.standard.Destination;
 
 import entity.Game;
 import entity.Player;
@@ -23,6 +26,10 @@ public class GameService {
 	// for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
+	private static final int[][] TOPLEFTTHROW = {{0, 1}, {1,1}, {1,0}};
+	private static final int[][] TOPRIGHTTHROW = {{0,-1}, {1,-1}, {1,0}};
+	private static final int[][] BOTTOMLEFTTHROW = {{-1,0},{-1,1},{0,1}};
+	private static final int[][] BOTTOMRIGHTTHROW = {{-1,0}, {-1,-1},{0,-1}};
 	private Game game;
 	private int half;
 	private String phase;
@@ -384,7 +391,9 @@ public class GameService {
 	public void catchBallAction(PlayerInGame player, boolean accuratePass) {
       int needed = calculateCatch(player, accuratePass);
       int roll = diceRoller(1, 6)[0];
-      if(needed >= roll) {
+      System.out.println(player.getName() + " tries to catch the ball");
+      System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+      if(roll >= needed) {
     	  System.out.println(player.getName() + " caught the ball!");
     	  player.setHasBall(true);
       } else {
@@ -407,8 +416,84 @@ public class GameService {
 		return result;
 	}
 	
+	//calculates throw direction, to save from having more constants
+	// no apparent way to calculate for corners, so use constant arrays for these
 	public void ballOffPitch(Tile origin) {
+		System.out.println("Ball went off pitch from " + origin.getPosition()[0] + " "+
+	                       origin.getPosition()[1]);
+		// determine which side/ orientation
+		int[] position = origin.getPosition();
+		int[] direction = new int[2];
+		int[][] corner = null; 
+		int shift = 1;
+		if(position[0] == 0) { // from top
+			if(position[1] == 0) {
+				corner = TOPLEFTTHROW;
+			} 
+			else if(position[1] == 14) {
+				corner = TOPRIGHTTHROW;
+			} else {
+				direction[0] = 1;
+			}
+		}
+		if(position[0] == 25) { // from bottom
+			if(position[1] == 0) {
+				corner = BOTTOMLEFTTHROW;
+			} 
+			else if(position[1] == 14) {
+				corner = BOTTOMRIGHTTHROW;
+			} else {
+				direction[0] = -1;
+			}
+		}
+		if(position[1] == 0) { // from left
+			direction[1] = 1;
+            shift = 0;
+		}
+		if(position[1] == 14) { // from right
+			direction[1] = -1;
+			shift = 0;
+		}
+		// roll 1D3 to determine direction
+		int directionRoll = diceRoller(1, 3)[0];
+		if(corner != null) {
+			direction = corner[directionRoll -1];
+		} else {
+		direction[shift] = directionRoll - 2;
+		}
+		System.out.println("Rolled direction: " + directionRoll);
+		System.out.println("Direction: " + direction[0] + " " + direction[1]);
 		
+		// roll 2D6 to determine squares moved
+		int[] squares = diceRoller(2, 6);
+		int squaresTotal = squares[0] + squares[1];
+		System.out.println("Rolled to move " + squaresTotal + " squares");
+		int [] destination = Arrays.copyOf(position, 2);
+		
+		for(int i = 0; i<squaresTotal; i++) {
+			destination[0] = destination[0] + direction[0];
+			destination[1] = destination[1] + direction[1];
+			System.out.println("Ball flying to " + destination[0] + " " + destination[1]);
+			if(destination[0] <0 || destination[0] > 25 || destination[1]<0 || destination[1]>14) {
+				System.out.println("Ball thrown off pitch again!");
+				System.out.println("Destination: " + destination[0] + " " + destination[1]);
+				destination[0] -= direction[0];
+				destination[1] -= direction[1];
+				ballOffPitch(pitch[destination[0]][destination[1]]);
+				return;
+			}
+		}
+		Tile target = pitch[destination[0]][destination[1]];
+		System.out.println("Ball thrown to square " + destination[0] + " " + destination[1]);
+		if(target.containsPlayer()) {
+			if(target.getPlayer().hasTackleZones()) {
+			  catchBallAction(target.getPlayer(), false);}
+			else {
+				scatterBall(target);
+			}
+		} else {
+			target.setContainsBall(true);
+		}
 	}
 
 	public void addTackleZones(PlayerInGame activePlayer) {
@@ -545,7 +630,7 @@ public class GameService {
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
-		gs.movePlayerRoute((PlayerInGame) p, route);
+		//gs.movePlayerRoute((PlayerInGame) p, route);
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
@@ -558,6 +643,8 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
-
+        Tile t = gs.pitch[25][14];
+        gs.ballOffPitch(t);
+        
 	}
 }
