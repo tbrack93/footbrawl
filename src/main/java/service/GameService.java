@@ -131,7 +131,6 @@ public class GameService {
 		// Tile origin = selectedPlayer.getTile();
 		Tile target = pitch[goal[0]][goal[1]];
 		int MA = p.getRemainingMA();
-		System.out.println(MA);
 
 		Comparator<Tile> comp = new Comparator<Tile>() {
 			@Override
@@ -237,19 +236,20 @@ public class GameService {
 					System.out.print(" Dodge: " + calculateDodge(p, route.get(i-1)) + "+");
 			}
 			if(t.containsBall()) {
-				System.out.print(" Pick Up Ball: " + calculatePickupBall(p) + "+");
+				System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
 			}
 		}
 	}
 
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
+		int startingMA = p.getRemainingMA();
 		List<Tile> totalRoute = new ArrayList<>();
 		Tile origin = p.getTile();
 		List<Tile> forReset = new ArrayList<>();
 		for (int[] i : waypoints) {
 			totalRoute.addAll(getOptimisedPath(p, i));
-			totalRoute.remove(totalRoute.size() - 1);
-			p.setRemainingMA(p.getMA() - totalRoute.size());
+			totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
+			p.setRemainingMA(p.getRemainingMA() - totalRoute.size());
 			Tile t = pitch[i[0]][i[1]];
 			if (!t.containsPlayer()) {
 				t.addPlayer(p);
@@ -258,7 +258,7 @@ public class GameService {
 
 		}
 		totalRoute.addAll(getOptimisedPath(p, goal));
-		p.setRemainingMA(p.getMA());
+		p.setRemainingMA(startingMA);
 		origin.addPlayer(p);
 		for (Tile t : forReset) {
 			t.removePlayer();
@@ -269,14 +269,9 @@ public class GameService {
 
 	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
-		if (p.getTile() != route.get(0)) {
-			throw new IllegalArgumentException("Route does not start from player's current position");
-		}
+		checkRouteValid(p, route);
 		route.remove(0);
 		for (Tile t : route) {
-			if (t.containsPlayer()) {
-				throw new IllegalArgumentException("Can't move to occupied square");
-			}
 			Tile tempT = p.getTile();
 			t.addPlayer(p);
 			tempT.removePlayer();
@@ -292,8 +287,31 @@ public class GameService {
 					rerollCheck();
 					return;
 				}
-			} else {
+			}
+			if(tempT.containsBall()) {
+				pickUpBallAction(p);
+			}
+			else {
 				System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
+			}
+		}
+	}
+	
+	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
+		List<Tile> tempR = new ArrayList<>(route);
+		int startingMA = p.getRemainingMA();
+		if (p.getTile() != tempR.get(0)) {
+			throw new IllegalArgumentException("Route does not start from player's current position");
+		}
+		tempR.remove(0);
+		for (Tile t : tempR) {
+			if (t.containsPlayer()) {
+				p.setRemainingMA(startingMA);
+				throw new IllegalArgumentException("Can't move to occupied square");
+			}
+			p.decrementRemainingMA();
+			if (p.getRemainingMA() < -2) {
+				throw new IllegalArgumentException("Not enough movement to reach destination");
 			}
 		}
 	}
@@ -382,6 +400,7 @@ public class GameService {
 		int[] position = new int[] { origin.getPosition()[0] + direction[0], origin.getPosition()[1] + direction[1] };
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
+			System.out.println("Ball scattered to: " + position[0] + " " + position[1]);
 			if (target.containsPlayer()) {
 				if (target.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
 					catchBallAction(target.getPlayer(), false);
@@ -412,19 +431,37 @@ public class GameService {
       }
 	}
 	
+	public void pickUpBallAction(PlayerInGame player) {
+	  if(!player.getTile().containsBall()) {
+		  throw new IllegalArgumentException("Player not in square with the ball");
+	  }
+      int needed = calculatePickUpBall(player, player.getTile());
+      int roll = diceRoller(1, 6)[0];
+      System.out.println(player.getName() + " tries to pick up the ball");
+      System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+      if(roll >= needed) {
+    	  System.out.println(player.getName() + " picked up the ball!");
+    	  player.setHasBall(true);
+      } else {
+    	  System.out.println(player.getName() + " failed to pick up the ball!");
+    	  rerollCheck();
+    	  scatterBall(player.getTile());
+      }
+	}
+	
 	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
 		int extraModifier = accuratePass ? 1 : 0;
-		return calculateAgilityRoll(p, extraModifier);
+		return calculateAgilityRoll(p, p.getTile(), extraModifier);
 	}
 	
-	public int calculatePickupBall(PlayerInGame p) {
-		return calculateAgilityRoll(p, 1);
+	public int calculatePickUpBall(PlayerInGame p, Tile location) {
+		return calculateAgilityRoll(p, location, 1);
 	}
 	
-	public int calculateAgilityRoll(PlayerInGame p, int extraModifier) {
+	public int calculateAgilityRoll(PlayerInGame p, Tile location, int extraModifier) {
 		addTackleZones(p);
 		int AG = p.getAG();
-		int modifier = p.getTile().getTackleZones();
+		int modifier = location.getTackleZones();
 		int result = 7 - AG - extraModifier - modifier;
 		if (result <= 1)
 			result = 2; // roll of 1 always fails, no matter what
@@ -605,7 +642,7 @@ public class GameService {
 		Player p = new Player();
 		p.setName("Billy");
 		p.setMA(4);
-		p.setAG(5);
+		p.setAG(2);
 		p.setTeam(1);
 		p.setST(6);
 		Player p2 = new Player();
@@ -635,17 +672,17 @@ public class GameService {
 		GameService gs = new GameService(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[5][4].addPlayer(team1Players.get(0));
+		gs.pitch[7][7].addPlayer(team1Players.get(0));
 		gs.pitch[17][5].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
 		Tile ballTile = gs.pitch[7][7];
 		ballTile.setContainsBall(true);
-		
-		 gs.showPossibleMovement(team1Players.get(0));
-		int[] goal = { 9, 9 };
-		List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
-		gs.showTravelPath(route);
+		gs.pickUpBallAction(team1Players.get(0));
+		// gs.showPossibleMovement(team1Players.get(0))
+		// int[] goal = { 9, 9 };
+		//List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
+		//gs.showTravelPath(route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		//int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		//List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
