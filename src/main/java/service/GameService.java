@@ -99,7 +99,7 @@ public class GameService {
 
 	// breadth first search to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		if (cost == p.getMA() + 2) {
+		if (cost == p.getRemainingMA() + 2) {
 			return;
 		}
 		addTackleZones(p);
@@ -110,7 +110,7 @@ public class GameService {
 				// checking if visited (not default of 99) or visited and new has route better
 				// cost
 				if (currentCost == 99 || currentCost != 99 && currentCost > cost + 1) {
-					if (cost + 1 > p.getMA()) {
+					if (cost + 1 > p.getRemainingMA()) {
 						t.goForIt();
 					} else {
 						t.setCostToReach(cost + 1);
@@ -131,6 +131,7 @@ public class GameService {
 		// Tile origin = selectedPlayer.getTile();
 		Tile target = pitch[goal[0]][goal[1]];
 		int MA = p.getRemainingMA();
+		System.out.println(MA);
 
 		Comparator<Tile> comp = new Comparator<Tile>() {
 			@Override
@@ -184,6 +185,14 @@ public class GameService {
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
 								+ noMovementPenalty + tackleZonesPenalty + predictedDistance;
 						// check if distance smaller
+//						System.out.println("Current " + current.getPosition()[0] + " " +current.getPosition()[1]);
+//						System.out.println("Neighbour " + neighbour.getPosition()[0] + " " + neighbour.getPosition()[1]);
+//						System.out.println("Total:" + totalDistance);
+//						System.out.println("Current:" + neighbour.getTotalDistance());
+//						System.out.println("No Movement penalty? " + noMovementPenalty);
+//						System.out.println(" Tacklezones penalty?" + tackleZonesPenalty);
+//						System.out.println("Predicted distance " + predictedDistance);
+//						System.out.println();
 						if (totalDistance < neighbour.getTotalDistance()) {
 
 							// update tile's distance
@@ -222,7 +231,7 @@ public class GameService {
 		for (int i = 0; i <route.size(); i++) {
 			Tile t = route.get(i);
 			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
-			System.out.print(i+1 > p.getMA() ? " Going For It: 2+" : "");
+			System.out.print(i > p.getRemainingMA() ? " Going For It: 2+" : "");
 			if (i>0) {
 				if (route.get(i-1).getTackleZones() != 0)
 					System.out.print(" Dodge: " + calculateDodge(p, route.get(i-1)) + "+");
@@ -635,11 +644,12 @@ public class GameService {
 		
 		 gs.showPossibleMovement(team1Players.get(0));
 		int[] goal = { 9, 9 };
-		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		int[][] waypoints = { { 5, 6 }, { 7, 7 } };
-		List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
+		List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 		gs.showTravelPath(route);
+		// gs.getOptimisedPath((PlayerInGame) p, goal);
+		//int[][] waypoints = { { 5, 6 }, { 7, 7 } };
+		//List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
+		//gs.showTravelPath(route);
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
