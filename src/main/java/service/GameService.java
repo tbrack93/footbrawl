@@ -99,7 +99,7 @@ public class GameService {
 
 	// breadth first search to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		if (cost == p.getMA() + 2) {
+		if (cost == p.getRemainingMA() + 2) {
 			return;
 		}
 		addTackleZones(p);
@@ -110,7 +110,7 @@ public class GameService {
 				// checking if visited (not default of 99) or visited and new has route better
 				// cost
 				if (currentCost == 99 || currentCost != 99 && currentCost > cost + 1) {
-					if (cost + 1 > p.getMA()) {
+					if (cost + 1 > p.getRemainingMA()) {
 						t.goForIt();
 					} else {
 						t.setCostToReach(cost + 1);
@@ -163,7 +163,7 @@ public class GameService {
 				current.setVisited(true);
 				// if last element in PQ reached
 				if (current.equals(target)) {
-					return showTravelPath(p, origin, target);
+					return getTravelPath(p, origin, target);
 				}
 
 				List<Tile> neighbours = getNeighbours(current);
@@ -184,6 +184,14 @@ public class GameService {
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
 								+ noMovementPenalty + tackleZonesPenalty + predictedDistance;
 						// check if distance smaller
+//						System.out.println("Current " + current.getPosition()[0] + " " +current.getPosition()[1]);
+//						System.out.println("Neighbour " + neighbour.getPosition()[0] + " " + neighbour.getPosition()[1]);
+//						System.out.println("Total:" + totalDistance);
+//						System.out.println("Current:" + neighbour.getTotalDistance());
+//						System.out.println("No Movement penalty? " + noMovementPenalty);
+//						System.out.println(" Tacklezones penalty?" + tackleZonesPenalty);
+//						System.out.println("Predicted distance " + predictedDistance);
+//						System.out.println();
 						if (totalDistance < neighbour.getTotalDistance()) {
 
 							// update tile's distance
@@ -204,7 +212,7 @@ public class GameService {
 		throw new IllegalArgumentException("Selected player cannot reach that point");
 	}
 
-	public List<Tile> showTravelPath(PlayerInGame p, Tile origin, Tile goal) {
+	public List<Tile> getTravelPath(PlayerInGame p, Tile origin, Tile goal) {
 		List<Tile> route = new ArrayList<Tile>();
 		Tile current = goal;
 		route.add(goal);
@@ -213,25 +221,35 @@ public class GameService {
 			route.add(current);
 		}
 		Collections.reverse(route);
-//		for (Tile t : route) {
-//			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
-//			System.out.print(t.getMovementUsed() > p.getMA() ? " Going For It: 2+" : "");
-//			if (t.getParent() != null) {
-//				if (t.getParent().getTackleZones() != 0)
-//					System.out.print(" Dodge: " + calculateDodge(p, t.getParent()) + "+");
-//			}
-//		}
 		return route;
+	}
+	
+	public void showTravelPath(List<Tile> route) {
+		PlayerInGame p = route.get(0).getPlayer();
+		addTackleZones(p);
+		for (int i = 0; i <route.size(); i++) {
+			Tile t = route.get(i);
+			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
+			System.out.print(i > p.getRemainingMA() ? " Going For It: 2+" : "");
+			if (i>0) {
+				if (route.get(i-1).getTackleZones() != 0)
+					System.out.print(" Dodge: " + calculateDodge(p, route.get(i-1)) + "+");
+			}
+			if(t.containsBall()) {
+				System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
+			}
+		}
 	}
 
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
+		int startingMA = p.getRemainingMA();
 		List<Tile> totalRoute = new ArrayList<>();
 		Tile origin = p.getTile();
 		List<Tile> forReset = new ArrayList<>();
 		for (int[] i : waypoints) {
 			totalRoute.addAll(getOptimisedPath(p, i));
-			totalRoute.remove(totalRoute.size() - 1);
-			p.setRemainingMA(p.getMA() - totalRoute.size());
+			totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
+			p.setRemainingMA(p.getRemainingMA() - totalRoute.size());
 			Tile t = pitch[i[0]][i[1]];
 			if (!t.containsPlayer()) {
 				t.addPlayer(p);
@@ -240,7 +258,7 @@ public class GameService {
 
 		}
 		totalRoute.addAll(getOptimisedPath(p, goal));
-		p.setRemainingMA(p.getMA());
+		p.setRemainingMA(startingMA);
 		origin.addPlayer(p);
 		for (Tile t : forReset) {
 			t.removePlayer();
@@ -251,14 +269,9 @@ public class GameService {
 
 	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
-		if (p.getTile() != route.get(0)) {
-			throw new IllegalArgumentException("Route does not start from player's current position");
-		}
+		checkRouteValid(p, route);
 		route.remove(0);
 		for (Tile t : route) {
-			if (t.containsPlayer()) {
-				throw new IllegalArgumentException("Can't move to occupied square");
-			}
 			Tile tempT = p.getTile();
 			t.addPlayer(p);
 			tempT.removePlayer();
@@ -274,8 +287,31 @@ public class GameService {
 					rerollCheck();
 					return;
 				}
-			} else {
+			}
+			if(tempT.containsBall()) {
+				pickUpBallAction(p);
+			}
+			else {
 				System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
+			}
+		}
+	}
+	
+	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
+		List<Tile> tempR = new ArrayList<>(route);
+		int startingMA = p.getRemainingMA();
+		if (p.getTile() != tempR.get(0)) {
+			throw new IllegalArgumentException("Route does not start from player's current position");
+		}
+		tempR.remove(0);
+		for (Tile t : tempR) {
+			if (t.containsPlayer()) {
+				p.setRemainingMA(startingMA);
+				throw new IllegalArgumentException("Can't move to occupied square");
+			}
+			p.decrementRemainingMA();
+			if (p.getRemainingMA() < -2) {
+				throw new IllegalArgumentException("Not enough movement to reach destination");
 			}
 		}
 	}
@@ -364,6 +400,7 @@ public class GameService {
 		int[] position = new int[] { origin.getPosition()[0] + direction[0], origin.getPosition()[1] + direction[1] };
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
+			System.out.println("Ball scattered to: " + position[0] + " " + position[1]);
 			if (target.containsPlayer()) {
 				if (target.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
 					catchBallAction(target.getPlayer(), false);
@@ -394,12 +431,38 @@ public class GameService {
       }
 	}
 	
+	public void pickUpBallAction(PlayerInGame player) {
+	  if(!player.getTile().containsBall()) {
+		  throw new IllegalArgumentException("Player not in square with the ball");
+	  }
+      int needed = calculatePickUpBall(player, player.getTile());
+      int roll = diceRoller(1, 6)[0];
+      System.out.println(player.getName() + " tries to pick up the ball");
+      System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+      if(roll >= needed) {
+    	  System.out.println(player.getName() + " picked up the ball!");
+    	  player.setHasBall(true);
+      } else {
+    	  System.out.println(player.getName() + " failed to pick up the ball!");
+    	  rerollCheck();
+    	  scatterBall(player.getTile());
+      }
+	}
+	
 	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
+		int extraModifier = accuratePass ? 1 : 0;
+		return calculateAgilityRoll(p, p.getTile(), extraModifier);
+	}
+	
+	public int calculatePickUpBall(PlayerInGame p, Tile location) {
+		return calculateAgilityRoll(p, location, 1);
+	}
+	
+	public int calculateAgilityRoll(PlayerInGame p, Tile location, int extraModifier) {
 		addTackleZones(p);
 		int AG = p.getAG();
-		int modifier = p.getTile().getTackleZones();
-		if(accuratePass) modifier++;
-		int result = 7 - AG - modifier;
+		int modifier = location.getTackleZones();
+		int result = 7 - AG - extraModifier - modifier;
 		if (result <= 1)
 			result = 2; // roll of 1 always fails, no matter what
 		if (result > 6)
@@ -579,7 +642,7 @@ public class GameService {
 		Player p = new Player();
 		p.setName("Billy");
 		p.setMA(4);
-		p.setAG(5);
+		p.setAG(2);
 		p.setTeam(1);
 		p.setST(6);
 		Player p2 = new Player();
@@ -609,22 +672,25 @@ public class GameService {
 		GameService gs = new GameService(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[5][4].addPlayer(team1Players.get(0));
+		gs.pitch[7][7].addPlayer(team1Players.get(0));
 		gs.pitch[17][5].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
-		
-		
-		 gs.showPossibleMovement(team1Players.get(0));
-		int[] goal = { 9, 9 };
+		Tile ballTile = gs.pitch[7][7];
+		ballTile.setContainsBall(true);
+		gs.pickUpBallAction(team1Players.get(0));
+		// gs.showPossibleMovement(team1Players.get(0))
+		// int[] goal = { 9, 9 };
+		//List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
+		//gs.showTravelPath(route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		int[][] waypoints = { { 5, 6 }, { 7, 7 } };
-		List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
+		//int[][] waypoints = { { 5, 6 }, { 7, 7 } };
+		//List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
+		//gs.showTravelPath(route);
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
-		gs.movePlayerRoute(team1Players.get(0), route);
+		//gs.movePlayerRoute(team1Players.get(0), route);
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
@@ -637,8 +703,8 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
-        Tile t = gs.pitch[25][14];
-        gs.ballOffPitch(t);
+        //Tile t = gs.pitch[25][14];
+       // gs.ballOffPitch(t);
         
 	}
 }

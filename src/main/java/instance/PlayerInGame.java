@@ -20,6 +20,7 @@ public class PlayerInGame{
 	public PlayerInGame(Player player) {
 		this.player = player;
 		hasTackleZones = true;
+		remainingMA = player.getMA();
 	}
 	
 	public void newTurn() {
