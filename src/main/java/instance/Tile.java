@@ -209,5 +209,9 @@ public class Tile {
 	public void setContainsBall(boolean ball) {
 		this.containsBall = ball;
 	}
+	
+	public boolean containsBall() {
+		return containsBall;
+	}
 
 }

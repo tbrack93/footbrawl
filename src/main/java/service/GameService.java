@@ -163,7 +163,7 @@ public class GameService {
 				current.setVisited(true);
 				// if last element in PQ reached
 				if (current.equals(target)) {
-					return showTravelPath(p, origin, target);
+					return getTravelPath(p, origin, target);
 				}
 
 				List<Tile> neighbours = getNeighbours(current);
@@ -204,7 +204,7 @@ public class GameService {
 		throw new IllegalArgumentException("Selected player cannot reach that point");
 	}
 
-	public List<Tile> showTravelPath(PlayerInGame p, Tile origin, Tile goal) {
+	public List<Tile> getTravelPath(PlayerInGame p, Tile origin, Tile goal) {
 		List<Tile> route = new ArrayList<Tile>();
 		Tile current = goal;
 		route.add(goal);
@@ -213,15 +213,24 @@ public class GameService {
 			route.add(current);
 		}
 		Collections.reverse(route);
-//		for (Tile t : route) {
-//			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
-//			System.out.print(t.getMovementUsed() > p.getMA() ? " Going For It: 2+" : "");
-//			if (t.getParent() != null) {
-//				if (t.getParent().getTackleZones() != 0)
-//					System.out.print(" Dodge: " + calculateDodge(p, t.getParent()) + "+");
-//			}
-//		}
 		return route;
+	}
+	
+	public void showTravelPath(List<Tile> route) {
+		PlayerInGame p = route.get(0).getPlayer();
+		addTackleZones(p);
+		for (int i = 0; i <route.size(); i++) {
+			Tile t = route.get(i);
+			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
+			System.out.print(i+1 > p.getMA() ? " Going For It: 2+" : "");
+			if (i>0) {
+				if (route.get(i-1).getTackleZones() != 0)
+					System.out.print(" Dodge: " + calculateDodge(p, route.get(i-1)) + "+");
+			}
+			if(t.containsBall()) {
+				System.out.print(" Pick Up Ball: " + calculatePickupBall(p) + "+");
+			}
+		}
 	}
 
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
@@ -395,11 +404,19 @@ public class GameService {
 	}
 	
 	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
+		int extraModifier = accuratePass ? 1 : 0;
+		return calculateAgilityRoll(p, extraModifier);
+	}
+	
+	public int calculatePickupBall(PlayerInGame p) {
+		return calculateAgilityRoll(p, 1);
+	}
+	
+	public int calculateAgilityRoll(PlayerInGame p, int extraModifier) {
 		addTackleZones(p);
 		int AG = p.getAG();
 		int modifier = p.getTile().getTackleZones();
-		if(accuratePass) modifier++;
-		int result = 7 - AG - modifier;
+		int result = 7 - AG - extraModifier - modifier;
 		if (result <= 1)
 			result = 2; // roll of 1 always fails, no matter what
 		if (result > 6)
@@ -613,7 +630,8 @@ public class GameService {
 		gs.pitch[17][5].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
-		
+		Tile ballTile = gs.pitch[7][7];
+		ballTile.setContainsBall(true);
 		
 		 gs.showPossibleMovement(team1Players.get(0));
 		int[] goal = { 9, 9 };
@@ -621,10 +639,11 @@ public class GameService {
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
+		gs.showTravelPath(route);
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
-		gs.movePlayerRoute(team1Players.get(0), route);
+		//gs.movePlayerRoute(team1Players.get(0), route);
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
@@ -637,8 +656,8 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
-        Tile t = gs.pitch[25][14];
-        gs.ballOffPitch(t);
+        //Tile t = gs.pitch[25][14];
+       // gs.ballOffPitch(t);
         
 	}
 }
