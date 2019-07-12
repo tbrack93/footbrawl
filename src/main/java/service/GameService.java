@@ -396,7 +396,7 @@ public class GameService {
 
 	public void scatterBall(Tile origin) {
 		int value = diceRoller(1, 8)[0];
-		int[] direction = ADJACENT[value];
+		int[] direction = ADJACENT[value-1];
 		int[] position = new int[] { origin.getPosition()[0] + direction[0], origin.getPosition()[1] + direction[1] };
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
