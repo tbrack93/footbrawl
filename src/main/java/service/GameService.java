@@ -1,7 +1,7 @@
 package service;
 
 import java.util.ArrayList;
-import java.util.Arrays; 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -27,10 +27,10 @@ public class GameService {
 	// for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
-	private static final int[][] TOPLEFTTHROW = {{0, 1}, {1,1}, {1,0}};
-	private static final int[][] TOPRIGHTTHROW = {{0,-1}, {1,-1}, {1,0}};
-	private static final int[][] BOTTOMLEFTTHROW = {{-1,0},{-1,1},{0,1}};
-	private static final int[][] BOTTOMRIGHTTHROW = {{-1,0}, {-1,-1},{0,-1}};
+	private static final int[][] TOPLEFTTHROW = { { 0, 1 }, { 1, 1 }, { 1, 0 } };
+	private static final int[][] TOPRIGHTTHROW = { { 0, -1 }, { 1, -1 }, { 1, 0 } };
+	private static final int[][] BOTTOMLEFTTHROW = { { -1, 0 }, { -1, 1 }, { 0, 1 } };
+	private static final int[][] BOTTOMRIGHTTHROW = { { -1, 0 }, { -1, -1 }, { 0, -1 } };
 	private Game game;
 	private int half;
 	private String phase;
@@ -58,7 +58,7 @@ public class GameService {
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
 	}
-		
+
 	public List<Tile> getNeighbours(Tile t) {
 		List<Tile> neighbours = new ArrayList<Tile>();
 		int row = t.getPosition()[0];
@@ -223,19 +223,19 @@ public class GameService {
 		Collections.reverse(route);
 		return route;
 	}
-	
+
 	public void showTravelPath(List<Tile> route) {
 		PlayerInGame p = route.get(0).getPlayer();
 		addTackleZones(p);
-		for (int i = 0; i <route.size(); i++) {
+		for (int i = 0; i < route.size(); i++) {
 			Tile t = route.get(i);
 			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
 			System.out.print(i > p.getRemainingMA() ? " Going For It: 2+" : "");
-			if (i>0) {
-				if (route.get(i-1).getTackleZones() != 0)
-					System.out.print(" Dodge: " + calculateDodge(p, route.get(i-1)) + "+");
+			if (i > 0) {
+				if (route.get(i - 1).getTackleZones() != 0)
+					System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
 			}
-			if(t.containsBall()) {
+			if (t.containsBall()) {
 				System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
 			}
 		}
@@ -288,15 +288,14 @@ public class GameService {
 					return;
 				}
 			}
-			if(tempT.containsBall()) {
+			if (tempT.containsBall()) {
 				pickUpBallAction(p);
-			}
-			else {
+			} else {
 				System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 			}
 		}
 	}
-	
+
 	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
 		List<Tile> tempR = new ArrayList<>(route);
 		int startingMA = p.getRemainingMA();
@@ -343,7 +342,7 @@ public class GameService {
 			return false;
 		}
 	}
-	
+
 	public int calculateDodge(PlayerInGame p, Tile from) {
 		addTackleZones(p);
 		int AG = p.getAG();
@@ -359,7 +358,7 @@ public class GameService {
 	public void knockDown(PlayerInGame p) {
 		p.setProne();
 		if (p.hasBall()) {
-			scatterBall(p.getTile());
+			scatterBall(p.getTile(), 1);
 			p.setHasBall(false);
 		}
 		int armour = p.getAV();
@@ -394,18 +393,23 @@ public class GameService {
 		// placeholder
 	}
 
-	public void scatterBall(Tile origin) {
+	// if times > 1 cannot try to catch until final scatter
+	public void scatterBall(Tile origin, int times) {
 		int value = diceRoller(1, 8)[0];
-		int[] direction = ADJACENT[value-1];
+		int[] direction = ADJACENT[value - 1];
 		int[] position = new int[] { origin.getPosition()[0] + direction[0], origin.getPosition()[1] + direction[1] };
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
 			System.out.println("Ball scattered to: " + position[0] + " " + position[1]);
+			if(times > 1) {
+				scatterBall(target, times - 1);
+				return;
+			}
 			if (target.containsPlayer()) {
 				if (target.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
 					catchBallAction(target.getPlayer(), false);
 				} else {
-					scatterBall(target); // if player can't catch, will scatter again
+					scatterBall(target, 1); // if player can't catch, will scatter again
 				}
 			} else {
 				origin.setContainsBall(false);
@@ -417,47 +421,93 @@ public class GameService {
 	}
 
 	public void catchBallAction(PlayerInGame player, boolean accuratePass) {
-      int needed = calculateCatch(player, accuratePass);
-      int roll = diceRoller(1, 6)[0];
-      System.out.println(player.getName() + " tries to catch the ball");
-      System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
-      if(roll >= needed) {
-    	  System.out.println(player.getName() + " caught the ball!");
-    	  player.setHasBall(true);
-      } else {
-    	  System.out.println(player.getName() + " failed to catch the ball!");
-    	  rerollCheck();
-    	  scatterBall(player.getTile());
-      }
+		int needed = calculateCatch(player, accuratePass);
+		int roll = diceRoller(1, 6)[0];
+		System.out.println(player.getName() + " tries to catch the ball");
+		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+		if (roll >= needed) {
+			System.out.println(player.getName() + " caught the ball!");
+			player.setHasBall(true);
+		} else {
+			System.out.println(player.getName() + " failed to catch the ball!");
+			rerollCheck();
+			scatterBall(player.getTile(), 1);
+		}
 	}
-	
+
 	public void pickUpBallAction(PlayerInGame player) {
-	  if(!player.getTile().containsBall()) {
-		  throw new IllegalArgumentException("Player not in square with the ball");
-	  }
-      int needed = calculatePickUpBall(player, player.getTile());
-      int roll = diceRoller(1, 6)[0];
-      System.out.println(player.getName() + " tries to pick up the ball");
-      System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
-      if(roll >= needed) {
-    	  System.out.println(player.getName() + " picked up the ball!");
-    	  player.setHasBall(true);
-      } else {
-    	  System.out.println(player.getName() + " failed to pick up the ball!");
-    	  rerollCheck();
-    	  scatterBall(player.getTile());
-      }
+		if (!player.getTile().containsBall()) {
+			throw new IllegalArgumentException("Player not in square with the ball");
+		}
+		int needed = calculatePickUpBall(player, player.getTile());
+		int roll = diceRoller(1, 6)[0];
+		System.out.println(player.getName() + " tries to pick up the ball");
+		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+		if (roll >= needed) {
+			System.out.println(player.getName() + " picked up the ball!");
+			player.setHasBall(true);
+		} else {
+			System.out.println(player.getName() + " failed to pick up the ball!");
+			rerollCheck();
+			scatterBall(player.getTile(), 1);
+		}
 	}
-	
+
+	public void throwBallAction(PlayerInGame player, Tile target) {
+		if (!player.hasBall()) {
+			throw new IllegalArgumentException("Player doesn't have the ball");
+		}
+		int needed = calculateThrow(player, player.getTile(), target);
+		int roll = diceRoller(1, 6)[0];
+		System.out.println(player.getName() + " tries to throw the ball");
+		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+		if(roll == 1) {
+			System.out.println(player.getName() + " fumbled the ball!");
+			rerollCheck();
+			scatterBall(player.getTile(), 1);
+		}
+		else if (roll >= needed) {
+			System.out.println(player.getName() + " threw the ball accurately!");
+			player.setHasBall(false);
+			if(target.containsPlayer()) {
+				catchBallAction(target.getPlayer(), true);
+			} else {
+				target.setContainsBall(true);
+			}
+		} else {
+			System.out.println(player.getName() + " threw the ball badly");
+			rerollCheck();
+			scatterBall(target, 3);
+		}
+	}
+
 	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
 		int extraModifier = accuratePass ? 1 : 0;
 		return calculateAgilityRoll(p, p.getTile(), extraModifier);
 	}
-	
+
 	public int calculatePickUpBall(PlayerInGame p, Tile location) {
 		return calculateAgilityRoll(p, location, 1);
 	}
-	
+
+	public int calculateThrow(PlayerInGame thrower, Tile from, Tile target) {
+		int[] origin = from.getPosition();
+		int[] destination = target.getPosition();
+		int distance = (int) Math.sqrt(((origin[0] - destination[0]) * (origin[0] - destination[0]))
+				+ ((origin[0] - destination[0]) * (origin[0] - destination[0])));
+		int distanceModifier = 0;// short pass
+		if (distance > 13) {
+			throw new IllegalArgumentException("Cannot throw more than 13 squares");
+		} else if (distance < 4) { // quick pass
+			distanceModifier = 1;
+		} else if (distance > 6 && distance < 11) { // long pass
+			distanceModifier = -1;
+		} else if (distance > 11) { // bomb
+			distanceModifier = -2;
+		}
+		return calculateAgilityRoll(thrower, from, distanceModifier);
+	}
+
 	public int calculateAgilityRoll(PlayerInGame p, Tile location, int extraModifier) {
 		addTackleZones(p);
 		int AG = p.getAG();
@@ -469,66 +519,63 @@ public class GameService {
 			result = 6; // roll of 6 always passes, no matter what
 		return result;
 	}
-	
-	//calculates throw direction, to save from having more constants
+
+	// calculates throw direction, to save from having more constants
 	// no apparent way to calculate for corners, so use constant arrays for these
 	public void ballOffPitch(Tile origin) {
-		System.out.println("Ball went off pitch from " + origin.getPosition()[0] + " "+
-	                       origin.getPosition()[1]);
+		System.out.println("Ball went off pitch from " + origin.getPosition()[0] + " " + origin.getPosition()[1]);
 		// determine which side/ orientation
 		int[] position = origin.getPosition();
 		int[] direction = new int[2];
-		int[][] corner = null; 
+		int[][] corner = null;
 		int shift = 1;
-		if(position[0] == 0) { // from top
-			if(position[1] == 0) {
+		if (position[0] == 0) { // from top
+			if (position[1] == 0) {
 				corner = TOPLEFTTHROW;
-			} 
-			else if(position[1] == 14) {
+			} else if (position[1] == 14) {
 				corner = TOPRIGHTTHROW;
 			} else {
 				direction[0] = 1;
 			}
 		}
-		if(position[0] == 25) { // from bottom
-			if(position[1] == 0) {
+		if (position[0] == 25) { // from bottom
+			if (position[1] == 0) {
 				corner = BOTTOMLEFTTHROW;
-			} 
-			else if(position[1] == 14) {
+			} else if (position[1] == 14) {
 				corner = BOTTOMRIGHTTHROW;
 			} else {
 				direction[0] = -1;
 			}
 		}
-		if(position[1] == 0) { // from left
+		if (position[1] == 0) { // from left
 			direction[1] = 1;
-            shift = 0;
+			shift = 0;
 		}
-		if(position[1] == 14) { // from right
+		if (position[1] == 14) { // from right
 			direction[1] = -1;
 			shift = 0;
 		}
 		// roll 1D3 to determine direction
 		int directionRoll = diceRoller(1, 3)[0];
-		if(corner != null) {
-			direction = corner[directionRoll -1];
+		if (corner != null) {
+			direction = corner[directionRoll - 1];
 		} else {
-		direction[shift] = directionRoll - 2;
+			direction[shift] = directionRoll - 2;
 		}
 		System.out.println("Rolled direction: " + directionRoll);
 		System.out.println("Direction: " + direction[0] + " " + direction[1]);
-		
+
 		// roll 2D6 to determine squares moved
 		int[] squares = diceRoller(2, 6);
 		int squaresTotal = squares[0] + squares[1];
 		System.out.println("Rolled to move " + squaresTotal + " squares");
-		int [] destination = Arrays.copyOf(position, 2);
-		
-		for(int i = 0; i<squaresTotal; i++) {
+		int[] destination = Arrays.copyOf(position, 2);
+
+		for (int i = 0; i < squaresTotal; i++) {
 			destination[0] = destination[0] + direction[0];
 			destination[1] = destination[1] + direction[1];
 			System.out.println("Ball flying to " + destination[0] + " " + destination[1]);
-			if(destination[0] <0 || destination[0] > 25 || destination[1]<0 || destination[1]>14) {
+			if (destination[0] < 0 || destination[0] > 25 || destination[1] < 0 || destination[1] > 14) {
 				System.out.println("Ball thrown off pitch again!");
 				System.out.println("Destination: " + destination[0] + " " + destination[1]);
 				destination[0] -= direction[0];
@@ -539,11 +586,11 @@ public class GameService {
 		}
 		Tile target = pitch[destination[0]][destination[1]];
 		System.out.println("Ball thrown to square " + destination[0] + " " + destination[1]);
-		if(target.containsPlayer()) {
-			if(target.getPlayer().hasTackleZones()) {
-			  catchBallAction(target.getPlayer(), false);}
-			else {
-				scatterBall(target);
+		if (target.containsPlayer()) {
+			if (target.getPlayer().hasTackleZones()) {
+				catchBallAction(target.getPlayer(), false);
+			} else {
+				scatterBall(target, 1);
 			}
 		} else {
 			target.setContainsBall(true);
@@ -553,7 +600,8 @@ public class GameService {
 	public void addTackleZones(PlayerInGame activePlayer) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = activePlayer.getTeam() == game.getTeam1().getId() ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
+		opponents = activePlayer.getTeam() == game.getTeam1().getId() ? team2.getPlayersOnPitch()
+				: team1.getPlayersOnPitch();
 		for (PlayerInGame p : opponents) {
 			if (p.hasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
@@ -578,8 +626,6 @@ public class GameService {
 			}
 		}
 	}
-
-
 
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
@@ -679,18 +725,20 @@ public class GameService {
 		Tile ballTile = gs.pitch[7][7];
 		ballTile.setContainsBall(true);
 		gs.pickUpBallAction(team1Players.get(0));
+		gs.throwBallAction(team1Players.get(0), gs.pitch[5][5]);
 		// gs.showPossibleMovement(team1Players.get(0))
 		// int[] goal = { 9, 9 };
-		//List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
-		//gs.showTravelPath(route);
+		// List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
+		// gs.showTravelPath(route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		//int[][] waypoints = { { 5, 6 }, { 7, 7 } };
-		//List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints, goal);
-		//gs.showTravelPath(route);
+		// int[][] waypoints = { { 5, 6 }, { 7, 7 } };
+		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
+		// goal);
+		// gs.showTravelPath(route);
 //		for(Tile t : route) {
 //			System.out.println(" Main: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
-		//gs.movePlayerRoute(team1Players.get(0), route);
+		// gs.movePlayerRoute(team1Players.get(0), route);
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
 		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
@@ -703,8 +751,8 @@ public class GameService {
 //		for(int i = 0; i<results.length; i++) {
 //			System.out.print(block[i] + " ");
 //		}
-        //Tile t = gs.pitch[25][14];
-       // gs.ballOffPitch(t);
-        
+		// Tile t = gs.pitch[25][14];
+		// gs.ballOffPitch(t);
+
 	}
 }
