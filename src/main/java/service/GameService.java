@@ -156,6 +156,7 @@ public class GameService {
 		}
 		origin.setWeightedDistance(0.0);
 		origin.setTotalDistance(0.0);
+	    origin.setMovementUsed(p.getStatus().equals("prone") ? 3 : 0); 
 		priorityQueue.add(origin);
 		Tile current = null;
 
@@ -230,10 +231,17 @@ public class GameService {
 	public void showTravelPath(List<Tile> route) {
 		PlayerInGame p = route.get(0).getPlayer();
 		addTackleZones(p);
+		int standingCost = 0;
+		if(p.getStatus().equals("prone")) {
+			standingCost = 3;
+		}
 		for (int i = 0; i < route.size(); i++) {
 			Tile t = route.get(i);
 			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
-			System.out.print(i > p.getRemainingMA() ? " Going For It: 2+" : "");
+			if(i == 0 && standingCost > 0) {
+				System.out.print(" Stand Up" + (p.getRemainingMA()<3 ? " 4+" : ""));
+			}
+			System.out.print(i + standingCost > p.getRemainingMA() && standingCost == 0 ? " Going For It: 2+" : "");
 			if (i > 0) {
 				if (route.get(i - 1).getTackleZones() != 0)
 					System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
@@ -273,6 +281,11 @@ public class GameService {
 	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
 		checkRouteValid(p, route);
+		if(p.getStatus().equals("prone")){
+			if(!standUpAction(p)){
+				return;
+			}
+		}
 		route.remove(0);
 		for (Tile t : route) {
 			Tile tempT = p.getTile();
@@ -291,11 +304,10 @@ public class GameService {
 					return;
 				}
 			}
-			if (tempT.containsBall()) {
+			System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
+			if (t.containsBall()) {
 				pickUpBallAction(p);
-			} else {
-				System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
-			}
+			} 
 		}
 	}
 
@@ -390,6 +402,25 @@ public class GameService {
 			System.out.println("Armour held");
 			return;
 		}
+	}
+	
+	public boolean standUpAction(PlayerInGame player) {
+		if(player.getStatus()!= "prone") {
+			throw new IllegalArgumentException("Can't stand up a player that isn't prone");
+		}
+		if(player.getRemainingMA()< 3) {
+			System.out.println(player.getName() + "tries to stand up.");
+			int rollResult = diceRoller(1,6)[0];
+			System.out.println("Needs a roll of 4+. Rolled " + rollResult);
+			if(rollResult < 4) {
+				System.out.println(player.getName() + " tried, but couldn't stand up");
+				return false;
+			}
+		}
+		player.setStatus("standing");
+		player.setRemainingMA(player.getRemainingMA() -3);
+		System.out.println(player.getName() + " stood up");
+		return true;
 	}
 
 	public void rerollCheck() {
@@ -793,7 +824,7 @@ public class GameService {
 	public static void main(String[] args) {
 		Player p = new Player();
 		p.setName("Billy");
-		p.setMA(4);
+		p.setMA(2);
 		p.setAG(2);
 		p.setTeam(1);
 		p.setST(6);
@@ -830,8 +861,8 @@ public class GameService {
 		gs.pitch[7][8].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
-		//team1Players.get(0).setStatus("prone");
-		Tile ballTile = gs.pitch[7][7];
+		team1Players.get(0).setStatus("prone");
+		Tile ballTile = gs.pitch[8][8];
 		ballTile.setContainsBall(true);
 		//gs.pickUpBallAction(team1Players.get(0));
 		//gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
@@ -845,10 +876,11 @@ public class GameService {
 		//List<PlayerInGame> interceptors = gs.calculatePossibleInterceptors(squares, team1Players.get(0));
 		//System.out.println(interceptors.size());
 		
-		gs.showPossibleMovement(team1Players.get(0));
-		// int[] goal = { 9, 9 };
-		// List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
+		//gs.showPossibleMovement(team1Players.get(0));
+		 int[] goal = { 8, 8 };
+		 List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 		// gs.showTravelPath(route);
+		 gs.movePlayerRoute(team1Players.get(0), route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		// int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
