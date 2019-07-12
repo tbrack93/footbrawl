@@ -510,6 +510,19 @@ public class GameService {
 			}
 		}
 	}
+	
+	public void handOffBallAction(PlayerInGame p, Tile target) {
+		if(!p.hasBall()) {
+			throw new IllegalArgumentException("Player doesn't have the ball");
+		}
+		if(!target.containsPlayer()) {
+			throw new IllegalArgumentException("Must hand off ball to a player");
+		}
+		System.out.println(p.getName() + " hands off the ball to " + target.getPlayer().getName());
+		p.setHasBall(false);
+		catchBallAction(target.getPlayer(), true);
+	}
+	
 
 	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
 		int extraModifier = accuratePass ? 1 : 0;
@@ -522,6 +535,13 @@ public class GameService {
 
 	public int calculatePickUpBall(PlayerInGame p, Tile location) {
 		return calculateAgilityRoll(p, location, 1);
+	}
+	
+    public int calculateHandOff(PlayerInGame p, Tile from, Tile target) {
+    	if(!target.containsPlayer()) {
+    		throw new IllegalArgumentException("Must hand off ball to a player");
+    	}
+		return calculateCatch(target.getPlayer(), true);
 	}
 
 	public int calculateThrow(PlayerInGame thrower, Tile from, Tile target) {
@@ -786,10 +806,11 @@ public class GameService {
 		p3.setTeam(2);
 		p3.setST(3);
 		Player p4 = new Player();
-		p3.setName("Sarah");
-		p3.setMA(3);
-		p3.setTeam(1);
-		p3.setST(3);
+		p4.setName("Sarah");
+		p4.setMA(3);
+		p4.setAG(4);
+		p4.setTeam(1);
+		p4.setST(3);
 		Team team1 = new Team("bobcats");
 		Team team2 = new Team("murderers");
 		team1.addPlayer(p);
@@ -803,13 +824,14 @@ public class GameService {
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
 		gs.pitch[7][7].addPlayer(team1Players.get(0));
-		gs.pitch[17][5].addPlayer(team1Players.get(1));
+		gs.pitch[7][8].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
 		Tile ballTile = gs.pitch[7][7];
 		ballTile.setContainsBall(true);
 		gs.pickUpBallAction(team1Players.get(0));
-		gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
+		gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
+		//gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
 
 		 List<Tile> squares = gs.calculateThrowTiles(team1Players.get(0),
 		 team1Players.get(0).getTile(), gs.pitch[3][3]);
