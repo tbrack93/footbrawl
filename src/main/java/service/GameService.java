@@ -11,8 +11,6 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
-import javax.print.attribute.standard.Destination;
-
 import entity.Game;
 import entity.Player;
 import entity.Team;
@@ -84,7 +82,12 @@ public class GameService {
 	public void showPossibleMovement(PlayerInGame p) {
 		resetTiles();
 		Tile position = p.getTile();
-		searchNeighbours(p, position, 0);
+		int cost = 0;
+		if(p.getStatus().equals("prone")) {
+			position.setCostToReach(3);
+			cost = 3;
+		}
+		searchNeighbours(p, position, cost);
 		for (int i = 0; i < 26; i++) {
 			for (int j = 0; j < 15; j++) {
 				Tile t = pitch[i][j];
@@ -118,7 +121,7 @@ public class GameService {
 					searchNeighbours(p, t, cost + 1);
 				}
 			} else if (t.getPlayer() == p) {
-				t.setCostToReach(0);
+				t.setCostToReach(p.getStatus().equals("prone") ? 3 : 0);
 			}
 		}
 	}
@@ -827,21 +830,22 @@ public class GameService {
 		gs.pitch[7][8].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
+		//team1Players.get(0).setStatus("prone");
 		Tile ballTile = gs.pitch[7][7];
 		ballTile.setContainsBall(true);
-		gs.pickUpBallAction(team1Players.get(0));
-		gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
+		//gs.pickUpBallAction(team1Players.get(0));
+		//gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
 		//gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
 
-		 List<Tile> squares = gs.calculateThrowTiles(team1Players.get(0),
-		 team1Players.get(0).getTile(), gs.pitch[3][3]);
+		// List<Tile> squares = gs.calculateThrowTiles(team1Players.get(0),
+		// team1Players.get(0).getTile(), gs.pitch[3][3]);
 //		for(Tile t : squares) {
 //			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
 		//List<PlayerInGame> interceptors = gs.calculatePossibleInterceptors(squares, team1Players.get(0));
 		//System.out.println(interceptors.size());
 		
-		// gs.showPossibleMovement(team1Players.get(0))
+		gs.showPossibleMovement(team1Players.get(0));
 		// int[] goal = { 9, 9 };
 		// List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 		// gs.showTravelPath(route);
