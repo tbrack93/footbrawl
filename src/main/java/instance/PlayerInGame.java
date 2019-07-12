@@ -21,6 +21,7 @@ public class PlayerInGame{
 		this.player = player;
 		hasTackleZones = true;
 		remainingMA = player.getMA();
+		status = "standing";
 	}
 	
 	public void newTurn() {
