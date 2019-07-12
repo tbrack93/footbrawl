@@ -401,7 +401,7 @@ public class GameService {
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
 			System.out.println("Ball scattered to: " + position[0] + " " + position[1]);
-			if(times > 1) {
+			if (times > 1) {
 				scatterBall(target, times - 1);
 				return;
 			}
@@ -434,6 +434,22 @@ public class GameService {
 			scatterBall(player.getTile(), 1);
 		}
 	}
+	
+	public boolean interceptBallAction(PlayerInGame player) {
+		int needed = calculateInterception(player);
+		int roll = diceRoller(1,6)[0];
+		System.out.println(player.getName() + " tries to intercept the ball");
+		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
+		if (roll >= needed) {
+			System.out.println(player.getName() + " intercepted the ball!");
+			player.setHasBall(true);
+			return true;
+		} else {
+			System.out.println(player.getName() + " failed to intercept the ball!");
+			rerollCheck();
+			return false;
+		}
+	}
 
 	public void pickUpBallAction(PlayerInGame player) {
 		if (!player.getTile().containsBall()) {
@@ -457,33 +473,51 @@ public class GameService {
 		if (!player.hasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
+		List<Tile> path = calculateThrowTiles(player, player.getTile(), target);
+		List<PlayerInGame> interceptors = calculatePossibleInterceptors(path, player);
+		PlayerInGame interceptor = null;
+		if (interceptors.size() > 1) {
+			requestInterceptor();
+		} else if (interceptors.size() == 1) {
+			interceptor = interceptors.get(0);
+		}
 		int needed = calculateThrow(player, player.getTile(), target);
 		int roll = diceRoller(1, 6)[0];
 		System.out.println(player.getName() + " tries to throw the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
-		if(roll == 1) {
+		if (roll == 1) {
 			System.out.println(player.getName() + " fumbled the ball!");
 			rerollCheck();
 			scatterBall(player.getTile(), 1);
-		}
-		else if (roll >= needed) {
-			System.out.println(player.getName() + " threw the ball accurately!");
-			player.setHasBall(false);
-			if(target.containsPlayer()) {
-				catchBallAction(target.getPlayer(), true);
-			} else {
-				target.setContainsBall(true);
-			}
 		} else {
-			System.out.println(player.getName() + " threw the ball badly");
-			rerollCheck();
-			scatterBall(target, 3);
+			if(interceptor != null) {
+				if(interceptBallAction(interceptor)) {
+				  return;
+				}
+			}
+			if (roll >= needed) {
+				System.out.println(player.getName() + " threw the ball accurately!");
+				player.setHasBall(false);
+				if (target.containsPlayer()) {
+					catchBallAction(target.getPlayer(), true);
+				} else {
+					target.setContainsBall(true);
+				}
+			} else {
+				System.out.println(player.getName() + " threw the ball badly");
+				rerollCheck();
+				scatterBall(target, 3);
+			}
 		}
 	}
 
 	public int calculateCatch(PlayerInGame p, boolean accuratePass) {
 		int extraModifier = accuratePass ? 1 : 0;
 		return calculateAgilityRoll(p, p.getTile(), extraModifier);
+	}
+
+	public int calculateInterception(PlayerInGame p) {
+		return calculateAgilityRoll(p, p.getTile(), -2);
 	}
 
 	public int calculatePickUpBall(PlayerInGame p, Tile location) {
@@ -493,6 +527,8 @@ public class GameService {
 	public int calculateThrow(PlayerInGame thrower, Tile from, Tile target) {
 		int[] origin = from.getPosition();
 		int[] destination = target.getPosition();
+		// rounds distance to target to nearest square (in a straight line, using
+		// Pythagoras' theorem)
 		int distance = (int) Math.sqrt(((origin[0] - destination[0]) * (origin[0] - destination[0]))
 				+ ((origin[0] - destination[0]) * (origin[0] - destination[0])));
 		int distanceModifier = 0;// short pass
@@ -505,7 +541,54 @@ public class GameService {
 		} else if (distance > 11) { // bomb
 			distanceModifier = -2;
 		}
+		List<Tile> path = calculateThrowTiles(thrower, from, target);
+		calculatePossibleInterceptors(path, thrower);
 		return calculateAgilityRoll(thrower, from, distanceModifier);
+	}
+
+	public List<PlayerInGame> calculatePossibleInterceptors(List<Tile> path, PlayerInGame thrower) {
+		List<PlayerInGame> interceptors = new ArrayList<>();
+		for (Tile t : path) {
+			if (t.containsPlayer() && t.getPlayer().getTeam() != thrower.getTeam() && t.getPlayer().hasTackleZones()) {
+				interceptors.add(t.getPlayer());
+				System.out.println("Possible interception by " + t.getPlayer().getName() + " at " + t.getPosition()[0]
+						+ " " + t.getPosition()[1] + " with a roll of " + calculateInterception(t.getPlayer()) + "+");
+			}
+		}
+		return interceptors;
+	}
+
+	public void requestInterceptor() {
+		// placeholder
+	}
+
+	// getting all squares that ball will travel over, for interception options
+	// uses enhanced version of Bresenham's line algorithm. Adapted from
+	// http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
+	public List<Tile> calculateThrowTiles(PlayerInGame thrower, Tile from, Tile target) {
+		List<Tile> squares = new ArrayList<>();
+		int x = from.getPosition()[0];
+		int y = from.getPosition()[1];
+		int xDistance = Math.abs(x - target.getPosition()[0]);
+		int yDistance = Math.abs(y - target.getPosition()[1]);
+		int n = 1 + xDistance + yDistance;
+		int xIncline = (target.getPosition()[0] > x) ? 1 : -1;
+		int yIncline = (target.getPosition()[1] > y) ? 1 : -1;
+		int error = xDistance - yDistance;
+		xDistance *= 2;
+		yDistance *= 2;
+
+		for (; n > 0; --n) {
+			squares.add(pitch[x][y]);
+			if (error > 0) {
+				x += xIncline;
+				error -= yDistance;
+			} else {
+				y += yIncline;
+				error += xDistance;
+			}
+		}
+		return squares;
 	}
 
 	public int calculateAgilityRoll(PlayerInGame p, Tile location, int extraModifier) {
@@ -693,6 +776,7 @@ public class GameService {
 		p.setST(6);
 		Player p2 = new Player();
 		p2.setName("Bobby");
+		p2.setAG(10);
 		p2.setMA(3);
 		p2.setTeam(2);
 		p2.setST(3);
@@ -725,7 +809,16 @@ public class GameService {
 		Tile ballTile = gs.pitch[7][7];
 		ballTile.setContainsBall(true);
 		gs.pickUpBallAction(team1Players.get(0));
-		gs.throwBallAction(team1Players.get(0), gs.pitch[5][5]);
+		gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
+
+		 List<Tile> squares = gs.calculateThrowTiles(team1Players.get(0),
+		 team1Players.get(0).getTile(), gs.pitch[3][3]);
+//		for(Tile t : squares) {
+//			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
+//		}
+		//List<PlayerInGame> interceptors = gs.calculatePossibleInterceptors(squares, team1Players.get(0));
+		//System.out.println(interceptors.size());
+		
 		// gs.showPossibleMovement(team1Players.get(0))
 		// int[] goal = { 9, 9 };
 		// List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
