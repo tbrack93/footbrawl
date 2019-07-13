@@ -124,6 +124,10 @@ public class PlayerInGame{
 	public List<Skill> getSkills() {
 		return player.getSkills();
 	}
+	
+	public boolean hasSkill(String name) {
+		return player.hasSkill(name);
+	}
 
 	public int getTeam() {
 		return player.getTeam();

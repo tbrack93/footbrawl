@@ -90,5 +90,13 @@ public class Player {
 		this.team = team;
 	}
 	
+	public boolean hasSkill(String name) {
+		for(Skill s : skills) {
+			if(s.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 }
