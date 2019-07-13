@@ -291,14 +291,19 @@ public class GameService {
 		return totalRoute;
 	}
 	
-    public void calculateBlitzRoute(PlayerInGame attacker, int[] goal) {
+    public void calculateBlitz(PlayerInGame attacker, int[][]waypoints, int[] goal) {
 		Tile target = pitch[goal[0]][goal[1]];
 		if(!target.containsPlayer() || target.getPlayer().getTeam() == attacker.getTeam()) {
 			throw new IllegalArgumentException("No opponent in target square");
 		}
 		PlayerInGame opponent = target.getPlayer();
 		target.removePlayer(); // temporarily remove opponent so can calculate best route there (blitz action uses 1 movement)
-		List<Tile> route = getOptimisedPath(attacker, goal);
+		List<Tile> route;
+		if(waypoints != null) {
+		   route = getRouteWithWaypoints(attacker, waypoints, goal);
+		} else {
+		  route = getOptimisedPath(attacker, goal);
+		}
 		route.remove(route.size()-1); // remove movement to opponent's square
 		target.addPlayer(opponent);
 		showTravelPath(route);
@@ -943,7 +948,9 @@ public class GameService {
 		
 		//gs.showPossibleMovement(team1Players.get(0));
 		 int[] goal = { 7, 7 };
-		 gs.calculateBlitzRoute(team1Players.get(0), goal);
+		 int[][] waypoints = {{5,7}};
+		// int[][] waypoints = null;
+		 gs.calculateBlitz(team1Players.get(0), waypoints, goal);
 		 //List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 	     //gs.showTravelPath(route);
 		// gs.movePlayerRouteAction(team1Players.get(0), route);
