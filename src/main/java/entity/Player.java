@@ -1,5 +1,6 @@
 package entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
@@ -15,7 +16,7 @@ public class Player {
 	private int team;
 	
 	public Player() {
-		
+		skills = new ArrayList<>();
 	}
 
 	public int getId() {
@@ -90,5 +91,13 @@ public class Player {
 		this.team = team;
 	}
 	
+	public boolean hasSkill(String name) {
+		for(Skill s : skills) {
+			if(s.getName().equals(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 }
