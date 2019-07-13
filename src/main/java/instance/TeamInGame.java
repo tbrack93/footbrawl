@@ -82,4 +82,8 @@ public class TeamInGame {
 		this.inducements = inducements;
 	}
 	
+	public int getId() {
+		return team.getId();
+	}
+	
 }

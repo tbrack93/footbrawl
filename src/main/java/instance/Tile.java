@@ -5,9 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import entity.Player;
-
-//not really an entity as not persisting
 public class Tile {
 
 	private int[] position;

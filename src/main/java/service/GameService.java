@@ -78,6 +78,20 @@ public class GameService {
 			}
 		}
 	}
+	
+	public void kickOff(TeamInGame kicking) {
+		// placeholder
+		// check if KO'd players can return
+		// team setup, starts with kicking team
+		// choose target to kick to. Must be in opponent's half
+		// roll on kick off table
+		// kick takes place, ball scatters
+		// receiving team's turn
+	}
+	
+	public void endOfHalf() {
+		//placeholder
+	}
 
 	public void showPossibleMovement(PlayerInGame p) {
 		resetTiles();
@@ -278,7 +292,7 @@ public class GameService {
 		return totalRoute;
 	}
 
-	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
+	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
 		checkRouteValid(p, route);
 		if(p.getStatus().equals("prone")){
@@ -306,8 +320,16 @@ public class GameService {
 			}
 			System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 			if (t.containsBall()) {
-				pickUpBallAction(p);
-			} 
+				if(!pickUpBallAction(p)) {
+					return;
+				};
+			}
+			if(p.hasBall()) { // checking if touchdown
+				if((t.getPosition()[0] == 0 && p.getTeam() == team2.getId()) ||
+					t.getPosition()[0] == 25 && p.getTeam() == team1.getId()) {
+					touchdown(p);
+				}
+			}
 		}
 	}
 
@@ -325,9 +347,11 @@ public class GameService {
 			}
 			p.decrementRemainingMA();
 			if (p.getRemainingMA() < -2) {
+				p.setRemainingMA(startingMA);
 				throw new IllegalArgumentException("Not enough movement to reach destination");
 			}
 		}
+		p.setRemainingMA(startingMA);
 	}
 
 	private boolean goingForItAction(PlayerInGame p, Tile tempT, Tile t) {
@@ -369,6 +393,26 @@ public class GameService {
 			result = 6; // roll of 6 always passes, no matter what
 		return result;
 	}
+	
+	public void touchdown(PlayerInGame p) {
+		System.out.println(p.getName() + " scored a touchdown!");
+		int team = p.getTeam();
+		TeamInGame tg = null;
+		if(team == team1.getId()) {
+			game.setTeam1Score(game.getTeam1Score() + 1);
+			tg = team1;
+			team1Turn++;
+		} else {
+			game.setTeam2Score(game.getTeam2Score() + 1);
+			tg = team2;
+			team2Turn++;
+		}
+		if(team1Turn > 8 || team2Turn > 8) {
+			endOfHalf();
+		} else {
+		kickOff(tg);
+		}
+	}
 
 	public void knockDown(PlayerInGame p) {
 		p.setProne();
@@ -409,6 +453,7 @@ public class GameService {
 			throw new IllegalArgumentException("Can't stand up a player that isn't prone");
 		}
 		if(player.getRemainingMA()< 3) {
+			System.out.println(player.getRemainingMA());
 			System.out.println(player.getName() + "tries to stand up.");
 			int rollResult = diceRoller(1,6)[0];
 			System.out.println("Needs a roll of 4+. Rolled " + rollResult);
@@ -485,7 +530,7 @@ public class GameService {
 		}
 	}
 
-	public void pickUpBallAction(PlayerInGame player) {
+	public boolean pickUpBallAction(PlayerInGame player) {
 		if (!player.getTile().containsBall()) {
 			throw new IllegalArgumentException("Player not in square with the ball");
 		}
@@ -496,10 +541,12 @@ public class GameService {
 		if (roll >= needed) {
 			System.out.println(player.getName() + " picked up the ball!");
 			player.setHasBall(true);
+			return true;
 		} else {
 			System.out.println(player.getName() + " failed to pick up the ball!");
 			rerollCheck();
 			scatterBall(player.getTile(), 1);
+			return false;
 		}
 	}
 
@@ -824,7 +871,7 @@ public class GameService {
 	public static void main(String[] args) {
 		Player p = new Player();
 		p.setName("Billy");
-		p.setMA(2);
+		p.setMA(3);
 		p.setAG(2);
 		p.setTeam(1);
 		p.setST(6);
@@ -857,12 +904,13 @@ public class GameService {
 		GameService gs = new GameService(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[7][7].addPlayer(team1Players.get(0));
+		gs.pitch[23][7].addPlayer(team1Players.get(0));
 		gs.pitch[7][8].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
 		gs.pitch[5][3].addPlayer(team2Players.get(1));
 		team1Players.get(0).setStatus("prone");
-		Tile ballTile = gs.pitch[8][8];
+		System.out.println(team1Players.get(0).getRemainingMA());
+		Tile ballTile = gs.pitch[24][7];
 		ballTile.setContainsBall(true);
 		//gs.pickUpBallAction(team1Players.get(0));
 		//gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
@@ -877,10 +925,10 @@ public class GameService {
 		//System.out.println(interceptors.size());
 		
 		//gs.showPossibleMovement(team1Players.get(0));
-		 int[] goal = { 8, 8 };
+		 int[] goal = { 25, 7 };
 		 List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 		// gs.showTravelPath(route);
-		 gs.movePlayerRoute(team1Players.get(0), route);
+		 gs.movePlayerRouteAction(team1Players.get(0), route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		// int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
