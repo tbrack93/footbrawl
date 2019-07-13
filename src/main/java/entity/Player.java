@@ -1,5 +1,6 @@
 package entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
@@ -15,7 +16,7 @@ public class Player {
 	private int team;
 	
 	public Player() {
-		
+		skills = new ArrayList<>();
 	}
 
 	public int getId() {

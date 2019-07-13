@@ -29,8 +29,8 @@ public class GameService {
 	private static final int[][] TOPRIGHTTHROW = { { 0, -1 }, { 1, -1 }, { 1, 0 } };
 	private static final int[][] BOTTOMLEFTTHROW = { { -1, 0 }, { -1, 1 }, { 0, 1 } };
 	private static final int[][] BOTTOMRIGHTTHROW = { { -1, 0 }, { -1, -1 }, { 0, -1 } };
-	private static final String[] BLOCK = { "Attacker Down", "Both Down", "Pushed", "Defender Stubmles",
-			"Defender Down" };
+	private static final String[] BLOCK = { "Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
+			"Defender Down" }; // pushes repeated as appears twice on block dice
 	private Game game;
 	private int half;
 	private String phase;
@@ -43,10 +43,12 @@ public class GameService {
 	private Tile[][] pitch;
 	private boolean waitingForPlayers;
 	private Queue<Runnable> queue;
+	private Tile ballToScatter;
 
 	public GameService(Game game) {
 		queue = new LinkedList<>();
 		dugout = new ArrayList<>();
+		ballToScatter = null;
 		this.game = game;
 		team1 = new TeamInGame(game.getTeam1());
 		team2 = new TeamInGame(game.getTeam2());
@@ -424,15 +426,15 @@ public class GameService {
 		int[] dice = calculateBlock(attacker, attacker.getTile(), defender);
 		int[] rolled = diceRoller(dice[0], 6);
 		for (int i : rolled) {
-			System.out.println("Rolled " + BLOCK[i]);
+			System.out.println("Rolled " + BLOCK[i-1]);
 		}
 		rerollCheck();
-		int choice = getBlockChoice(rolled, dice[1]); // get choice of dice from stronger player's user
-		System.out.print("Result: " + BLOCK[0]);
-		if (rolled[choice] == 0) { // attacker down
+		int result = rolled[getBlockChoice(rolled, dice[1])] -1; // get choice of dice from stronger player's user
+		System.out.println("Result: " + BLOCK[result]);
+		if (result == 0) { // attacker down
 			knockDown(attacker);
 			return;
-		} else if (rolled[choice] == 1) { // both down
+		} else if (result == 1) { // both down
 			if (defender.hasSkill("Block")) {
 				System.out.println(defender.getName() + " used block skill");
 			} else {
@@ -444,11 +446,19 @@ public class GameService {
 				knockDown(attacker);
 			}
 			return;
-		} else if (rolled[choice] == 2) { // push
+		} else if (result >= 2) { // push: 2 and 3
 			Tile follow = defender.getTile();
 			pushAction(attacker, defender, false);
 			if(followUp == true) {
 				followUp(attacker, follow);
+			}
+			if(result == 4 && !defender.hasSkill("dodge") || // defender stumbles
+			   result == 5) { // defender down
+				knockDown(defender);
+			}
+			if(ballToScatter != null) {
+				scatterBall(ballToScatter, 1);
+				ballToScatter = null;
 			}
 			return;
 		}
@@ -467,11 +477,14 @@ public class GameService {
 				Tile origin = defender.getTile();
 				pushChoice.addPlayer(defender);
 				origin.removePlayer();
+				System.out.println(defender.getName() + " is pushed back to " + 
+						   pushChoice.getPosition()[0] + " " +
+						   pushChoice.getPosition()[1]);
 				if(secondary == true) {
 					followUp(attacker, origin);
 				}
-				if(pushChoice.containsBall()) {
-					scatterBall(pushChoice, 1);
+				if(pushChoice.containsBall()) { 
+					ballToScatter = pushChoice; // scatter needs to happen after follow up and knockdown
 				}
 			}
 		}
@@ -955,7 +968,7 @@ public class GameService {
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
 	public int[] calculateBlock(PlayerInGame attacker, Tile from, PlayerInGame defender) {
-		if (from.getNeighbours().contains(defender.getTile())) {
+		if (!from.getNeighbours().contains(defender.getTile())) {
 			throw new IllegalArgumentException("Can only block an adjacent player");
 		}
 		;
@@ -1045,7 +1058,7 @@ public class GameService {
 		GameService gs = new GameService(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[6][7].addPlayer(team1Players.get(0));
+		gs.pitch[6][6].addPlayer(team1Players.get(0));
 		gs.pitch[7][8].addPlayer(team1Players.get(1));
 		gs.pitch[5][6].addPlayer(team2Players.get(0));
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
@@ -1071,8 +1084,8 @@ public class GameService {
 		// int[][] waypoints = {{5,7}};
 		// int[][] waypoints = null;
 		// gs.calculateBlitz(team1Players.get(0), waypoints, goal);
-		List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0), team2Players.get(0));
-
+		//List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0), team2Players.get(0));
+          gs.blockAction(team1Players.get(0), team2Players.get(0), false);
 		// List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 		// gs.showTravelPath(route);
 		// gs.movePlayerRouteAction(team1Players.get(0), route);
@@ -1081,9 +1094,9 @@ public class GameService {
 		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
 		// goal);
 		// gs.showTravelPath(route);
-		for (Tile t : pushes) {
-			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
-		}
+//		for (Tile t : pushes) {
+//			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
+//		}
 		// gs.movePlayerRoute(team1Players.get(0), route);
 		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
 		// gs.queue.remove().run();
