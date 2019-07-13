@@ -142,7 +142,7 @@ public class GameService {
 
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
-	public List<Tile> getOptimisedPath(PlayerInGame p, int[] goal) throws IllegalArgumentException {
+	public List<Tile> getOptimisedPath(PlayerInGame p, int[] goal) {
 		addTackleZones(p);
 		Tile origin = p.getTile();
 		// Tile origin = selectedPlayer.getTile();
@@ -280,7 +280,6 @@ public class GameService {
 				t.addPlayer(p);
 				forReset.add(t);
 			}
-
 		}
 		totalRoute.addAll(getOptimisedPath(p, goal));
 		p.setRemainingMA(startingMA);
@@ -290,6 +289,28 @@ public class GameService {
 		}
 		// queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		return totalRoute;
+	}
+	
+    public void calculateBlitz(PlayerInGame attacker, int[][]waypoints, int[] goal) {
+		Tile target = pitch[goal[0]][goal[1]];
+		if(!target.containsPlayer() || target.getPlayer().getTeam() == attacker.getTeam()) {
+			throw new IllegalArgumentException("No opponent in target square");
+		}
+		PlayerInGame opponent = target.getPlayer();
+		target.removePlayer(); // temporarily remove opponent so can calculate best route there (blitz action uses 1 movement)
+		List<Tile> route;
+		if(waypoints != null) {
+		   route = getRouteWithWaypoints(attacker, waypoints, goal);
+		} else {
+		  route = getOptimisedPath(attacker, goal);
+		}
+		route.remove(route.size()-1); // remove movement to opponent's square
+		target.addPlayer(opponent);
+		showTravelPath(route);
+		int[] block = calculateBlock(attacker, target, opponent);
+		System.out.println();
+		System.out.println("Blitz: " + block[0] + " dice, " + 
+		                  (block[1] == attacker.getTeam() ? "attacker" : "defender") + " chooses");
 	}
 
 	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
@@ -810,11 +831,12 @@ public class GameService {
 			}
 		}
 	}
+	
 
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
-	public int[] calculateBlock(PlayerInGame attacker, PlayerInGame defender) {
-		if (!attacker.getTile().getNeighbours().contains(defender.getTile())) {
+	public int[] calculateBlock(PlayerInGame attacker, Tile from, PlayerInGame defender) {
+		if (from.getNeighbours().contains(defender.getTile())) {
 			throw new IllegalArgumentException("Can only block an adjacent player");
 		}
 		;
@@ -828,7 +850,7 @@ public class GameService {
 		int dice = 1;
 		if (attStr >= defStr * 2 || defStr >= attStr * 2)
 			dice = 3;
-		if (attStr > defStr || defStr > attStr)
+		else if (attStr > defStr || defStr > attStr)
 			dice = 2;
 		return new int[] { dice, strongerTeam };
 	}
@@ -874,7 +896,7 @@ public class GameService {
 		p.setMA(3);
 		p.setAG(2);
 		p.setTeam(1);
-		p.setST(6);
+		p.setST(9);
 		Player p2 = new Player();
 		p2.setName("Bobby");
 		p2.setAG(10);
@@ -904,12 +926,12 @@ public class GameService {
 		GameService gs = new GameService(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[23][7].addPlayer(team1Players.get(0));
+		gs.pitch[5][6].addPlayer(team1Players.get(0));
 		gs.pitch[7][8].addPlayer(team1Players.get(1));
 		gs.pitch[5][5].addPlayer(team2Players.get(0));
-		gs.pitch[5][3].addPlayer(team2Players.get(1));
-		team1Players.get(0).setStatus("prone");
-		System.out.println(team1Players.get(0).getRemainingMA());
+		gs.pitch[7][7].addPlayer(team2Players.get(1));
+		//team1Players.get(0).setStatus("prone");
+		
 		Tile ballTile = gs.pitch[24][7];
 		ballTile.setContainsBall(true);
 		//gs.pickUpBallAction(team1Players.get(0));
@@ -925,10 +947,13 @@ public class GameService {
 		//System.out.println(interceptors.size());
 		
 		//gs.showPossibleMovement(team1Players.get(0));
-		 int[] goal = { 25, 7 };
-		 List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
-		// gs.showTravelPath(route);
-		 gs.movePlayerRouteAction(team1Players.get(0), route);
+		 int[] goal = { 7, 7 };
+		 int[][] waypoints = {{5,7}};
+		// int[][] waypoints = null;
+		 gs.calculateBlitz(team1Players.get(0), waypoints, goal);
+		 //List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
+	     //gs.showTravelPath(route);
+		// gs.movePlayerRouteAction(team1Players.get(0), route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		// int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
