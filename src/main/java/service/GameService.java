@@ -78,6 +78,20 @@ public class GameService {
 			}
 		}
 	}
+	
+	public void kickOff(TeamInGame kicking) {
+		// placeholder
+		// check if KO'd players can return
+		// team setup, starts with kicking team
+		// choose target to kick to. Must be in opponent's half
+		// roll on kick off table
+		// kick takes place, ball scatters
+		// receiving team's turn
+	}
+	
+	public void endOfHalf() {
+		//placeholder
+	}
 
 	public void showPossibleMovement(PlayerInGame p) {
 		resetTiles();
@@ -278,7 +292,7 @@ public class GameService {
 		return totalRoute;
 	}
 
-	public void movePlayerRoute(PlayerInGame p, List<Tile> route) {
+	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
 		checkRouteValid(p, route);
 		if(p.getStatus().equals("prone")){
@@ -307,7 +321,13 @@ public class GameService {
 			System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 			if (t.containsBall()) {
 				pickUpBallAction(p);
-			} 
+			}
+			if(p.hasBall()) { // checking if touchdown
+				if((t.getPosition()[0] == 0 && p.getTeam() == team2.getId()) ||
+					t.getPosition()[0] == 25 && p.getTeam() == team1.getId()) {
+					touchdown(p);
+				}
+			}
 		}
 	}
 
@@ -368,6 +388,25 @@ public class GameService {
 		if (result > 6)
 			result = 6; // roll of 6 always passes, no matter what
 		return result;
+	}
+	
+	public void touchdown(PlayerInGame p) {
+		int team = p.getTeam();
+		TeamInGame tg = null;
+		if(team == team1.getId()) {
+			game.setTeam1Score(game.getTeam1Score() + 1);
+			tg = team1;
+			team1Turn++;
+		} else {
+			game.setTeam2Score(game.getTeam2Score() + 1);
+			tg = team2;
+			team2Turn++;
+		}
+		if(team1Turn > 8 || team2Turn > 8) {
+			endOfHalf();
+		} else {
+		kickOff(tg);
+		}
 	}
 
 	public void knockDown(PlayerInGame p) {
@@ -880,7 +919,7 @@ public class GameService {
 		 int[] goal = { 8, 8 };
 		 List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
 		// gs.showTravelPath(route);
-		 gs.movePlayerRoute(team1Players.get(0), route);
+		 gs.movePlayerRouteAction(team1Players.get(0), route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
 		// int[][] waypoints = { { 5, 6 }, { 7, 7 } };
 		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
