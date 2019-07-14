@@ -37,6 +37,7 @@ public class GameService {
 	private int half;
 	private String phase;
 	private int activeTeam;
+    private PlayerInGame activePlayer;
 	private TeamInGame team1;
 	private TeamInGame team2;
 	private List<PlayerInGame> dugout; // for KO'd / injured players
@@ -49,13 +50,14 @@ public class GameService {
 	private Tile ballToScatter;
 
 	public GameService(Game game) {
-		queue = new LinkedList<>();
-		dugout = new ArrayList<>();
-		dungeon = new ArrayList<>();
-		ballToScatter = null;
 		this.game = game;
 		team1 = new TeamInGame(game.getTeam1());
 		team2 = new TeamInGame(game.getTeam2());
+		queue = new LinkedList<>();
+		dugout = new ArrayList<>();
+		dungeon = new ArrayList<>();
+		activePlayer = null;
+		ballToScatter = null;
 		pitch = new Tile[26][15];
 		for (int row = 0; row < 26; row++) {
 			for (int column = 0; column < 15; column++) {
@@ -102,6 +104,12 @@ public class GameService {
 	}
 
 	public void showPossibleMovement(PlayerInGame p) {
+		if(p != activePlayer && p.getTeam() == activeTeam) { // when new player selected will become the active player
+			if(activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already acted this turn, deselecting them ends their action 
+				endOfAction(activePlayer);
+				activePlayer = p;
+			}
+		}
 		resetTiles();
 		Tile position = p.getTile();
 		int cost = 0;
@@ -151,6 +159,7 @@ public class GameService {
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
 	public List<Tile> getOptimisedPath(PlayerInGame p, int[] goal) {
+		actionCheck(p);
 		addTackleZones(p);
 		Tile origin = p.getTile();
 		// Tile origin = selectedPlayer.getTile();
@@ -275,6 +284,7 @@ public class GameService {
 	}
 
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
+	    actionCheck(p);
 		int startingMA = p.getRemainingMA();
 		List<Tile> totalRoute = new ArrayList<>();
 		Tile origin = p.getTile();
@@ -300,18 +310,20 @@ public class GameService {
 	}
 
 	public void blitzAction(PlayerInGame attacker, int[][] waypoints, int[] goal, boolean followUp) {
+		actionCheck(attacker);
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
 		movePlayerRouteAction(attacker, route);
 		if (attacker.getStatus().equals("standing")) { // only if movement was successful
 			blockAction(attacker, defender, followUp);
-			if (attacker.getStatus() == "standing" && attacker.getRemainingMA() > -2) {
+			if (attacker.getStatus() == "standing") {
 				attacker.setActionOver(false); // player blitzing can move, etc. after
 			}
 		}
 	}
 
 	public void calculateBlitz(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+		actionCheck(attacker);
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame opponent = pitch[goal[0]][goal[1]].getPlayer();
 		showTravelPath(route);
@@ -341,9 +353,13 @@ public class GameService {
 	}
 	
 	public void foulAction(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+		actionCheck(attacker);
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
-		movePlayerRouteAction(attacker, route);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
+		if(defender.getTeam() == attacker.getTeam()) {
+			throw new IllegalArgumentException("Can't fould player on same team");
+		}
+		movePlayerRouteAction(attacker, route);
 		boolean refereeSees = false;
 		if(attacker.getStatus() == "standing") {
 			System.out.println(attacker.getName() + " fouls " + defender.getName());
@@ -380,10 +396,13 @@ public class GameService {
 		}
 		if(refereeSees == true) {
 			sendOff(attacker);
+		} else {
+			endOfAction(attacker);
 		}
 	}
 	
 	public void calculateFoul(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+		actionCheck(attacker);
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
 		if(defender.getStatus().contentEquals("standing")) {
@@ -414,8 +433,10 @@ public class GameService {
 	
 
 	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
+		actionCheck(p);
 		addTackleZones(p);
 		checkRouteValid(p, route);
+		p.setActedThisTurn(true);
 		if (p.getStatus().equals("prone")) {
 			if (!standUpAction(p)) {
 				return;
@@ -444,7 +465,6 @@ public class GameService {
 				if (!pickUpBallAction(p)) {
 					return;
 				}
-				;
 			}
 			if (p.hasBall()) { // checking if touchdown
 				if ((t.getPosition()[0] == 0 && p.getTeam() == team2.getId())
@@ -517,8 +537,9 @@ public class GameService {
 	}
 
 	public void blockAction(PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
-		System.out.println(attacker.getName() + " blocks " + defender.getName());
+		actionCheck(attacker);
 		int[] dice = calculateBlock(attacker, attacker.getTile(), defender);
+		System.out.println(attacker.getName() + " blocks " + defender.getName());
 		int[] rolled = diceRoller(dice[0], 6);
 		for (int i : rolled) {
 			System.out.println("Rolled " + BLOCK[i - 1]);
@@ -528,7 +549,6 @@ public class GameService {
 		System.out.println("Result: " + BLOCK[result]);
 		if (result == 0) { // attacker down
 			knockDown(attacker);
-			return;
 		} else if (result == 1) { // both down
 			if (defender.hasSkill("Block")) {
 				System.out.println(defender.getName() + " used block skill");
@@ -540,7 +560,6 @@ public class GameService {
 			} else {
 				knockDown(attacker);
 			}
-			return;
 		} else if (result >= 2) { // push: 2 and 3
 			Tile follow = defender.getTile();
 			pushAction(attacker, defender, false);
@@ -555,8 +574,33 @@ public class GameService {
 				scatterBall(ballToScatter, 1);
 				ballToScatter = null;
 			}
-			return;
 		}
+		endOfAction(attacker);
+	}
+	
+	// result: first element is dice to roll, second element id of team (user) to
+	// choose result
+	public int[] calculateBlock(PlayerInGame attacker, Tile from, PlayerInGame defender) {
+		actionCheck(attacker);
+		if (!from.getNeighbours().contains(defender.getTile())) {
+			throw new IllegalArgumentException("Can only block an adjacent player");
+		}
+		if (attacker.getTeam() == defender.getTeam()) {
+			throw new IllegalArgumentException("Cannot block player on same team");
+		}
+		if(defender.getStatus() != "standing") {
+			throw new IllegalArgumentException("Cannot block a player on the ground");
+		}
+		int[] assists = calculateAssists(attacker, defender);
+		int attStr = attacker.getST() + assists[0];
+		int defStr = defender.getST() + assists[1];
+		int strongerTeam = attStr >= defStr ? attacker.getTeam() : defender.getTeam();
+		int dice = 1;
+		if (attStr >= defStr * 2 || defStr >= attStr * 2)
+			dice = 3;
+		else if (attStr > defStr || defStr > attStr)
+			dice = 2;
+		return new int[] { dice, strongerTeam };
 	}
 
 	public void pushAction(PlayerInGame attacker, PlayerInGame defender, boolean secondary) {
@@ -800,6 +844,7 @@ public class GameService {
 	}
 
 	public void throwBallAction(PlayerInGame player, Tile target) {
+		actionCheck(player);
 		if (!player.hasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
@@ -839,9 +884,11 @@ public class GameService {
 				scatterBall(target, 3);
 			}
 		}
+		endOfAction(player);
 	}
 
 	public void handOffBallAction(PlayerInGame p, Tile target) {
+		actionCheck(p);
 		if (!p.hasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
@@ -874,6 +921,7 @@ public class GameService {
 	}
 
 	public int calculateThrow(PlayerInGame thrower, Tile from, Tile target) {
+		actionCheck(thrower);
 		int[] origin = from.getPosition();
 		int[] destination = target.getPosition();
 		// rounds distance to target to nearest square (in a straight line, using
@@ -1059,27 +1107,7 @@ public class GameService {
 		}
 	}
 
-	// result: first element is dice to roll, second element id of team (user) to
-	// choose result
-	public int[] calculateBlock(PlayerInGame attacker, Tile from, PlayerInGame defender) {
-		if (!from.getNeighbours().contains(defender.getTile())) {
-			throw new IllegalArgumentException("Can only block an adjacent player");
-		}
-		;
-		if (attacker.getTeam() == defender.getTeam()) {
-			throw new IllegalArgumentException("Cannot block player on same team");
-		}
-		int[] assists = calculateAssists(attacker, defender);
-		int attStr = attacker.getST() + assists[0];
-		int defStr = defender.getST() + assists[1];
-		int strongerTeam = attStr >= defStr ? attacker.getTeam() : defender.getTeam();
-		int dice = 1;
-		if (attStr >= defStr * 2 || defStr >= attStr * 2)
-			dice = 3;
-		else if (attStr > defStr || defStr > attStr)
-			dice = 2;
-		return new int[] { dice, strongerTeam };
-	}
+
 
 	public int[] calculateAssists(PlayerInGame attacker, PlayerInGame defender) {
 		attacker.setHasTackleZones(false);
@@ -1106,6 +1134,10 @@ public class GameService {
 		}
 		return support;
 	}
+	
+	public void endOfAction(PlayerInGame player) { // will involve informing front end
+		player.setActionOver(true);
+	}
 
 	public static int[] diceRoller(int quantity, int number) {
 		Random rand = new Random();
@@ -1114,6 +1146,19 @@ public class GameService {
 			result[i] = rand.nextInt(number) + 1;
 		}
 		return result;
+	}
+	
+	public void actionCheck(PlayerInGame p) {
+		if(p.getTeam() != activeTeam) {
+			throw new IllegalArgumentException("Not that player's turn");
+		}
+		if(p.getActionOver() == true) {
+			throw new IllegalArgumentException("That player's action has finished for this turn");
+		}
+		if(p.getStatus() == "stunned") {
+			throw new IllegalArgumentException("A stunned player cannot act");
+		}
+		
 	}
 
 	public static void main(String[] args) {
