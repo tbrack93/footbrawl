@@ -15,6 +15,7 @@ public class PlayerInGame{
 	private boolean hasTackleZones;
 	private boolean hasBall;
 	private Tile tile;
+	private TeamInGame teamIG;
 	
 	
 	public PlayerInGame(Player player) {
@@ -22,6 +23,14 @@ public class PlayerInGame{
 		hasTackleZones = true;
 		remainingMA = player.getMA();
 		status = "standing";
+	}
+	
+	public PlayerInGame(Player player, TeamInGame tig) {
+		this.player = player;
+		hasTackleZones = true;
+		remainingMA = player.getMA();
+		status = "standing";
+		teamIG = tig;
 	}
 	
 	public void newTurn() {
@@ -60,6 +69,7 @@ public class PlayerInGame{
 	}
 
 	public void setStatus(String status) {
+		hasTackleZones = status.equals("standing");
 		this.status = status;
 	}
 	
@@ -147,5 +157,15 @@ public class PlayerInGame{
 	public boolean getActionOver() {
 		return actionOver;
 	}
+
+	public TeamInGame getTeamIG() {
+		return teamIG;
+	}
+
+	public void setTeamIG(TeamInGame teamIG) {
+		this.teamIG = teamIG;
+	}
+	
+	
 	
 }
