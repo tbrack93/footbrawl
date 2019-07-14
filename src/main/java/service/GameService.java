@@ -31,14 +31,16 @@ public class GameService {
 	private static final int[][] BOTTOMLEFTTHROW = { { -1, 0 }, { -1, 1 }, { 0, 1 } };
 	private static final int[][] BOTTOMRIGHTTHROW = { { -1, 0 }, { -1, -1 }, { 0, -1 } };
 	private static final String[] BLOCK = { "Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
-			"Defender Down" }; // pushes repeated as appears twice on block dice
+			                                "Defender Down" }; // pushes repeated as appears twice on block dice
+	
 	private Game game;
 	private int half;
 	private String phase;
 	private int activeTeam;
 	private TeamInGame team1;
 	private TeamInGame team2;
-	private List<PlayerInGame> dugout;
+	private List<PlayerInGame> dugout; // for KO'd / injured players
+	private List<PlayerInGame> dungeon; // for sent off players
 	private int team1Turn;
 	private int team2Turn;
 	private Tile[][] pitch;
@@ -49,6 +51,7 @@ public class GameService {
 	public GameService(Game game) {
 		queue = new LinkedList<>();
 		dugout = new ArrayList<>();
+		dungeon = new ArrayList<>();
 		ballToScatter = null;
 		this.game = game;
 		team1 = new TeamInGame(game.getTeam1());
@@ -297,7 +300,7 @@ public class GameService {
 	}
 
 	public void blitzAction(PlayerInGame attacker, int[][] waypoints, int[] goal, boolean followUp) {
-		List<Tile> route = calculateBlitz(attacker, waypoints, goal);
+		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
 		movePlayerRouteAction(attacker, route);
 		if (attacker.getStatus().equals("standing")) { // only if movement was successful
@@ -308,7 +311,17 @@ public class GameService {
 		}
 	}
 
-	public List<Tile> calculateBlitz(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+	public void calculateBlitz(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
+		PlayerInGame opponent = pitch[goal[0]][goal[1]].getPlayer();
+		showTravelPath(route);
+		int[] block = calculateBlock(attacker, route.get(route.size() - 1), opponent);
+		System.out.println();
+		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
+				+ " chooses");
+	}
+	
+	public List<Tile> calculateBlitzRoute(PlayerInGame attacker, int[][]waypoints, int[]goal){
 		Tile target = pitch[goal[0]][goal[1]];
 		if (!target.containsPlayer() || target.getPlayer().getTeam() == attacker.getTeam()) {
 			throw new IllegalArgumentException("No opponent in target square");
@@ -324,13 +337,81 @@ public class GameService {
 		}
 		route.remove(route.size() - 1); // remove movement to opponent's square
 		target.addPlayer(opponent);
-		showTravelPath(route);
-		int[] block = calculateBlock(attacker, route.get(route.size() - 1), opponent);
-		System.out.println();
-		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
-				+ " chooses");
 		return route;
 	}
+	
+	public void foulAction(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
+		movePlayerRouteAction(attacker, route);
+		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
+		boolean refereeSees = false;
+		if(attacker.getStatus() == "standing") {
+			System.out.println(attacker.getName() + " fouls " + defender.getName());
+			int[] rolls = diceRoller(2, 6);
+			if(rolls[0] == rolls[1]) { 
+				refereeSees = true;
+			}
+			int total = rolls[0] + rolls[1];
+			if (total > defender.getAV()) {
+				System.out.println(defender.getName() + "'s armour was broken");
+				rolls = diceRoller(2, 6);
+				if(rolls[0] == rolls[1]) { 
+					refereeSees = true;
+				}
+				total = rolls[0] + rolls[1];
+				if (total <= 7) {
+					System.out.println(defender.getName() + " is stunned");
+					defender.setStatus("stunned");
+				} else {
+					// possibility to use apothecary, etc. here
+					defender.getTile().removePlayer();
+					dugout.add(defender);
+					if (total <= 9) {
+						System.out.println(defender.getName() + " is KO'd");
+						defender.setStatus("KO");
+					} else {
+						System.out.println(defender.getName() + " is injured");
+						defender.setStatus("injured");
+					}
+				}
+			} else {
+				System.out.println(defender.getName() + "'s armour held");
+			}
+		}
+		if(refereeSees == true) {
+			sendOff(attacker);
+		}
+	}
+	
+	public void calculateFoul(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
+		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
+		if(defender.getStatus().contentEquals("standing")) {
+			throw new IllegalArgumentException("Can only foul a player on the ground");
+		}
+		showTravelPath(route);
+		System.out.println();
+		int[] assists = calculateAssists(attacker, defender);
+		int modifier = assists[0] - assists[1];
+		if(modifier == 0) {
+			System.out.println("No armour roll modifier");
+		} else {
+		  System.out.println((modifier < 0 ? "" : "+") + modifier + " to armour roll");
+		}
+	}
+	
+	public void sendOff(PlayerInGame p) {
+		System.out.println("Referee saw " + p.getName() + " commiting a foul!");
+		System.out.println(p.getName() + " is sent off for the rest of the game.");
+		Tile location = p.getTile();
+		location.removePlayer();
+		dungeon.add(p);
+		if(p.hasBall()) {
+			p.setHasBall(false);
+			scatterBall(location, 1);
+		}
+	}
+	
 
 	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
 		addTackleZones(p);
@@ -580,10 +661,7 @@ public class GameService {
 
 	public void knockDown(PlayerInGame p) {
 		p.setProne();
-		if (p.hasBall()) {
-			p.setHasBall(false);
-			scatterBall(p.getTile(), 1);
-		}
+		Tile location = p.getTile();
 		int armour = p.getAV();
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
@@ -592,7 +670,10 @@ public class GameService {
 			injuryRoll(p);
 		} else {
 			System.out.println(p.getName() + "'s armour held");
-			return;
+		}
+		if (p.hasBall()) {
+			p.setHasBall(false);
+			scatterBall(location, 1);
 		}
 	}
 
@@ -1077,13 +1158,14 @@ public class GameService {
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
 		gs.pitch[6][6].addPlayer(team1Players.get(0));
-		gs.pitch[7][8].addPlayer(team1Players.get(1));
-		gs.pitch[6][8].addPlayer(team2Players.get(0));
+		gs.pitch[5][3].addPlayer(team1Players.get(1));
+		gs.pitch[7][5].addPlayer(team2Players.get(0));
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
-		// team1Players.get(0).setStatus("prone");
+		 team2Players.get(1).setStatus("prone");
 
-		Tile ballTile = gs.pitch[24][7];
-		ballTile.setContainsBall(true);
+		//Tile ballTile = gs.pitch[24][7];
+		//ballTile.setContainsBall(true);
+		 team1Players.get(0).setHasBall(true);
 		// gs.pickUpBallAction(team1Players.get(0));
 		// gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
 		// gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
@@ -1101,7 +1183,8 @@ public class GameService {
 		int[] goal = { 7, 7 };
 		int[][] waypoints = { { 5, 6 } };
 		// int[][] waypoints = null;
-		gs.blitzAction(team1Players.get(0), waypoints, goal, true);
+		//gs.blitzAction(team1Players.get(0), waypoints, goal, true);
+		gs.foulAction(team1Players.get(0), waypoints, goal);
 		// List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0),
 		// team2Players.get(0));
 		// gs.blockAction(team1Players.get(0), team2Players.get(0), false);
