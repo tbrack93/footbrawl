@@ -12,8 +12,14 @@ public class TeamInGame {
 	private List<PlayerInGame> reserves;
 	private List<PlayerInGame> playersOnPitch;
 	private List<PlayerInGame> dugout;
+	private List<PlayerInGame> dungeon;
 	private int turn;
 	private int teamRerolls;
+	// action limits (once per turn)
+	private boolean blitzed;
+	private boolean passed;
+	private boolean handedOff;
+	private boolean fouled;
 	private String inducements; // need to replace with real inducements
 	
 	public TeamInGame(Team team) {
@@ -22,7 +28,7 @@ public class TeamInGame {
 		playersOnPitch = new ArrayList<>();
 		dugout = new ArrayList<>();
 	    for(Player p : team.getPlayers()) {
-	    	playersOnPitch.add(new PlayerInGame(p)); // should start as reserves, but on pitch for testing
+	    	playersOnPitch.add(new PlayerInGame(p, this)); // should start as reserves, but on pitch for testing
 	    }
 	}
 
@@ -84,6 +90,46 @@ public class TeamInGame {
 	
 	public int getId() {
 		return team.getId();
+	}
+
+	public List<PlayerInGame> getDungeon() {
+		return dungeon;
+	}
+
+	public void setDungeon(List<PlayerInGame> dungeon) {
+		this.dungeon = dungeon;
+	}
+
+	public boolean hasBlitzed() {
+		return blitzed;
+	}
+
+	public void setBlitzed(boolean blitzed) {
+		this.blitzed = blitzed;
+	}
+
+	public boolean hasPassed() {
+		return passed;
+	}
+
+	public void setPassed(boolean passed) {
+		this.passed = passed;
+	}
+
+	public boolean hasHandedOff() {
+		return handedOff;
+	}
+
+	public void setHandedOff(boolean handedOff) {
+		this.handedOff = handedOff;
+	}
+
+	public boolean hasFouled() {
+		return fouled;
+	}
+
+	public void setFouled(boolean fouled) {
+		this.fouled = fouled;
 	}
 	
 }
