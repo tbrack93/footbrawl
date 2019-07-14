@@ -132,5 +132,9 @@ public class PlayerInGame{
 	public int getTeam() {
 		return player.getTeam();
 	}
+
+	public void setActionOver(boolean over) {
+		actionOver = over;
+	}
 	
 }
