@@ -53,8 +53,13 @@ public class Tile {
 	}
 
 	public void removePlayer() {
+		player.setTile(null);
 		this.player = null;
 		empty = containsBall;
+	}
+	
+	public void setPlayer(PlayerInGame p) {
+		this.player = p;
 	}
 
 	public void addBall() {
@@ -93,10 +98,6 @@ public class Tile {
 
 	public void moveTo() {
 		moveTo = true;
-	}
-
-	public String toString() {
-		return "" + (moveTo);
 	}
 
 	public int[] getPosition() {

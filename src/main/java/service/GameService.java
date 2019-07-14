@@ -40,10 +40,6 @@ public class GameService {
     private PlayerInGame activePlayer;
 	private TeamInGame team1;
 	private TeamInGame team2;
-	private List<PlayerInGame> dugout; // for KO'd / injured players
-	private List<PlayerInGame> dungeon; // for sent off players
-	private int team1Turn;
-	private int team2Turn;
 	private Tile[][] pitch;
 	private boolean waitingForPlayers;
 	private Queue<Runnable> queue;
@@ -54,8 +50,6 @@ public class GameService {
 		team1 = new TeamInGame(game.getTeam1());
 		team2 = new TeamInGame(game.getTeam2());
 		queue = new LinkedList<>();
-		dugout = new ArrayList<>();
-		dungeon = new ArrayList<>();
 		activePlayer = null;
 		ballToScatter = null;
 		pitch = new Tile[26][15];
@@ -101,6 +95,32 @@ public class GameService {
 
 	public void endOfHalf() {
 		// placeholder
+		// check if end of game & if winner
+		// if not start new half or extra time
+		// if extra time and no winner, go to penalty shoot out
+	}
+	
+	public void newHalf() {
+		// placeholder
+		// new kickoff with team that received start of last half
+		// team re-rolls reset
+		// some inducements may come into play here
+	}
+	
+	public void endTurn() { // may be additional steps or user actions at end of turn
+		activePlayer = null;
+		activeTeam.endTurn();
+		activeTeam = (activeTeam == team1 ? team2 : team1);
+		if(activeTeam.getTurn()==8) {
+			endOfHalf();
+		} else {
+			activeTeam.incrementTurn();
+			newTurn();
+		}
+	}
+	
+	public void newTurn() {
+		activeTeam.newTurn(); // reset players on pitch (able to move/ act)
 	}
 
 	public void showPossibleMovement(PlayerInGame p) {
@@ -301,10 +321,10 @@ public class GameService {
 		}
 		totalRoute.addAll(getOptimisedPath(p, goal));
 		p.setRemainingMA(startingMA);
-		origin.addPlayer(p);
-		for (Tile t : forReset) {
-			t.removePlayer();
+		for (Tile t : forReset) { 
+			t.setPlayer(null);
 		}
+		origin.addPlayer(p);
 		// queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		return totalRoute;
 	}
@@ -354,16 +374,18 @@ public class GameService {
 		} else {
 			route = getOptimisedPath(attacker, goal);
 		}
+		target = pitch[goal[0]][goal[1]];
+		//System.out.println(target);
 		route.remove(route.size() - 1); // remove movement to opponent's square
 		target.addPlayer(opponent);
 		return route;
 	}
 	
 	public void foulAction(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+		actionCheck(attacker);
 		if(attacker.getTeamIG().hasFouled()) {
 			throw new IllegalArgumentException("Can only attempt foul once per turn");
 		}
-		actionCheck(attacker);
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
 		if(defender.getTeam() == attacker.getTeam()) {
@@ -392,13 +414,14 @@ public class GameService {
 				} else {
 					// possibility to use apothecary, etc. here
 					defender.getTile().removePlayer();
-					dugout.add(defender);
 					if (total <= 9) {
 						System.out.println(defender.getName() + " is KO'd");
 						defender.setStatus("KO");
+						defender.getTeamIG().addToDugout(defender);
 					} else {
 						System.out.println(defender.getName() + " is injured");
 						defender.setStatus("injured");
+						defender.getTeamIG().addToInjured(defender);
 					}
 				}
 			} else {
@@ -438,7 +461,7 @@ public class GameService {
 		System.out.println(p.getName() + " is sent off for the rest of the game.");
 		Tile location = p.getTile();
 		location.removePlayer();
-		dungeon.add(p);
+		p.getTeamIG().addToDungeon(p);
 		if(p.hasBall()) {
 			p.setHasBall(false);
 			scatterBall(location, 1);
@@ -460,7 +483,7 @@ public class GameService {
 		for (Tile t : route) {
 			Tile tempT = p.getTile();
 			t.addPlayer(p);
-			tempT.removePlayer();
+			tempT.setPlayer(null);
 			p.decrementRemainingMA();
 			if (p.getRemainingMA() < 0) {
 				if (!goingForItAction(p, tempT, t)) {
@@ -678,7 +701,7 @@ public class GameService {
 			System.out.println(p.getName() + " was put back in reserves");
 			p.setStatus("standing");
 			p.getTile().removePlayer();
-			dugout.add(p);
+			p.getTeamIG().addToReserves(p);
 		}
 		if (p.hasBall()) {
 			p.setHasBall(false);
@@ -704,13 +727,13 @@ public class GameService {
 		if (team == team1) {
 			game.setTeam1Score(game.getTeam1Score() + 1);
 			tg = team1;
-			team1Turn++;
+			tg.incrementTurn();
 		} else {
 			game.setTeam2Score(game.getTeam2Score() + 1);
 			tg = team2;
-			team2Turn++;
+			tg.incrementTurn();
 		}
-		if (team1Turn > 8 || team2Turn > 8) {
+		if (team1.getTurn() > 8 || team2.getTurn() > 8) {
 			endOfHalf();
 		} else {
 			kickOff(tg);
@@ -743,15 +766,16 @@ public class GameService {
 			p.setStatus("stunned");
 		} else {
 			// possibility to use apothecary, etc. here
-			p.getTile().removePlayer();
-			dugout.add(p);
 			if (total <= 9) {
 				System.out.println(p.getName() + " is KO'd");
 				p.setStatus("KO");
+				p.getTeamIG().addToDugout(p);
 			} else {
 				System.out.println(p.getName() + " is injured");
 				p.setStatus("injured");
+				p.getTeamIG().addToInjured(p);
 			}
+			p.getTile().removePlayer();
 		}
 	}
 
@@ -1206,7 +1230,7 @@ public class GameService {
 		p3.setMA(3);
 		p3.setTeam(2);
 		p3.setST(3);
-		p3.setAV(7);
+		p3.setAV(11);
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		List<Skill> skills = new ArrayList<>();
 		skills.add(block);
@@ -1235,6 +1259,7 @@ public class GameService {
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
 		 team2Players.get(1).setStatus("prone");
          gs.setActiveTeam(gs.team1);
+        
         // gs.team1.setFouled(true);
 		//Tile ballTile = gs.pitch[24][7];
 		//ballTile.setContainsBall(true);
@@ -1258,6 +1283,12 @@ public class GameService {
 		// int[][] waypoints = null;
 		//gs.blitzAction(team1Players.get(0), waypoints, goal, true);
 		gs.foulAction(team1Players.get(0), waypoints, goal);
+		
+		 gs.endTurn();
+		 gs.endTurn();
+		 System.out.println(gs.activeTeam.getName());
+		 gs.foulAction(team1Players.get(0), waypoints, goal);
+		 
 		// List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0),
 		// team2Players.get(0));
 		// gs.blockAction(team1Players.get(0), team2Players.get(0), false);

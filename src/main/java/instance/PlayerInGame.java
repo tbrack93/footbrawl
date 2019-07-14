@@ -39,6 +39,13 @@ public class PlayerInGame{
 		actionOver = false;
 	}
 	
+	public void endTurn() {
+		if(status.equals("stunned")) {
+			status = "prone";
+		}
+		actionOver = true;
+	}
+	
 	public void setMA(int MA) {
 		player.setMA(MA);;
 		this.remainingMA = MA;

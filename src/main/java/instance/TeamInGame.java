@@ -11,11 +11,13 @@ public class TeamInGame {
 	private Team team; // related entity
 	private List<PlayerInGame> reserves;
 	private List<PlayerInGame> playersOnPitch;
-	private List<PlayerInGame> dugout;
-	private List<PlayerInGame> dungeon;
+	private List<PlayerInGame> dugout; // KO'd
+	private List<PlayerInGame> injured; // injured & dead
+	private List<PlayerInGame> dungeon; // sent off for fouling
 	private int turn;
 	private int teamRerolls;
 	// action limits (once per turn)
+	private boolean rerolled;
 	private boolean blitzed;
 	private boolean passed;
 	private boolean handedOff;
@@ -24,9 +26,12 @@ public class TeamInGame {
 	
 	public TeamInGame(Team team) {
 		this.team = team;
+		turn = 0;
 		reserves = new ArrayList<>();
 		playersOnPitch = new ArrayList<>();
+		injured = new ArrayList<>();
 		dugout = new ArrayList<>();
+		dungeon = new ArrayList<>();
 	    for(Player p : team.getPlayers()) {
 	    	playersOnPitch.add(new PlayerInGame(p, this)); // should start as reserves, but on pitch for testing
 	    }
@@ -47,6 +52,10 @@ public class TeamInGame {
 	public void setReserves(List<PlayerInGame> reserves) {
 		this.reserves = reserves;
 	}
+	
+	public void addToReserves(PlayerInGame player){
+		reserves.add(player);
+	}
 
 	public List<PlayerInGame> getPlayersOnPitch() {
 		return playersOnPitch;
@@ -54,6 +63,27 @@ public class TeamInGame {
 
 	public void setPlayersOnPitch(List<PlayerInGame> playersOnPitch) {
 		this.playersOnPitch = playersOnPitch;
+	}
+	
+	public void endTurn() {
+		for(PlayerInGame p : playersOnPitch) {
+			p.endTurn();
+		}
+	}
+	
+	public void newTurn() {
+		resetPlayersOnPitch();
+		rerolled = false;
+		fouled = false;
+		blitzed = false;
+		passed = false;
+		handedOff = false;
+	}
+	
+	public void resetPlayersOnPitch() {
+		for(PlayerInGame p : playersOnPitch) {
+			p.newTurn();
+		}
 	}
 
 	public List<PlayerInGame> getDugout() {
@@ -63,6 +93,10 @@ public class TeamInGame {
 	public void setDugout(List<PlayerInGame> dugout) {
 		this.dugout = dugout;
 	}
+	
+	public void addToDugout(PlayerInGame player) {
+		dugout.add(player);
+	}
 
 	public int getTurn() {
 		return turn;
@@ -70,6 +104,10 @@ public class TeamInGame {
 
 	public void setTurn(int turn) {
 		this.turn = turn;
+	}
+	
+	public void incrementTurn() {
+		turn++;
 	}
 
 	public int getTeamRerolls() {
@@ -98,6 +136,10 @@ public class TeamInGame {
 
 	public void setDungeon(List<PlayerInGame> dungeon) {
 		this.dungeon = dungeon;
+	}
+	
+	public void addToDungeon(PlayerInGame player) {
+		dungeon.add(player);
 	}
 
 	public boolean hasBlitzed() {
@@ -130,6 +172,30 @@ public class TeamInGame {
 
 	public void setFouled(boolean fouled) {
 		this.fouled = fouled;
+	}
+
+	public boolean hasRerolled() {
+		return rerolled;
+	}
+
+	public void setRerolled(boolean rerolled) {
+		this.rerolled = rerolled;
+	}
+
+	public List<PlayerInGame> getInjured() {
+		return injured;
+	}
+
+	public void setInjured(List<PlayerInGame> injured) {
+		this.injured = injured;
+	}
+	
+	public void addToInjured(PlayerInGame player) {
+		injured.add(player);
+	}
+	
+	public String getName() {
+		return team.getName();
 	}
 	
 }
