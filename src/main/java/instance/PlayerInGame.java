@@ -135,6 +135,17 @@ public class PlayerInGame{
 
 	public void setActionOver(boolean over) {
 		actionOver = over;
+		if(over == true) {
+			remainingMA = -5;
+		}
+	}
+
+	public boolean getActedThisTurn() {
+		return actedThisTurn;
+	}
+
+	public boolean getActionOver() {
+		return actionOver;
 	}
 	
 }
