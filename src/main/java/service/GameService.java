@@ -152,7 +152,7 @@ public class GameService {
 		// kick takes place, ball scatters
 		// receiving team's turn
 	}
-	
+
 	public void getTeamSetup(TeamInGame team) {
 		// placeholder
 		// ask team to setup
@@ -188,7 +188,7 @@ public class GameService {
 				receivingSetupDone = true;
 				getKickChoice(activeTeam);
 			}
-			
+
 		}
 	}
 
@@ -294,7 +294,7 @@ public class GameService {
 			}
 		}
 	}
-	
+
 	public void kickBall(int[] target) {
 		phase = "kick";
 		Tile goal = pitch[target[0]][target[1]];
@@ -307,7 +307,8 @@ public class GameService {
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			goal = pitch[position[0]][position[1]];
 			System.out.println("Ball flew to: " + position[0] + " " + position[1]);
-			if (activeTeam == team2 && goal.getPosition()[0] > 12 || activeTeam == team1 && goal.getPosition()[0] < 13) {
+			if (activeTeam == team2 && goal.getPosition()[0] > 12
+					|| activeTeam == team1 && goal.getPosition()[0] < 13) {
 				System.out.println("Ball landed on kicking team's side, so receivers are given the ball");
 				getTouchBack(activeTeam == team1 ? team2 : team1);
 			}
@@ -321,7 +322,8 @@ public class GameService {
 				scatterBall(goal, 1); // will need a message to inform front end of this ball movement
 			}
 			Tile scatteredTo = ballLocationCheck();
-			if (activeTeam == team2 && scatteredTo.getPosition()[0] > 12 || activeTeam == team1 && scatteredTo.getPosition()[0] < 13) {
+			if (activeTeam == team2 && scatteredTo.getPosition()[0] > 12
+					|| activeTeam == team1 && scatteredTo.getPosition()[0] < 13) {
 				System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
 				getTouchBack(activeTeam == team1 ? team2 : team1);
 			}
@@ -336,12 +338,41 @@ public class GameService {
 		// placeholder
 		// for relevant user to specify which player to be given ball
 	}
-	
+
 	public void endOfHalf() {
 		// placeholder
+		if (half == 1) {
+			newHalf();
+		} else if (half == 2) {
+			if (game.getTeam1Score() == game.getTeam2Score()) {
+				extraTime();
+			} else {
+				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+			}
+		} else if (half == 3){
+			if (game.getTeam1Score() == game.getTeam2Score()) {
+				penaltyShootOuts();
+			}
+		} else {
+			endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+		}
 		// check if end of game & if winner
 		// if not start new half or extra time
 		// if extra time and no winner, go to penalty shoot out
+	}
+
+	public void endGame(TeamInGame winners) {
+		System.out.println(winners.getName() + " won the match!");
+		// with database, will save result
+		// in league will need to update league points
+	}
+
+	public void extraTime() {
+
+	}
+
+	public void penaltyShootOuts() {
+
 	}
 
 	public void newHalf() {
@@ -350,7 +381,7 @@ public class GameService {
 		team1.resetRerolls();
 		team2.resetRerolls();
 		// new kickoff with team that received start of last half
-
+		kickOff(lastKickOff == team1 ? team2 : team1);
 		// some inducements may come into play here
 	}
 
