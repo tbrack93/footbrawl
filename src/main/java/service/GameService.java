@@ -31,19 +31,21 @@ public class GameService {
 	private static final int[][] BOTTOMLEFTTHROW = { { -1, 0 }, { -1, 1 }, { 0, 1 } };
 	private static final int[][] BOTTOMRIGHTTHROW = { { -1, 0 }, { -1, -1 }, { 0, -1 } };
 	private static final String[] BLOCK = { "Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
-			                                "Defender Down" }; // pushes repeated as appears twice on block dice
-	
+			"Defender Down" }; // pushes repeated as appears twice on block dice
+
 	private Game game;
 	private int half;
 	private String phase;
 	private TeamInGame activeTeam;
-    private PlayerInGame activePlayer;
+	private PlayerInGame activePlayer;
 	private TeamInGame team1;
 	private TeamInGame team2;
 	private Tile[][] pitch;
 	private boolean waitingForPlayers;
 	private Queue<Runnable> queue;
 	private Tile ballToScatter;
+	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
+								// chain of events
 
 	public GameService(Game game) {
 		this.game = game;
@@ -99,33 +101,43 @@ public class GameService {
 		// if not start new half or extra time
 		// if extra time and no winner, go to penalty shoot out
 	}
-	
+
 	public void newHalf() {
 		// placeholder
 		// new kickoff with team that received start of last half
 		// team re-rolls reset
 		// some inducements may come into play here
 	}
-	
+
+	public void turnover() {
+		System.out.println(activeTeam.getName() + " suffered a turnover");
+		endTurn();
+	}
+
 	public void endTurn() { // may be additional steps or user actions at end of turn
+		inPassOrHandOff = false;
 		activePlayer = null;
 		activeTeam.endTurn();
 		activeTeam = (activeTeam == team1 ? team2 : team1);
-		if(activeTeam.getTurn()==8) {
+		if (activeTeam.getTurn() == 8) {
 			endOfHalf();
 		} else {
 			activeTeam.incrementTurn();
 			newTurn();
 		}
 	}
-	
+
 	public void newTurn() {
 		activeTeam.newTurn(); // reset players on pitch (able to move/ act)
 	}
 
 	public void showPossibleMovement(PlayerInGame p) {
-		if(p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active player
-			if(activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already acted this turn, deselecting them ends their action 
+		if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
+																// player
+			if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already
+																							// acted this turn,
+																							// deselecting them ends
+																							// their action
 				endOfAction(activePlayer);
 				activePlayer = p;
 			}
@@ -304,7 +316,7 @@ public class GameService {
 	}
 
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
-	    actionCheck(p);
+		actionCheck(p);
 		int startingMA = p.getRemainingMA();
 		List<Tile> totalRoute = new ArrayList<>();
 		Tile origin = p.getTile();
@@ -321,7 +333,7 @@ public class GameService {
 		}
 		totalRoute.addAll(getOptimisedPath(p, goal));
 		p.setRemainingMA(startingMA);
-		for (Tile t : forReset) { 
+		for (Tile t : forReset) {
 			t.setPlayer(null);
 		}
 		origin.addPlayer(p);
@@ -331,7 +343,7 @@ public class GameService {
 
 	public void blitzAction(PlayerInGame attacker, int[][] waypoints, int[] goal, boolean followUp) {
 		actionCheck(attacker);
-		if(attacker.getTeamIG().hasBlitzed()) {
+		if (attacker.getTeamIG().hasBlitzed()) {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
@@ -348,7 +360,7 @@ public class GameService {
 
 	public void calculateBlitz(PlayerInGame attacker, int[][] waypoints, int[] goal) {
 		actionCheck(attacker);
-		if(attacker.getTeamIG().hasBlitzed()) {
+		if (attacker.getTeamIG().hasBlitzed()) {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
@@ -359,8 +371,8 @@ public class GameService {
 		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
 				+ " chooses");
 	}
-	
-	public List<Tile> calculateBlitzRoute(PlayerInGame attacker, int[][]waypoints, int[]goal){
+
+	public List<Tile> calculateBlitzRoute(PlayerInGame attacker, int[][] waypoints, int[] goal) {
 		Tile target = pitch[goal[0]][goal[1]];
 		if (!target.containsPlayer() || target.getPlayer().getTeam() == attacker.getTeam()) {
 			throw new IllegalArgumentException("No opponent in target square");
@@ -375,36 +387,38 @@ public class GameService {
 			route = getOptimisedPath(attacker, goal);
 		}
 		target = pitch[goal[0]][goal[1]];
-		//System.out.println(target);
+		// System.out.println(target);
 		route.remove(route.size() - 1); // remove movement to opponent's square
 		target.addPlayer(opponent);
 		return route;
 	}
-	
-	public void foulAction(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+
+	public void foulAction(PlayerInGame attacker, int[][] waypoints, int[] goal) {
 		actionCheck(attacker);
-		if(attacker.getTeamIG().hasFouled()) {
+		if (attacker.getTeamIG().hasFouled()) {
 			throw new IllegalArgumentException("Can only attempt foul once per turn");
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
-		if(defender.getTeam() == attacker.getTeam()) {
+		if (defender.getTeam() == attacker.getTeam()) {
 			throw new IllegalArgumentException("Can't foul player on same team");
 		}
+		int[] assists = calculateAssists(attacker, defender);
+		int modifier = assists[0] - assists[1];
 		attacker.getTeamIG().setFouled(true);
 		movePlayerRouteAction(attacker, route);
 		boolean refereeSees = false;
-		if(attacker.getStatus() == "standing") {
+		if (attacker.getStatus() == "standing") {
 			System.out.println(attacker.getName() + " fouls " + defender.getName());
 			int[] rolls = diceRoller(2, 6);
-			if(rolls[0] == rolls[1]) { 
+			if (rolls[0] == rolls[1]) {
 				refereeSees = true;
 			}
-			int total = rolls[0] + rolls[1];
+			int total = rolls[0] + rolls[1] + modifier;
 			if (total > defender.getAV()) {
 				System.out.println(defender.getName() + "'s armour was broken");
 				rolls = diceRoller(2, 6);
-				if(rolls[0] == rolls[1]) { 
+				if (rolls[0] == rolls[1]) {
 					refereeSees = true;
 				}
 				total = rolls[0] + rolls[1];
@@ -428,46 +442,47 @@ public class GameService {
 				System.out.println(defender.getName() + "'s armour held");
 			}
 		}
-		if(refereeSees == true) {
+		if (refereeSees == true) {
+			System.out.println("Referee saw " + attacker.getName() + " commiting a foul!");
+			// need to add logic for bribes
 			sendOff(attacker);
 		} else {
 			endOfAction(attacker);
 		}
 	}
-	
-	public void calculateFoul(PlayerInGame attacker, int[][]waypoints, int[]goal) {
+
+	public void calculateFoul(PlayerInGame attacker, int[][] waypoints, int[] goal) {
 		actionCheck(attacker);
-		if(attacker.getTeamIG().hasFouled()) {
+		if (attacker.getTeamIG().hasFouled()) {
 			throw new IllegalArgumentException("Can only attempt foul once per turn");
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
-		if(defender.getStatus().contentEquals("standing")) {
+		if (defender.getStatus().contentEquals("standing")) {
 			throw new IllegalArgumentException("Can only foul a player on the ground");
 		}
 		showTravelPath(route);
 		System.out.println();
 		int[] assists = calculateAssists(attacker, defender);
 		int modifier = assists[0] - assists[1];
-		if(modifier == 0) {
+		if (modifier == 0) {
 			System.out.println("No armour roll modifier");
 		} else {
-		  System.out.println((modifier < 0 ? "" : "+") + modifier + " to armour roll");
+			System.out.println((modifier < 0 ? "" : "+") + modifier + " to armour roll");
 		}
 	}
-	
+
 	public void sendOff(PlayerInGame p) {
-		System.out.println("Referee saw " + p.getName() + " commiting a foul!");
 		System.out.println(p.getName() + " is sent off for the rest of the game.");
 		Tile location = p.getTile();
 		location.removePlayer();
 		p.getTeamIG().addToDungeon(p);
-		if(p.hasBall()) {
+		if (p.hasBall()) {
 			p.setHasBall(false);
 			scatterBall(location, 1);
 		}
+		turnover();
 	}
-	
 
 	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
 		actionCheck(p);
@@ -487,19 +502,19 @@ public class GameService {
 			p.decrementRemainingMA();
 			if (p.getRemainingMA() < 0) {
 				if (!goingForItAction(p, tempT, t)) {
-					rerollCheck();
 					return;
 				}
 			}
 			if (tempT.getTackleZones() != 0) {
 				if (!dodgeAction(p, tempT, t)) {
-					rerollCheck();
+					turnover();
 					return;
 				}
 			}
 			System.out.println(p.getName() + " moved to: " + t.getPosition()[0] + " " + t.getPosition()[1]);
 			if (t.containsBall()) {
 				if (!pickUpBallAction(p)) {
+					turnover();
 					return;
 				}
 			}
@@ -540,6 +555,9 @@ public class GameService {
 			return true;
 		} else {
 			System.out.println(p.getName() + " went for it and tripped!");
+			if (rerollCheck() == true) {
+				return goingForItAction(p, tempT, t);
+			}
 			knockDown(p);
 			return false;
 		}
@@ -556,6 +574,9 @@ public class GameService {
 		} else {
 			System.out.println(p.getName() + " failed to dodge and was tripped into " + to.getPosition()[0] + " "
 					+ to.getPosition()[1]);
+			if (rerollCheck() == true) {
+				return dodgeAction(p, from, to);
+			}
 			knockDown(p);
 			return false;
 		}
@@ -607,14 +628,17 @@ public class GameService {
 					result == 5) { // defender down
 				knockDown(defender);
 			}
-			if (ballToScatter != null) {
+			if (ballToScatter != null) { // ball has to scatter after all other actions
 				scatterBall(ballToScatter, 1);
 				ballToScatter = null;
 			}
 		}
 		endOfAction(attacker);
+		if(attacker.getStatus()!= "standing") {
+			turnover();
+		}
 	}
-	
+
 	// result: first element is dice to roll, second element id of team (user) to
 	// choose result
 	public int[] calculateBlock(PlayerInGame attacker, Tile from, PlayerInGame defender) {
@@ -625,7 +649,7 @@ public class GameService {
 		if (attacker.getTeam() == defender.getTeam()) {
 			throw new IllegalArgumentException("Cannot block player on same team");
 		}
-		if(defender.getStatus() != "standing") {
+		if (defender.getStatus() != "standing") {
 			throw new IllegalArgumentException("Cannot block a player on the ground");
 		}
 		int[] assists = calculateAssists(attacker, defender);
@@ -706,6 +730,9 @@ public class GameService {
 		if (p.hasBall()) {
 			p.setHasBall(false);
 			scatterBall(p.getTile(), 1);
+			if(p.getTeamIG() == activeTeam) {
+				turnover();
+			}
 		}
 	}
 
@@ -799,7 +826,8 @@ public class GameService {
 		return true;
 	}
 
-	public void rerollCheck() {
+	public boolean rerollCheck() {
+		return false;
 		// placeholder
 	}
 
@@ -838,10 +866,21 @@ public class GameService {
 		if (roll >= needed) {
 			System.out.println(player.getName() + " caught the ball!");
 			player.setHasBall(true);
+			if (player.getTeamIG() != activeTeam) {
+				turnover();
+				return;
+			}
 		} else {
 			System.out.println(player.getName() + " failed to catch the ball!");
 			rerollCheck();
 			scatterBall(player.getTile(), 1);
+			if (!inPassOrHandOff) {
+				Tile scatteredTo = ballLocationCheck();
+				if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
+					turnover(); // only a turnover if ball is not caught by player on active team before comes to
+								// rest
+				}
+			}
 		}
 	}
 
@@ -875,7 +914,9 @@ public class GameService {
 			return true;
 		} else {
 			System.out.println(player.getName() + " failed to pick up the ball!");
-			rerollCheck();
+			if (rerollCheck() == true) {
+				return pickUpBallAction(player);
+			}
 			scatterBall(player.getTile(), 1);
 			return false;
 		}
@@ -886,11 +927,10 @@ public class GameService {
 		if (!thrower.hasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
-		if(thrower.getTeamIG().hasPassed()) {
+		if (thrower.getTeamIG().hasPassed()) {
 			throw new IllegalArgumentException("Can only attempt pass once per turn");
 		}
 		List<Tile> path = calculateThrowTiles(thrower, thrower.getTile(), target);
-		thrower.getTeamIG().setPassed(true); // counts as pass action for turn even if fails
 		List<PlayerInGame> interceptors = calculatePossibleInterceptors(path, thrower);
 		PlayerInGame interceptor = null;
 		if (interceptors.size() > 1) {
@@ -899,6 +939,7 @@ public class GameService {
 			interceptor = interceptors.get(0);
 		}
 		int needed = calculateThrow(thrower, thrower.getTile(), target);
+		inPassOrHandOff = true;
 		int roll = diceRoller(1, 6)[0];
 		System.out.println(thrower.getName() + " tries to throw the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
@@ -909,6 +950,7 @@ public class GameService {
 		} else {
 			if (interceptor != null) {
 				if (interceptBallAction(interceptor)) {
+					turnover();
 					return;
 				}
 			}
@@ -924,8 +966,15 @@ public class GameService {
 				System.out.println(thrower.getName() + " threw the ball badly");
 				rerollCheck();
 				scatterBall(target, 3);
+				Tile scatteredTo = ballLocationCheck();
+				if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
+					turnover(); // only a turnover if is not caught by player on same team before comes to rest
+					return;
+				}
 			}
 		}
+		thrower.getTeamIG().setPassed(true);
+		inPassOrHandOff = false;
 		endOfAction(thrower);
 	}
 
@@ -937,7 +986,7 @@ public class GameService {
 		if (!target.containsPlayer()) {
 			throw new IllegalArgumentException("Must hand off ball to a player");
 		}
-		if(player.getTeamIG().hasHandedOff()) {
+		if (player.getTeamIG().hasHandedOff()) {
 			throw new IllegalArgumentException("Can only hand off ball once per turn");
 		}
 		player.getTeamIG().setHandedOff(true);
@@ -968,7 +1017,7 @@ public class GameService {
 
 	public int calculateThrow(PlayerInGame thrower, Tile from, Tile target) {
 		actionCheck(thrower);
-		if(thrower.getTeamIG().hasPassed()) {
+		if (thrower.getTeamIG().hasPassed()) {
 			throw new IllegalArgumentException("Can only attempt pass once per turn");
 		}
 		int[] origin = from.getPosition();
@@ -1129,8 +1178,7 @@ public class GameService {
 	public void addTackleZones(PlayerInGame activePlayer) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = activePlayer.getTeamIG() == team1 ? team2.getPlayersOnPitch()
-				: team1.getPlayersOnPitch();
+		opponents = activePlayer.getTeamIG() == team1 ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
 		for (PlayerInGame p : opponents) {
 			if (p.hasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
@@ -1181,7 +1229,7 @@ public class GameService {
 		}
 		return support;
 	}
-	
+
 	public void endOfAction(PlayerInGame player) { // will involve informing front end
 		player.setActionOver(true);
 	}
@@ -1194,22 +1242,32 @@ public class GameService {
 		}
 		return result;
 	}
-	
+
 	public void actionCheck(PlayerInGame p) {
-		if(p.getTeamIG() != activeTeam) {
+		if (p.getTeamIG() != activeTeam) {
 			throw new IllegalArgumentException("Not that player's turn");
 		}
-		if(p.getActionOver() == true) {
+		if (p.getActionOver() == true) {
 			throw new IllegalArgumentException("That player's action has finished for this turn");
 		}
-		if(p.getStatus() == "stunned") {
+		if (p.getStatus() == "stunned") {
 			throw new IllegalArgumentException("A stunned player cannot act");
 		}
-		
 	}
-	
+
 	public void setActiveTeam(TeamInGame team) {
 		activeTeam = team;
+	}
+
+	public Tile ballLocationCheck() {
+		for (Tile[] array : pitch) {
+			for (Tile t : array) {
+				if (t.containsBall() || t.containsPlayer() && t.getPlayer().hasBall()) {
+					return t;
+				}
+			}
+		}
+		return null; // should be impossible during main gameplay
 	}
 
 	public static void main(String[] args) {
@@ -1257,13 +1315,13 @@ public class GameService {
 		gs.pitch[5][3].addPlayer(team1Players.get(1));
 		gs.pitch[7][5].addPlayer(team2Players.get(0));
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
-		 team2Players.get(1).setStatus("prone");
-         gs.setActiveTeam(gs.team1);
-        
-        // gs.team1.setFouled(true);
-		//Tile ballTile = gs.pitch[24][7];
-		//ballTile.setContainsBall(true);
-		 team1Players.get(0).setHasBall(true);
+		team2Players.get(1).setStatus("prone");
+		gs.setActiveTeam(gs.team1);
+
+		// gs.team1.setFouled(true);
+		// Tile ballTile = gs.pitch[24][7];
+		// ballTile.setContainsBall(true);
+		team1Players.get(0).setHasBall(true);
 		// gs.pickUpBallAction(team1Players.get(0));
 		// gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
 		// gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
@@ -1281,14 +1339,14 @@ public class GameService {
 		int[] goal = { 7, 7 };
 		int[][] waypoints = { { 5, 6 } };
 		// int[][] waypoints = null;
-		//gs.blitzAction(team1Players.get(0), waypoints, goal, true);
+		// gs.blitzAction(team1Players.get(0), waypoints, goal, true);
 		gs.foulAction(team1Players.get(0), waypoints, goal);
-		
-		 gs.endTurn();
-		 gs.endTurn();
-		 System.out.println(gs.activeTeam.getName());
-		 gs.foulAction(team1Players.get(0), waypoints, goal);
-		 
+
+		gs.endTurn();
+		gs.endTurn();
+		System.out.println(gs.activeTeam.getName());
+		gs.foulAction(team1Players.get(0), waypoints, goal);
+
 		// List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0),
 		// team2Players.get(0));
 		// gs.blockAction(team1Players.get(0), team2Players.get(0), false);
