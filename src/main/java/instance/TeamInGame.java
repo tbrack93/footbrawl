@@ -15,7 +15,7 @@ public class TeamInGame {
 	private List<PlayerInGame> injured; // injured & dead
 	private List<PlayerInGame> dungeon; // sent off for fouling
 	private int turn;
-	private int teamRerolls;
+	private int remainingTeamRerolls;
 	// action limits (once per turn)
 	private boolean rerolled;
 	private boolean blitzed;
@@ -27,6 +27,7 @@ public class TeamInGame {
 	public TeamInGame(Team team) {
 		this.team = team;
 		turn = 0;
+		remainingTeamRerolls = team.getTeamRerolls();
 		reserves = new ArrayList<>();
 		playersOnPitch = new ArrayList<>();
 		injured = new ArrayList<>();
@@ -55,6 +56,7 @@ public class TeamInGame {
 	
 	public void addToReserves(PlayerInGame player){
 		reserves.add(player);
+		if(player.getTile() != null) player.getTile().removePlayer();
 	}
 
 	public List<PlayerInGame> getPlayersOnPitch() {
@@ -63,6 +65,10 @@ public class TeamInGame {
 
 	public void setPlayersOnPitch(List<PlayerInGame> playersOnPitch) {
 		this.playersOnPitch = playersOnPitch;
+	}
+	
+	public void addPlayerOnPitch(PlayerInGame player) {
+		playersOnPitch.add(player);
 	}
 	
 	public void endTurn() {
@@ -96,6 +102,11 @@ public class TeamInGame {
 	
 	public void addToDugout(PlayerInGame player) {
 		dugout.add(player);
+		playersOnPitch.remove(player);
+	}
+	
+	public void removeFromDugout(PlayerInGame player) {
+		dugout.remove(player);
 	}
 
 	public int getTurn() {
@@ -110,22 +121,29 @@ public class TeamInGame {
 		turn++;
 	}
 
-	public int getTeamRerolls() {
-		return teamRerolls;
+	public int getRemainingTeamRerolls() {
+		return remainingTeamRerolls;
 	}
 
 	public void setTeamRerolls(int teamRerolls) {
-		this.teamRerolls = teamRerolls;
+		this.remainingTeamRerolls = teamRerolls;
+	}
+	
+	public void useReroll() {
+		if(remainingTeamRerolls == 0) {
+			throw new IllegalArgumentException("No rerolls to use");
+		}
+		remainingTeamRerolls--;
+	}
+	
+	public void resetRerolls() {
+		remainingTeamRerolls = team.getTeamRerolls();
 	}
 
 	public String getInducements() {
 		return inducements;
 	}
 
-	public void setInducements(String inducements) {
-		this.inducements = inducements;
-	}
-	
 	public int getId() {
 		return team.getId();
 	}
@@ -140,6 +158,7 @@ public class TeamInGame {
 	
 	public void addToDungeon(PlayerInGame player) {
 		dungeon.add(player);
+		playersOnPitch.remove(player);
 	}
 
 	public boolean hasBlitzed() {
@@ -192,10 +211,12 @@ public class TeamInGame {
 	
 	public void addToInjured(PlayerInGame player) {
 		injured.add(player);
+		playersOnPitch.remove(player);
 	}
 	
 	public String getName() {
 		return team.getName();
 	}
+	
 	
 }
