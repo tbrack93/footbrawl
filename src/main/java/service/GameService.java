@@ -35,6 +35,7 @@ public class GameService {
 
 	private Game game;
 	private int half;
+	private TeamInGame lastKickOff;
 	private String phase;
 	private TeamInGame activeTeam;
 	private PlayerInGame activePlayer;
@@ -42,10 +43,12 @@ public class GameService {
 	private TeamInGame team2;
 	private Tile[][] pitch;
 	private boolean waitingForPlayers;
+	private boolean kickingSetupDone;
+	private boolean receivingSetupDone;
 	private Queue<Runnable> queue;
 	private Tile ballToScatter;
 	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
-								// chain of events
+	// chain of events
 
 	public GameService(Game game) {
 		this.game = game;
@@ -85,27 +88,300 @@ public class GameService {
 		}
 	}
 
-	public void kickOff(TeamInGame kicking) {
+	public void startGame() {
+		half = 1;
+		// send both player details of teams
+		coinToss();
+	}
+
+	public void coinToss() {
+		TeamInGame winner;
+		TeamInGame loser;
+		if (diceRoller(1, 2)[0] == 1) {
+			winner = team1;
+			loser = team2;
+		} else {
+			winner = team2;
+			loser = team1;
+		}
+		System.out.println(winner.getName() + " won the coin toss!");
+		TeamInGame kicking = chooseKickOff(winner) ? winner : loser;
+		lastKickOff = kicking;
+		kickOff(kicking);
+	}
+
+	public boolean chooseKickOff(TeamInGame chooser) {
 		// placeholder
-		// check if KO'd players can return
+		// ask relevant user if they want to kick (true) or receive (false) to start
+		return true;
+	}
+
+	public void kickOff(TeamInGame kicking) {
+		if (!(half == 1 && game.getTeam1Score() == 0 && game.getTeam2Score() == 0)) { // no KO's if first kickoff
+			checkKOs();
+		}
+		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
+			TeamInGame emptyTeam;
+			TeamInGame otherTeam;
+			if (team1.getReserves().size() == 0) {
+				emptyTeam = team1;
+				otherTeam = team2;
+			} else {
+				emptyTeam = team2;
+				otherTeam = team1;
+			}
+			System.out.println(emptyTeam.getName() + " has no players to put on pitch.");
+			System.out.println(otherTeam.getName() + " is awarded an extra touchdown.");
+			System.out
+					.println("Teams wait 2 turns to see if any of " + emptyTeam.getName() + "'s KO'd players wake up.");
+			team1.incrementTurn();
+			team1.incrementTurn();
+			team2.incrementTurn();
+			team2.incrementTurn();
+			if (team1.getTurn() > 8 || team2.getTurn() > 8) {
+				newHalf();
+			} else {
+				kickOff(kicking);
+			}
+		}
+		activeTeam = kicking;
+		getTeamSetup(kicking);
 		// team setup, starts with kicking team
 		// choose target to kick to. Must be in opponent's half
-		// roll on kick off table
+		// roll on kick off table (low priority)
 		// kick takes place, ball scatters
 		// receiving team's turn
 	}
 
+	public void getTeamSetup(TeamInGame team) {
+		// placeholder
+		// ask team to setup
+	}
+
+	public void playerPlacement(PlayerInGame player, int[] position) {
+		if (player.getTeamIG() != activeTeam) {
+			throw new IllegalArgumentException("Not your setup phase");
+		}
+		Tile target = pitch[position[0]][position[1]];
+		if (checkValidPlacement(player, target)) {
+			if (target.containsPlayer()) {
+				PlayerInGame tempP = target.getPlayer();
+				if (player.getTile() != null) { // swap if both already on pitch
+					Tile tempT = player.getTile();
+					tempT.addPlayer(tempP);
+				} else {
+					player.getTeamIG().addToReserves(tempP); // otherwise put existing player back in reserves
+				}
+				target.addPlayer(player);
+				player.getTeamIG().addPlayerOnPitch(player);
+			}
+		}
+	}
+
+	public void endTeamSetup(TeamInGame team) {
+		if (checkTeamSetupValid(team)) {
+			activeTeam = activeTeam == team1 ? team2 : team1;
+			if (kickingSetupDone == false) {
+				kickingSetupDone = true;
+				getTeamSetup(activeTeam);
+			} else {
+				receivingSetupDone = true;
+				getKickChoice(activeTeam);
+			}
+
+		}
+	}
+
+	public void getKickChoice(TeamInGame kicking) {
+		// placeholder
+		// ask relevant user where they want to kick ball to
+	}
+
+	public boolean checkTeamSetupValid(TeamInGame team) {
+		if (team.getPlayersOnPitch().size() < 11 && !team.getReserves().isEmpty()) {
+			throw new IllegalArgumentException("Must place 11 players on pitch, or as many as you can");
+		}
+		int wideZone1 = 0;
+		int wideZone2 = 0;
+		int scrimmage = 0;
+		for (PlayerInGame p : team.getPlayersOnPitch()) {
+			if (p.getTile().getPosition()[1] >= 0 && p.getTile().getPosition()[1] <= 3) {
+				wideZone1++;
+			} else if (p.getTile().getPosition()[1] >= 10 && p.getTile().getPosition()[1] <= 14) {
+				wideZone2++;
+			} else if (team == team1 && p.getTile().getPosition()[0] == 12
+					|| team == team2 && p.getTile().getPosition()[0] == 13) {
+				scrimmage++;
+			}
+		}
+		if (wideZone1 >= 2 || wideZone2 >= 2) {
+			throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
+		}
+		if (scrimmage < 3 && team.getPlayersOnPitch().size() + team.getReserves().size() >= 3) {
+			throw new IllegalArgumentException(
+					"Must have at least 3 players on line of scrimmage, or as many as you can");
+		}
+		return true;
+	}
+
+	public void playerPlacementRemove(PlayerInGame player) {
+		if (player.getTeamIG() != activeTeam) {
+			throw new IllegalArgumentException("Not your setup phase");
+		}
+		player.getTeamIG().addToReserves(player);
+	}
+
+	public boolean checkValidPlacement(PlayerInGame player, Tile target) {
+		TeamInGame team = player.getTeamIG();
+		if (!target.containsPlayer()) {
+			if (team.getPlayersOnPitch().size() >= 11) {
+				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
+			}
+			if (target.getPosition()[1] >= 0 && target.getPosition()[1] <= 3) {
+				int wideZone1 = 0;
+				for (PlayerInGame p : team.getPlayersOnPitch()) {
+					if (p.getTile().getPosition()[1] >= 0 && p.getTile().getPosition()[1] <= 3) {
+						wideZone1++;
+					}
+				}
+				if (wideZone1 >= 2) {
+					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
+				}
+			} else if (target.getPosition()[1] >= 10 && target.getPosition()[1] <= 14) {
+				int wideZone2 = 0;
+				for (PlayerInGame p : team.getPlayersOnPitch()) {
+					if (p.getTile().getPosition()[1] >= 10 && p.getTile().getPosition()[1] <= 14) {
+						wideZone2++;
+					}
+				}
+				if (wideZone2 >= 2) {
+					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
+				}
+			}
+			if (team == team1 && target.getPosition()[0] > 12 || team == team2 && target.getPosition()[0] < 13) {
+				throw new IllegalArgumentException("Must be placed in your half of the pitch");
+			}
+		}
+		return true; // if contains a player (on right side), must be valid for other checks
+	}
+
+	public void checkKOs() {
+		System.out.println("Checking if KO'd players wake up");
+		if (team1.getDugout().isEmpty()) {
+			System.out.println("Team 1 has no KO'd players");
+		} else {
+			for (PlayerInGame p : team1.getDugout()) {
+				if (diceRoller(1, 6)[0] >= 4) {
+					team1.addToReserves(p);
+					team1.removeFromDugout(p);
+					System.out.println(p.getName() + " wakes up and joins the rest of his team");
+				} else {
+					System.out.println(p.getName() + " is still KO'd");
+				}
+			}
+		}
+		if (team2.getDugout().isEmpty()) {
+			System.out.println("Team 1 has no KO'd players");
+		} else {
+			for (PlayerInGame p : team2.getDugout()) {
+				if (diceRoller(1, 6)[0] >= 4) {
+					team1.addToReserves(p);
+					team1.removeFromDugout(p);
+					System.out.println(p.getName() + " wakes up and joins the rest of his team");
+				} else {
+					System.out.println(p.getName() + " is still KO'd");
+				}
+			}
+		}
+	}
+
+	public void kickBall(int[] target) {
+		phase = "kick";
+		Tile goal = pitch[target[0]][target[1]];
+		if (activeTeam == team2 && goal.getPosition()[0] > 12 || activeTeam == team1 && goal.getPosition()[0] < 13) {
+			throw new IllegalArgumentException("Must kick to opponent's half of the pitch");
+		}
+		int value = diceRoller(1, 8)[0];
+		int[] direction = ADJACENT[value - 1];
+		int[] position = new int[] { goal.getPosition()[0] + direction[0], goal.getPosition()[1] + direction[1] };
+		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
+			goal = pitch[position[0]][position[1]];
+			System.out.println("Ball flew to: " + position[0] + " " + position[1]);
+			if (activeTeam == team2 && goal.getPosition()[0] > 12
+					|| activeTeam == team1 && goal.getPosition()[0] < 13) {
+				System.out.println("Ball landed on kicking team's side, so receivers are given the ball");
+				getTouchBack(activeTeam == team1 ? team2 : team1);
+			}
+			if (goal.containsPlayer()) {
+				if (goal.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
+					catchBallAction(goal.getPlayer(), false);
+				} else {
+					scatterBall(goal, 1); // if player can't catch, will scatter again
+				}
+			} else {
+				scatterBall(goal, 1); // will need a message to inform front end of this ball movement
+			}
+			Tile scatteredTo = ballLocationCheck();
+			if (activeTeam == team2 && scatteredTo.getPosition()[0] > 12
+					|| activeTeam == team1 && scatteredTo.getPosition()[0] < 13) {
+				System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
+				getTouchBack(activeTeam == team1 ? team2 : team1);
+			}
+		}
+		phase = "main game";
+		activeTeam = (activeTeam == team1 ? team2 : team1);
+		activeTeam.incrementTurn();
+		newTurn();
+	}
+
+	public void getTouchBack(TeamInGame team) {
+		// placeholder
+		// for relevant user to specify which player to be given ball
+	}
+
 	public void endOfHalf() {
 		// placeholder
+		if (half == 1) {
+			newHalf();
+		} else if (half == 2) {
+			if (game.getTeam1Score() == game.getTeam2Score()) {
+				extraTime();
+			} else {
+				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+			}
+		} else if (half == 3){
+			if (game.getTeam1Score() == game.getTeam2Score()) {
+				penaltyShootOuts();
+			}
+		} else {
+			endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+		}
 		// check if end of game & if winner
 		// if not start new half or extra time
 		// if extra time and no winner, go to penalty shoot out
 	}
 
+	public void endGame(TeamInGame winners) {
+		System.out.println(winners.getName() + " won the match!");
+		// with database, will save result
+		// in league will need to update league points
+	}
+
+	public void extraTime() {
+
+	}
+
+	public void penaltyShootOuts() {
+
+	}
+
 	public void newHalf() {
 		// placeholder
-		// new kickoff with team that received start of last half
 		// team re-rolls reset
+		team1.resetRerolls();
+		team2.resetRerolls();
+		// new kickoff with team that received start of last half
+		kickOff(lastKickOff == team1 ? team2 : team1);
 		// some inducements may come into play here
 	}
 
@@ -334,7 +610,7 @@ public class GameService {
 		totalRoute.addAll(getOptimisedPath(p, goal));
 		p.setRemainingMA(startingMA);
 		for (Tile t : forReset) {
-			t.setPlayer(null);
+			t.removePlayer();
 		}
 		origin.addPlayer(p);
 		// queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
@@ -378,8 +654,10 @@ public class GameService {
 			throw new IllegalArgumentException("No opponent in target square");
 		}
 		PlayerInGame opponent = target.getPlayer();
-		target.removePlayer(); // temporarily remove opponent so can calculate best route there (blitz action
+		target.removePlayer(); // temporarily remove opponent from tile so can calculate best route there
+								// (blitz action
 								// uses 1 movement)
+		opponent.setTile(target); // but player needs to keep tile to prevent null exception
 		List<Tile> route;
 		if (waypoints != null) {
 			route = getRouteWithWaypoints(attacker, waypoints, goal);
@@ -387,7 +665,6 @@ public class GameService {
 			route = getOptimisedPath(attacker, goal);
 		}
 		target = pitch[goal[0]][goal[1]];
-		// System.out.println(target);
 		route.remove(route.size() - 1); // remove movement to opponent's square
 		target.addPlayer(opponent);
 		return route;
@@ -519,7 +796,7 @@ public class GameService {
 				}
 			}
 			if (p.hasBall()) { // checking if touchdown
-				if ((t.getPosition()[0] == 0 && p.getTeam() == team2.getId())
+				if ((t.getPosition()[0] == 0 && p.getTeamIG() == team2)
 						|| t.getPosition()[0] == 25 && p.getTeamIG() == team1) {
 					touchdown(p);
 				}
@@ -634,7 +911,7 @@ public class GameService {
 			}
 		}
 		endOfAction(attacker);
-		if(attacker.getStatus()!= "standing") {
+		if (attacker.getStatus() != "standing") {
 			turnover();
 		}
 	}
@@ -730,7 +1007,7 @@ public class GameService {
 		if (p.hasBall()) {
 			p.setHasBall(false);
 			scatterBall(p.getTile(), 1);
-			if(p.getTeamIG() == activeTeam) {
+			if (p.getTeamIG() == activeTeam) {
 				turnover();
 			}
 		}
@@ -874,10 +1151,11 @@ public class GameService {
 			System.out.println(player.getName() + " failed to catch the ball!");
 			rerollCheck();
 			scatterBall(player.getTile(), 1);
-			if (!inPassOrHandOff) {
+			if (!inPassOrHandOff && phase != "kick") {
 				Tile scatteredTo = ballLocationCheck();
 				if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
-					turnover(); // only a turnover if ball is not caught by player on active team before comes to
+					turnover(); // only a turnover if ball is not caught by player on active team before comes
+								// to
 								// rest
 				}
 			}
@@ -1175,13 +1453,14 @@ public class GameService {
 		}
 	}
 
-	public void addTackleZones(PlayerInGame activePlayer) {
+	public void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = activePlayer.getTeamIG() == team1 ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
+		opponents = player.getTeamIG() == team1 ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
 		for (PlayerInGame p : opponents) {
 			if (p.hasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
+					// System.out.println(t);
 					t.addTackler(p);
 				}
 			}
@@ -1288,7 +1567,7 @@ public class GameService {
 		p3.setMA(3);
 		p3.setTeam(2);
 		p3.setST(3);
-		p3.setAV(11);
+		p3.setAV(2);
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		List<Skill> skills = new ArrayList<>();
 		skills.add(block);
@@ -1340,12 +1619,18 @@ public class GameService {
 		int[][] waypoints = { { 5, 6 } };
 		// int[][] waypoints = null;
 		// gs.blitzAction(team1Players.get(0), waypoints, goal, true);
-		gs.foulAction(team1Players.get(0), waypoints, goal);
-
-		gs.endTurn();
-		gs.endTurn();
-		System.out.println(gs.activeTeam.getName());
-		gs.foulAction(team1Players.get(0), waypoints, goal);
+		// gs.foulAction(team1Players.get(0), waypoints, goal);
+		// gs.endTurn();
+		gs.team2.addToDugout(team1Players.get(0));
+		gs.newHalf();
+		gs.kickOff(gs.team1);
+		// System.out.println(gs.activeTeam.getName());
+		// System.out.println(team1Players.get(0).getTile());
+//		team1Players = gs.team1.getPlayersOnPitch();
+//		team2Players = gs.team2.getPlayersOnPitch();
+//		int[] test= team2Players.get(1).getTile().getPosition();
+//		System.out.println(test[0] + " " + test[1]);
+//		gs.foulAction(team1Players.get(0), waypoints, goal);
 
 		// List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0),
 		// team2Players.get(0));
