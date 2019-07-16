@@ -1615,15 +1615,15 @@ public class GameService {
 		// System.out.println(interceptors.size());
 
 		// gs.showPossibleMovement(team1Players.get(0));
-		int[] goal = { 7, 7 };
-		int[][] waypoints = { { 5, 6 } };
+		//int[] goal = { 7, 7 };
+		//int[][] waypoints = { { 5, 6 } };
 		// int[][] waypoints = null;
 		// gs.blitzAction(team1Players.get(0), waypoints, goal, true);
 		// gs.foulAction(team1Players.get(0), waypoints, goal);
 		// gs.endTurn();
-		gs.team2.addToDugout(team1Players.get(0));
-		gs.newHalf();
-		gs.kickOff(gs.team1);
+		//gs.team2.addToDugout(team1Players.get(0));
+		//gs.newHalf();
+		//gs.kickOff(gs.team1);
 		// System.out.println(gs.activeTeam.getName());
 		// System.out.println(team1Players.get(0).getTile());
 //		team1Players = gs.team1.getPlayersOnPitch();
@@ -1639,10 +1639,11 @@ public class GameService {
 		// gs.showTravelPath(route);
 		// gs.movePlayerRouteAction(team1Players.get(0), route);
 		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		// int[][] waypoints = { { 5, 6 }, { 7, 7 } };
-		// List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
-		// goal);
-		// gs.showTravelPath(route);
+		int[] goal = { 7, 8 };
+		 int[][] waypoints = { { 5, 6 } };
+		 List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
+		 goal);
+		 gs.showTravelPath(route);
 //		for (Tile t : pushes) {
 //			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
 //		}
