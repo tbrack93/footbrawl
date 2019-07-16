@@ -1,0 +1,7 @@
+#canvas {
+  position: absolute;
+  width: 80%;
+  background: url(/images/board.jpg);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
