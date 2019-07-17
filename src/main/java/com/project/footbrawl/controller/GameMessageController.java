@@ -1,4 +1,4 @@
-package controller;
+package com.project.footbrawl.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -13,8 +13,17 @@ public class GameMessageController {
 		@Autowired	    
 		private SimpMessageSendingOperations messagingTemplate;
 
-		@MessageMapping("/game/{game}/player")
-		public void message(@DestinationVariable String game) throws Exception {
+		@MessageMapping("/game/gameplay/{game}/{team}")
+		public void specificTeam(@DestinationVariable int game, @DestinationVariable int team) throws Exception {
 		  
-		 }
+		}
+		
+		@MessageMapping("/game/gameplay/{game}")
+		public void bothTeams(@DestinationVariable String game) throws Exception {
+		  
+		}
+		
+		
+		
+		
 }

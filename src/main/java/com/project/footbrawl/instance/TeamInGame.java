@@ -1,10 +1,10 @@
-package instance;
+package com.project.footbrawl.instance;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import entity.Player;
-import entity.Team;
+import com.project.footbrawl.entity.Player;
+import com.project.footbrawl.entity.Team;
 
 public class TeamInGame {
 	

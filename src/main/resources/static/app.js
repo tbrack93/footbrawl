@@ -1,3 +1,4 @@
+
 var canvas;
 // below used to determine canvas absolute pixel locations
 var canvasLeft;
@@ -8,17 +9,24 @@ var debounceInterval = 500;
 
 window.onload = init;
 
-var socket = new SockJS('/messages');
-stompClient = Stomp.over(socket);
-stompClient.connect({}, function (frame) {
-    stompClient.subscribe('/topic/game/1', function (info) {
-    	//players.push(JSON.parse(info.body));
-       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
-        // showGreeting(JSON.parse(info.body).content.name);
-    });
-});
-
 function init() {
+	var game = document.getElementById("gameId").value;
+	var team = document.getElementById("teamId").value;
+	var socket = new SockJS('/messages');
+	stompClient = Stomp.over(socket);
+	stompClient.connect({}, function (frame) {
+	    stompClient.subscribe('/topic/game/'+ game, function (info) {
+	    	//players.push(JSON.parse(info.body));
+	       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
+	        // showGreeting(JSON.parse(info.body).content.name);
+	    });
+	    stompClient.subscribe('/topic/game/'+ game + "/" + team, function (info) {
+	    	//players.push(JSON.parse(info.body));
+	       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
+	        // showGreeting(JSON.parse(info.body).content.name);
+	    });
+	    
+	});
 	players = new Array();
 	canvas = document.getElementById('canvas');
 	context = canvas.getContext('2d');

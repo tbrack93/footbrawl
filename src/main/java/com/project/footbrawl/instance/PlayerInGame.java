@@ -1,9 +1,9 @@
-package instance;
+package com.project.footbrawl.instance;
 
 import java.util.List;
 
-import entity.Player;
-import entity.Skill;
+import com.project.footbrawl.entity.Player;
+import com.project.footbrawl.entity.Skill;
 
 public class PlayerInGame{
 	
