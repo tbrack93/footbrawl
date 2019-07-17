@@ -1,4 +1,4 @@
-package entity;
+package com.project.footbrawl.entity;
 
 public class Skill {
 	

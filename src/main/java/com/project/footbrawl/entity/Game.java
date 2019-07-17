@@ -1,4 +1,4 @@
-package entity;
+package com.project.footbrawl.entity;
 
 // just data that will be stored in database
 public class Game {

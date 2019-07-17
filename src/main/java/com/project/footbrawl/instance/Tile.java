@@ -1,4 +1,4 @@
-package instance;
+package com.project.footbrawl.instance;
 
 import java.util.Arrays;
 import java.util.HashSet;

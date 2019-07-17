@@ -1,4 +1,4 @@
-package entity;
+package com.project.footbrawl.entity;
 
 import java.util.ArrayList;
 import java.util.List;

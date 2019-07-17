@@ -1,4 +1,4 @@
-package service;
+package com.project.footbrawl.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,13 +11,13 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
-import entity.Game;
-import entity.Player;
-import entity.Skill;
-import entity.Team;
-import instance.PlayerInGame;
-import instance.TeamInGame;
-import instance.Tile;
+import com.project.footbrawl.entity.Game;
+import com.project.footbrawl.entity.Player;
+import com.project.footbrawl.entity.Skill;
+import com.project.footbrawl.entity.Team;
+import com.project.footbrawl.instance.PlayerInGame;
+import com.project.footbrawl.instance.TeamInGame;
+import com.project.footbrawl.instance.Tile;
 
 // controls a game's logic and progress
 // future: contain DTO for database interactions
@@ -64,6 +64,10 @@ public class GameService {
 			}
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
+	}
+	
+	public int getGameId() {
+		return game.getId();
 	}
 
 	public List<Tile> getNeighbours(Tile t) {
