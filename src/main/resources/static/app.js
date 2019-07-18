@@ -50,7 +50,7 @@ function init() {
 		stompClient.connect({}, function (frame) {
 		    stompClient.subscribe('/topic/game/'+ game, function (message) {
 		    	console.log("Message received");
-		    	console.log(message);
+		    	decodeMessage(JSON.parse(message.body));
 		    	// players.push(JSON.parse(info.body));
 		       // draw(JSON.parse(info.body).content.currentColumn,
 				// JSON.parse(info.body).content.currentRow);
@@ -58,7 +58,7 @@ function init() {
 		    });
 		    stompClient.subscribe('/queue/game/'+ game + "/" + team, function (message) {
 		    	console.log("Message received");
-		    	console.log(message);
+		    	decodeMessage(JSON.parse(message.body));
 		    	// players.push(JSON.parse(info.body));
 		       // draw(JSON.parse(info.body).content.currentColumn,
 				// JSON.parse(info.body).content.currentRow);
@@ -89,6 +89,12 @@ function drawBoard() {
 	context.stroke();
 }
 
+function drawPlayers(){
+	players.forEach(player => {
+		drawPlayer(player);
+	});
+}
+
 function drawPlayer(player) {
 	var column = player.location[0];
 	var row = player.location[1];
@@ -105,6 +111,15 @@ function drawPlayer(player) {
 	}
 }
 
+function drawSquare(tile){
+	    context.globalAlpha = 0.5;
+	    var squareH = canvas.height/15;
+        
+	    // Draw a rectangle
+	    context.fillStyle = "blue";
+	    context.fillRect(tile.position[1]*squareH+3, tile.position[0]*squareH+3 , squareH-5, squareH-5);
+	}
+
 function isIntersect(click, player){
 	var rect = canvas.getBoundingClientRect()
 	var squareSize = canvas.offsetWidth/26;
@@ -119,4 +134,22 @@ function isIntersect(click, player){
 	       clickX > (squareSize * playerRow) &&
 	       clickX < (squareSize * (playerRow+1));
 	
+}
+
+function decodeMessage(message){
+	console.log("Decoding message");
+	if(message.type == "INFO"){
+		console.log("in info");
+		if(message.action == "MOVEMENT"){
+			showMovement(message);
+		}
+	}
+}
+
+function showMovement(message){
+	console.log("in show movement");
+	message.squares.forEach(tile => {
+		drawSquare(tile);
+	});
+	drawPlayers();
 }
