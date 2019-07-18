@@ -211,5 +211,4 @@ public class Tile {
 	public boolean containsBall() {
 		return containsBall;
 	}
-
 }

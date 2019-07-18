@@ -47,12 +47,11 @@ function init() {
 		       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
 		        // showGreeting(JSON.parse(info.body).content.name);
 		    });
-		    stompClient.subscribe('/topic/game/'+ game + "/" + team, function (info) {
+		    stompClient.subscribe('/queue/game/'+ game + "/" + team, function (info) {
 		    	//players.push(JSON.parse(info.body));
 		       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
 		        // showGreeting(JSON.parse(info.body).content.name);
 		    });
-		    
 		});
 	}
 

@@ -99,5 +99,9 @@ public class Player {
 		}
 		return false;
 	}
+	
+	public String toString() {
+		return Integer.toString(id);
+	}
 
 }
