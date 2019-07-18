@@ -6,6 +6,8 @@ var canvasTop;
 var players;
 var timeSinceClick;
 var debounceInterval = 500;
+var game;
+var team;
 
 window.onload = init;
 
@@ -17,39 +19,45 @@ function init() {
 	canvasLeft = canvas.offsetLeft;
 	canvasTop = canvas.offsetTop;
 	drawBoard();
-	drawPlayer(0, 1);
 	timeSinceClick = new Date();
-	var player = {name:"John", row: 0, column: 1};
+	var player = {id: 1, name:"John", location: [0, 1]};
 	players.push(player);
+	drawPlayer(player);
 	    
 	    canvas.addEventListener('click', (e) => {
 	    	var time = new Date();
 	    	if(time - timeSinceClick > debounceInterval){
 	    		timeSinceClick = new Date();
-	    	    //console.log(e.clientX - canvasLeft);
-	    	    //console.log(e.clientY - canvasTop);
+	    	    // console.log(e.clientX - canvasLeft);
+	    	    // console.log(e.clientY - canvasTop);
 	    	  
 	    	    players.forEach(player => {
 	    		 // console.log("checking");
 	    		 if(isIntersect(e, player)) {
 	    			 console.log(player);
+	    			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+					         JSON.stringify({"type": "INFO", action: "MOVEMENT", "player": player.id,
+					                         "location": player.location}));
+	    			 
 	    		 }
 	    	  });
 	    	}});
 	    
-	    var game = document.getElementById("gameId").value;
-		var team = document.getElementById("teamId").value;
+	    game = document.getElementById("gameId").value;
+		team = document.getElementById("teamId").value;
 		var socket = new SockJS('/messages');
 		stompClient = Stomp.over(socket);
 		stompClient.connect({}, function (frame) {
 		    stompClient.subscribe('/topic/game/'+ game, function (info) {
-		    	//players.push(JSON.parse(info.body));
-		       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
+		    	// players.push(JSON.parse(info.body));
+		       // draw(JSON.parse(info.body).content.currentColumn,
+				// JSON.parse(info.body).content.currentRow);
 		        // showGreeting(JSON.parse(info.body).content.name);
 		    });
 		    stompClient.subscribe('/queue/game/'+ game + "/" + team, function (info) {
-		    	//players.push(JSON.parse(info.body));
-		       // draw(JSON.parse(info.body).content.currentColumn, JSON.parse(info.body).content.currentRow);
+		    	// players.push(JSON.parse(info.body));
+		       // draw(JSON.parse(info.body).content.currentColumn,
+				// JSON.parse(info.body).content.currentRow);
 		        // showGreeting(JSON.parse(info.body).content.name);
 		    });
 		});
@@ -77,7 +85,9 @@ function drawBoard() {
 	context.stroke();
 }
 
-function drawPlayer(column, row) {
+function drawPlayer(player) {
+	var column = player.location[0];
+	var row = player.location[1];
 	var img = new Image();
 	var squareH = canvas.height / 15;
 	img.src = "/images/human_blitzer.png";
@@ -94,8 +104,8 @@ function drawPlayer(column, row) {
 function isIntersect(click, player){
 	var rect = canvas.getBoundingClientRect()
 	var squareSize = canvas.offsetWidth/26;
-	var playerColumn = player.column;
-	var playerRow = player.row;
+	var playerColumn = player.location[1];
+	var playerRow = player.location[0];
 	var clickX = click.clientX - rect.left;
 	var clickY = click.clientY - rect.top;
 	console.log(clickX);

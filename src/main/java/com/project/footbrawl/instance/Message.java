@@ -5,6 +5,7 @@ public class Message {
 	private String type;
 	private String action;
 	private int player;
+	private int [] location;
 	private int[] target;
 	private String description;
 	
@@ -50,6 +51,14 @@ public class Message {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public int[] getLocation() {
+		return location;
+	}
+
+	public void setLocation(int[] location) {
+		this.location = location;
 	}
 
 }

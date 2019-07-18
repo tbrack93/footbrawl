@@ -22,7 +22,7 @@ import com.project.footbrawl.instance.Tile;
 // controls a game's logic and progress
 // future: contain DTO for database interactions
 public class GameService {
-
+	
 	// for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
@@ -38,10 +38,10 @@ public class GameService {
 	private TeamInGame lastKickOff;
 	private String phase;
 	private TeamInGame activeTeam;
-	private PlayerInGame activePlayer;
-	private TeamInGame team1;
-	private TeamInGame team2;
-	private Tile[][] pitch;
+	PlayerInGame activePlayer;
+	TeamInGame team1;
+	TeamInGame team2;
+	Tile[][] pitch;
 	private boolean waitingForPlayers;
 	private boolean kickingSetupDone;
 	private boolean receivingSetupDone;
@@ -411,7 +411,13 @@ public class GameService {
 		activeTeam.newTurn(); // reset players on pitch (able to move/ act)
 	}
 
-	public void showPossibleMovement(PlayerInGame p) {
+	public void showPossibleMovement(int playerId, int[] location) {
+		System.out.println("Determining movement options");
+		PlayerInGame p = pitch[location[0]][location[1]].getPlayer();
+		System.out.println(p.getId());
+		if(p.getId()!= playerId || p == null) {
+			throw new IllegalArgumentException("Invalid player or location");
+		}
 		if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
 																// player
 			if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already

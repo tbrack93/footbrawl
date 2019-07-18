@@ -2,7 +2,7 @@ package com.project.footbrawl.instance;
 
 import java.util.List;
 
-public class messageFromClient extends Message {
+public class MessageFromClient extends Message {
 
 	private List<Integer[]> route;
 	private int diceChoice;
@@ -10,7 +10,7 @@ public class messageFromClient extends Message {
 	private String skillName;
 	private boolean useReroll;
 	
-	public messageFromClient() {
+	public MessageFromClient() {
 		
 	}
 
@@ -55,7 +55,5 @@ public class messageFromClient extends Message {
 	public void setUseReroll(boolean useReroll) {
 		this.useReroll = useReroll;
 	}
-	
-	
 	
 }

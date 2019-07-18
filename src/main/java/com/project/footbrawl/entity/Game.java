@@ -3,7 +3,7 @@ package com.project.footbrawl.entity;
 // just data that will be stored in database
 public class Game {
 	
-	public static int idCounter;
+	public static int idCounter; // id will be handled by database
 	
 	private int id;
 	private Team team1;
@@ -14,11 +14,11 @@ public class Game {
 	private String status;
 	
 	public Game() {
-		
+		id = 1; // just for testing
 	}
 
 	public Game(Team team1, Team team2) {
-		this.id = ++idCounter;
+		this.id = ++idCounter; // will be done by database
 		this.team1 = team1;
 		this.team2 = team2;
 	}
