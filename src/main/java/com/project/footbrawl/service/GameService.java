@@ -11,6 +11,10 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
 import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
@@ -18,10 +22,16 @@ import com.project.footbrawl.entity.Team;
 import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
 import com.project.footbrawl.instance.Tile;
+import com.project.footbrawl.instance.jsonTile;
 
 // controls a game's logic and progress
 // future: contain DTO for database interactions
+@Service
+@Scope("prototype")
 public class GameService {
+	
+	@Autowired
+	MessageSendingService sender;
 	
 	// for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -50,7 +60,27 @@ public class GameService {
 	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
 	// chain of events
 
-	public GameService(Game game) {
+//	public GameService(Game game) {
+//		this.game = game;
+//		team1 = new TeamInGame(game.getTeam1());
+//		team2 = new TeamInGame(game.getTeam2());
+//		queue = new LinkedList<>();
+//		activePlayer = null;
+//		ballToScatter = null;
+//		pitch = new Tile[26][15];
+//		for (int row = 0; row < 26; row++) {
+//			for (int column = 0; column < 15; column++) {
+//				pitch[row][column] = new Tile(row, column);
+//			}
+//		}
+//		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
+//	}
+	
+	public GameService(MessageSendingService sender) {
+		this.sender = sender;
+	}
+	
+	public void setGame(Game game) {
 		this.game = game;
 		team1 = new TeamInGame(game.getTeam1());
 		team2 = new TeamInGame(game.getTeam2());
@@ -412,6 +442,7 @@ public class GameService {
 	}
 
 	public void showPossibleMovement(int playerId, int[] location) {
+		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = pitch[location[0]][location[1]].getPlayer();
 		System.out.println(p.getId());
@@ -439,13 +470,23 @@ public class GameService {
 		for (int i = 0; i < 26; i++) {
 			for (int j = 0; j < 15; j++) {
 				Tile t = pitch[i][j];
-				int tackleZones = t.getTackleZones();
-				if (t.getCostToReach() == 99)
-					tackleZones = 0;
-				System.out.printf("%5d %2d ", t.getCostToReach(), tackleZones);
+				if(t.getCostToReach() != 99) {
+					jsonTile jTile = new jsonTile(t);
+					if(t.getCostToReach() == 77) {
+						jTile.setGoingForItRoll(2); // if blizzard this will be 3
+					}
+					squares.add(jTile);
+				}
+//				int tackleZones = t.getTackleZones();
+//				if (t.getCostToReach() == 99){
+//					tackleZones = 0;
+//				}
+			//	System.out.printf("%5d %2d ", t.getCostToReach(), tackleZones);
 			}
-			System.out.println();
+			//System.out.println();
 		}
+		System.out.println(sender == null);
+		sender.sendMovementInfoMessage(game.getId(), p.getTeam(), p.getId(), squares);
 	}
 
 	// breadth first search to determine where can move
@@ -1559,119 +1600,5 @@ public class GameService {
 		return null; // should be impossible during main gameplay
 	}
 
-	public static void main(String[] args) {
-		Player p = new Player();
-		p.setName("Billy");
-		p.setMA(4);
-		p.setAG(6);
-		p.setTeam(1);
-		p.setST(9);
-		Player p2 = new Player();
-		p2.setName("Bobby");
-		p2.setAG(10);
-		p2.setMA(3);
-		p2.setTeam(2);
-		p2.setST(3);
-		Player p3 = new Player();
-		p3.setName("Sam");
-		p3.setMA(3);
-		p3.setTeam(2);
-		p3.setST(3);
-		p3.setAV(2);
-		Skill block = new Skill("Block", "blocking is fun", "block");
-		List<Skill> skills = new ArrayList<>();
-		skills.add(block);
-		p3.setSkills(skills);
-		Player p4 = new Player();
-		p4.setName("Sarah");
-		p4.setMA(3);
-		p4.setAG(4);
-		p4.setTeam(1);
-		p4.setST(3);
-		Team team1 = new Team("bobcats");
-		Team team2 = new Team("murderers");
-		team1.addPlayer(p);
-		team2.addPlayer(p2);
-		team2.addPlayer(p3);
-		team1.addPlayer(p4);
-		Game g = new Game();
-		g.setTeam1(team1);
-		g.setTeam2(team2);
-		GameService gs = new GameService(g);
-		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
-		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[6][6].addPlayer(team1Players.get(0));
-		gs.pitch[5][3].addPlayer(team1Players.get(1));
-		gs.pitch[7][5].addPlayer(team2Players.get(0));
-		gs.pitch[7][7].addPlayer(team2Players.get(1));
-		team2Players.get(1).setStatus("prone");
-		gs.setActiveTeam(gs.team1);
-
-		// gs.team1.setFouled(true);
-		// Tile ballTile = gs.pitch[24][7];
-		// ballTile.setContainsBall(true);
-		team1Players.get(0).setHasBall(true);
-		// gs.pickUpBallAction(team1Players.get(0));
-		// gs.handOffBallAction(team1Players.get(0), gs.pitch[7][8]);
-		// gs.throwBallAction(team1Players.get(0), gs.pitch[3][3]);
-
-		// List<Tile> squares = gs.calculateThrowTiles(team1Players.get(0),
-		// team1Players.get(0).getTile(), gs.pitch[3][3]);
-//		for(Tile t : squares) {
-//			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
-//		}
-		// List<PlayerInGame> interceptors = gs.calculatePossibleInterceptors(squares,
-		// team1Players.get(0));
-		// System.out.println(interceptors.size());
-
-		// gs.showPossibleMovement(team1Players.get(0));
-		//int[] goal = { 7, 7 };
-		//int[][] waypoints = { { 5, 6 } };
-		// int[][] waypoints = null;
-		// gs.blitzAction(team1Players.get(0), waypoints, goal, true);
-		// gs.foulAction(team1Players.get(0), waypoints, goal);
-		// gs.endTurn();
-		//gs.team2.addToDugout(team1Players.get(0));
-		//gs.newHalf();
-		//gs.kickOff(gs.team1);
-		// System.out.println(gs.activeTeam.getName());
-		// System.out.println(team1Players.get(0).getTile());
-//		team1Players = gs.team1.getPlayersOnPitch();
-//		team2Players = gs.team2.getPlayersOnPitch();
-//		int[] test= team2Players.get(1).getTile().getPosition();
-//		System.out.println(test[0] + " " + test[1]);
-//		gs.foulAction(team1Players.get(0), waypoints, goal);
-
-		// List<Tile> pushes = gs.calculatePushOptions(team1Players.get(0),
-		// team2Players.get(0));
-		// gs.blockAction(team1Players.get(0), team2Players.get(0), false);
-		// List<Tile> route = gs.getOptimisedPath(team1Players.get(0), goal);
-		// gs.showTravelPath(route);
-		// gs.movePlayerRouteAction(team1Players.get(0), route);
-		// gs.getOptimisedPath((PlayerInGame) p, goal);
-		int[] goal = { 7, 8 };
-		 int[][] waypoints = { { 5, 6 } };
-		 List<Tile> route = gs.getRouteWithWaypoints(team1Players.get(0), waypoints,
-		 goal);
-		 gs.showTravelPath(route);
-//		for (Tile t : pushes) {
-//			System.out.println(t.getPosition()[0] + " " + t.getPosition()[1]);
-//		}
-		// gs.movePlayerRoute(team1Players.get(0), route);
-		// gs.getRouteWithWaypoints((PlayerInGame) p, waypoints, goal);
-		// gs.queue.remove().run();
-		// System.out.println(gs.calculateDodge((PlayerInGame)p, gs.pitch[6][5]) +"+");
-		// int[] results = diceRoller(2, 3);
-		System.out.println();
-//		for(int i = 0; i<results.length; i++) {
-//			System.out.print(results[i] + " ");
-//		}
-//		int[] block = gs.calculateBlock((PlayerInGame)p, (PlayerInGame) p2);
-//		for(int i = 0; i<results.length; i++) {
-//			System.out.print(block[i] + " ");
-//		}
-		// Tile t = gs.pitch[25][14];
-		// gs.ballOffPitch(t);
-
-	}
+	
 }

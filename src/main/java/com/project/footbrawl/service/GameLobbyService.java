@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.entity.Game;
@@ -15,10 +16,14 @@ import com.project.footbrawl.instance.PlayerInGame;
 
 @Service
 public class GameLobbyService {
+	
+	@Autowired
+	private GameService gs;
 		
 	private Map<Integer, GameService> activeGames; // game id and gameservice
 	
-	public GameLobbyService() {
+	public GameLobbyService(GameService gs) {
+		this.gs = gs;
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
@@ -57,7 +62,7 @@ public class GameLobbyService {
 		Game g = new Game();
 		g.setTeam1(team1);
 		g.setTeam2(team2);
-		GameService gs = new GameService(g);
+		gs.setGame(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
 		gs.pitch[0][1].addPlayer(team1Players.get(0));
@@ -86,5 +91,9 @@ public class GameLobbyService {
 	public List<GameService> getActiveGames() {
 		return new ArrayList<GameService>(activeGames.values());
 	}
+	
+//	public static void main(String[] args) {
+//		GameLobbyService test = new GameLobbyService();
+//	}
 
 }
