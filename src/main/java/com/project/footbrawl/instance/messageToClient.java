@@ -2,7 +2,7 @@ package com.project.footbrawl.instance;
 
 import java.util.List;
 
-public class messageToClient extends Message {
+public class MessageToClient extends Message {
 
 	private int numberOfDice;
 	private int userToChoose;
@@ -11,7 +11,7 @@ public class messageToClient extends Message {
 	private int rollNeeded;
 	private int rolled;
 	
-	public messageToClient() {
+	public MessageToClient() {
 		
 	}
 

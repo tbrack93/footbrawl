@@ -14,9 +14,11 @@ public class Player {
 	private int cost;
 	private List<Skill> skills;
 	private int team;
+	private String imgUrl;
 	
 	public Player() {
 		skills = new ArrayList<>();
+		id = 1;
 	}
 
 	public int getId() {
@@ -91,6 +93,14 @@ public class Player {
 		this.team = team;
 	}
 	
+	public String getImgUrl() {
+		return imgUrl;
+	}
+
+	public void setImgUrl(String imgUrl) {
+		this.imgUrl = imgUrl;
+	}
+
 	public boolean hasSkill(String name) {
 		for(Skill s : skills) {
 			if(s.getName().equals(name)) {
