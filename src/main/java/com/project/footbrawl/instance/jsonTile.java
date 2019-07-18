@@ -1,17 +1,21 @@
 package com.project.footbrawl.instance;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class jsonTile {
 
-	private int[] position;
-	private int tackleZones;
-	private int dodgeRoll;
-	private int goingForItRoll;
-	private int pickUpBallRoll;
-	private int standUpRoll;
+	private int[] position; // position
+	private Integer tackleZones; // tackleZones
+	private Integer dodgeRoll; // dodgeRoll
+	private Integer goingForItRoll; // goingForItRoll
+	private Integer pickUpBallRoll; // pickUpBallRoll
+	private Integer standUpRoll; // standUpRoll
 
 	public jsonTile(Tile tile) {
 		this.position = tile.getPosition();
 		this.tackleZones = tile.getTackleZones();
+		if(tackleZones == 0) tackleZones = null;
 	}
 
 	public int[] getPosition() {
@@ -22,7 +26,7 @@ public class jsonTile {
 		this.position = position;
 	}
 
-	public int getTackleZones() {
+	public Integer getTackleZones() {
 		return tackleZones;
 	}
 
@@ -30,15 +34,15 @@ public class jsonTile {
 		this.tackleZones = tackleZones;
 	}
 
-	public int getDodgeRoll() {
+	public Integer getDodgeRoll() {
 		return dodgeRoll;
 	}
 
-	public void setDodgeRoll(int dodgeRoll) {
+	public void setDodgeRoll(Integer dodgeRoll) {
 		this.dodgeRoll = dodgeRoll;
 	}
 
-	public int getGoingForItRoll() {
+	public Integer getGoingForItRoll() {
 		return goingForItRoll;
 	}
 
@@ -46,7 +50,7 @@ public class jsonTile {
 		this.goingForItRoll = goingForItRoll;
 	}
 
-	public int getPickUpBallRoll() {
+	public Integer getPickUpBallRoll() {
 		return pickUpBallRoll;
 	}
 
@@ -54,7 +58,7 @@ public class jsonTile {
 		this.pickUpBallRoll = pickUpBallRoll;
 	}
 
-	public int getStandUpRoll() {
+	public Integer getStandUpRoll() {
 		return standUpRoll;
 	}
 

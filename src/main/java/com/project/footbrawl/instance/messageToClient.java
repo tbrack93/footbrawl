@@ -2,17 +2,21 @@ package com.project.footbrawl.instance;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MessageToClient extends Message {
 
-	private int numberOfDice;
-	private int userToChoose;
+	private Integer numberOfDice; // Integers so default to null
+	private Integer userToChoose;
 	private List<jsonTile> route; // for moving to a specific point
 	private List<jsonTile> squares; // for seeing all squares player can move to
-	private int rollNeeded;
-	private int rolled;
+	private Integer rollNeeded;
+	private Integer rolled;
 	
 	public MessageToClient() {
-		
+        route = null;
+		squares = null;
 	}
 
 	public List<jsonTile> getSquares() {
@@ -31,7 +35,7 @@ public class MessageToClient extends Message {
 		this.route = route;
 	}
 
-	public int getDice() {
+	public Integer getDice() {
 		return numberOfDice;
 	}
 
@@ -39,7 +43,7 @@ public class MessageToClient extends Message {
 		this.numberOfDice = dice;
 	}
 
-	public int getUserToChoose() {
+	public Integer getUserToChoose() {
 		return userToChoose;
 	}
 
@@ -47,7 +51,7 @@ public class MessageToClient extends Message {
 		this.userToChoose = userToChoose;
 	}
 
-	public int getNumberOfDice() {
+	public Integer getNumberOfDice() {
 		return numberOfDice;
 	}
 
@@ -55,7 +59,7 @@ public class MessageToClient extends Message {
 		this.numberOfDice = numberOfDice;
 	}
 
-	public int getRollNeeded() {
+	public Integer getRollNeeded() {
 		return rollNeeded;
 	}
 
@@ -63,7 +67,7 @@ public class MessageToClient extends Message {
 		this.rollNeeded = rollNeeded;
 	}
 
-	public int getRolled() {
+	public Integer getRolled() {
 		return rolled;
 	}
 

@@ -3,9 +3,13 @@ package com.project.footbrawl.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
 import com.project.footbrawl.instance.MessageFromClient;
+import com.project.footbrawl.instance.MessageToClient;
 import com.project.footbrawl.service.MessageDecoderService;
 
 @Controller
@@ -13,6 +17,9 @@ public class GameMessageController {
 	
 	    @Autowired
 	    private MessageDecoderService decoder;
+	    
+	    @Autowired	    
+		private SimpMessageSendingOperations sending;
 
 		@MessageMapping("/game/gameplay/{game}/{team}")
 		public void specificTeam(@DestinationVariable int game, @DestinationVariable int team, MessageFromClient message) throws Exception {
@@ -25,7 +32,9 @@ public class GameMessageController {
 		  
 		}
 		
-		
-		
-		
+		public void sendMessageToUser(int game, int team, MessageToClient message) {
+			System.out.println("Sending message");
+			System.out.println("game: " + game + " team: " + team);
+			sending.convertAndSend("/queue/game/" + game + "/" + team, message);
+		}
 }
