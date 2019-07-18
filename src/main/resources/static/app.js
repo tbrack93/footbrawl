@@ -112,11 +112,15 @@ function drawPlayer(player) {
 }
 
 function drawSquare(tile){
-	    context.globalAlpha = 0.5;
+	    context.globalAlpha = 0.3;
 	    var squareH = canvas.height/15;
-        
-	    // Draw a rectangle
-	    context.fillStyle = "blue";
+        var colour = "blue";
+        if(tile.tackleZones != null){
+        	colour = "red";
+        	// need to add logic for number of tacklezones
+        }
+        // need to add logic for showing going for it
+	    context.fillStyle = colour;
 	    context.fillRect(tile.position[1]*squareH+3, tile.position[0]*squareH+3 , squareH-5, squareH-5);
 	}
 
