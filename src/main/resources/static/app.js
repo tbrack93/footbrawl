@@ -22,9 +22,13 @@ function init() {
 	drawBoard();
 	timeSinceClick = new Date();
 	var player = {id: 1, name:"John", location: [0, 1]};
-	var player2 = {id: 4, name:"Sam", location: [5,3]};
+	var player2 = {id: 2, name:"Bobby", location: [7,5]};
+	var player3 = {id: 3, name:"Sam", location: [7,7]};
+	var player4 = {id: 4, name:"Sarah", location: [5,3]};
 	players.push(player);
 	players.push(player2);
+	players.push(player3);
+	players.push(player4);
 	drawPlayers();
 	    
 	    canvas.addEventListener('click', (e) => {
@@ -69,7 +73,10 @@ function init() {
 				// JSON.parse(info.body).content.currentRow);
 		        // showGreeting(JSON.parse(info.body).content.name);
 		    });
+		    stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+		    JSON.stringify({"type": "INFO", action: "TEAMS"}));
 		});
+		
 	}
 
 function drawBoard() {
@@ -101,8 +108,8 @@ function drawPlayers(){
 }
 
 function drawPlayer(player) {
-	var column = player.location[1];
-	var row = player.location[0];
+	var column = player.location[0];
+	var row = 14 -player.location[1];
 	var img = new Image();
 	var squareH = canvas.height / 15;
 	img.src = "/images/human_blitzer.png";
@@ -130,18 +137,20 @@ function drawSquare(tile){
         }
         // need to add logic for showing going for it
 	    context.fillStyle = colour;
-	    context.fillRect(tile.position[1]*squareH+3, tile.position[0]*squareH+3 , squareH-5, squareH-5);
+	    var column = tile.position[0];
+	    var row = 14 - tile.position[1];
+	    context.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
 	    if(tile.tackleZones !=null){
 	    	context.globalAlpha = 1;
 		    context.fillStyle = "white";
 		    context.font = "30px Arial";
-		    context.fillText(tile.tackleZones, tile.position[1]*squareH +20, tile.position[0]*squareH +30);
+		    context.fillText(tile.tackleZones, column*squareH +20, row*squareH +30);
 	    }
 	    if(tile.goingForItRoll != null){
 	    	context.globalAlpha = 1;
 		    context.fillStyle = "white";
 		    context.font = "30px Arial";
-		    context.fillText("GFI", tile.position[1]*squareH + squareH/3, tile.position[0]*squareH + squareH/2+10);
+		    context.fillText("GFI",column*squareH + squareH/3, row*squareH + squareH/2+10);
 	    }
 	}
 
@@ -149,15 +158,15 @@ function isIntersect(click, player){
 	var rect = canvas.getBoundingClientRect()
 	var squareSize = canvas.offsetWidth/26;
 	var playerColumn = player.location[0];
-	var playerRow = player.location[1];
+	var playerRow = 14 - player.location[1];
 	var clickX = click.clientX - rect.left;
 	var clickY = click.clientY - rect.top;
 	console.log(clickX);
 	console.log(clickY);
-	return clickY > (squareSize * playerColumn) &&
-	       clickY < (squareSize * (playerColumn +1)) &&
-	       clickX > (squareSize * playerRow) &&
-	       clickX < (squareSize * (playerRow+1));
+	return clickX > (squareSize * playerColumn) &&
+	       clickX < (squareSize * (playerColumn +1)) &&
+	       clickY > (squareSize * playerRow) &&
+	       clickY < (squareSize * (playerRow+1));
 	
 }
 
@@ -167,6 +176,8 @@ function decodeMessage(message){
 		console.log("in info");
 		if(message.action == "MOVEMENT"){
 			showMovement(message);
+		} else if(message.action == "TEAMS"){
+			updateTeamDetails(message);
 		}
 	}
 }
@@ -178,4 +189,10 @@ function showMovement(message){
 		drawSquare(tile);
 	});
 	drawPlayers();
+}
+
+function updateTeamDetails(message){
+	console.log("in team details");
+	document.getElementById("team1Name").innerHTML = message.team1Name;
+	document.getElementById("team2Name").innerHTML = message.team2Name;
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.controller.GameMessageController;
 import com.project.footbrawl.instance.MessageToClient;
+import com.project.footbrawl.instance.TeamInGame;
 import com.project.footbrawl.instance.jsonTile;
 
 @Service
@@ -22,14 +23,25 @@ public class MessageSendingService {
 		
 	}
 
-	public void sendMovementInfoMessage(int game, int team, int playerId, List<jsonTile> squares) {
+	public void sendMovementInfoMessage(int gameId, int teamId, int playerId, List<jsonTile> squares) {
 		System.out.println("creating message");
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("MOVEMENT");
 		message.setPlayer(playerId);
 		message.setSquares(squares);
-		controller.sendMessageToUser(game, team, message);
+		controller.sendMessageToUser(gameId, teamId, message);
+	}
+	
+	public void sendTeamsInfo(int gameId, int teamId, TeamInGame team1, TeamInGame team2) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("TEAMS");
+		message.setTeam1Name(team1.getName());
+		message.setTeam2Name(team2.getName());
+		message.setTeam1(team1.getPlayersOnPitch());
+		message.setTeam2(team2.getPlayersOnPitch());
+		controller.sendMessageToUser(gameId, teamId, message);
 	}
 	
 }

@@ -13,6 +13,10 @@ public class MessageToClient extends Message {
 	private List<jsonTile> squares; // for seeing all squares player can move to
 	private Integer rollNeeded;
 	private Integer rolled;
+	private String team1Name;
+	private String team2Name;
+	private List<PlayerInGame> team1;
+	private List<PlayerInGame> team2;
 	
 	public MessageToClient() {
         route = null;
@@ -74,6 +78,39 @@ public class MessageToClient extends Message {
 	public void setRolled(int rolled) {
 		this.rolled = rolled;
 	}
+
+	public String getTeam1Name() {
+		return team1Name;
+	}
+
+	public void setTeam1Name(String team1Name) {
+		this.team1Name = team1Name;
+	}
+
+	public String getTeam2Name() {
+		return team2Name;
+	}
+
+	public void setTeam2Name(String team2Name) {
+		this.team2Name = team2Name;
+	}
+
+	public List<PlayerInGame> getTeam1() {
+		return team1;
+	}
+
+	public void setTeam1(List<PlayerInGame> team1) {
+		this.team1 = team1;
+	}
+
+	public List<PlayerInGame> getTeam2() {
+		return team2;
+	}
+
+	public void setTeam2(List<PlayerInGame> team2) {
+		this.team2 = team2;
+	}
+	
 	
 	
 	

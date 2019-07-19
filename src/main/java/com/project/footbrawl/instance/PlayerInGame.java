@@ -2,11 +2,13 @@ package com.project.footbrawl.instance;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
 
 public class PlayerInGame{
 	
+	@JsonIgnore
 	private Player player;
 	private int remainingMA;
 	private boolean actedThisTurn;
@@ -14,7 +16,9 @@ public class PlayerInGame{
 	private String status;
 	private boolean hasTackleZones;
 	private boolean hasBall;
+	@JsonIgnore
 	private Tile tile;
+	@JsonIgnore
 	private TeamInGame teamIG;
 	
 	

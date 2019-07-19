@@ -21,6 +21,9 @@ public class MessageDecoderService {
 			if(message.getAction().equals("MOVEMENT")){
 				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), team);
 			}
+			if(message.getAction().equals("TEAMS")){
+				lobby.getGameService(gameId).sendTeamsInfo(team);
+			}
 		}
 	}
 	

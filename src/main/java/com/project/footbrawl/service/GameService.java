@@ -1611,6 +1611,10 @@ public class GameService {
 		}
 		return p1;
 	}
+	
+	public void sendTeamsInfo(int teamId) {
+		sender.sendTeamsInfo(game.getId(), teamId, team1, team2);
+	}
 
 	
 }
