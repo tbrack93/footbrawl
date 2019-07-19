@@ -37,4 +37,12 @@ public class GameMessageController {
 			System.out.println("game: " + game + " team: " + team);
 			sending.convertAndSend("/queue/game/" + game + "/" + team, message);
 		}
+		
+		public void sendMessageToBothUsers(int game, MessageToClient message) {
+			System.out.println("Sending message");
+			System.out.println("game: " + game);
+			sending.convertAndSend("/topic/game/" + game, message);
+		}
+		
+		
 }

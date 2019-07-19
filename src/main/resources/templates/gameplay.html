@@ -2,7 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 <title>Game</title>
-<link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+<link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
+	rel="stylesheet">
 <link th:href="@{/main.css}" rel="stylesheet">
 <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
@@ -17,12 +18,23 @@
 			JavaScript! Websockets rely on JavaScript being enabled. Please
 			enable JavaScript and try again</h2>
 	</noscript>
-	<br>
-	<br>
+
+
 	<div class="container-fluid">
+		<div class="row">
+			<div class="col-sm-2 text-center">
+				<h3 id="team1Name">Test</h3>
+			</div>
+			<div class="col-sm-8"></div>
+			<div class="col-sm-2 text-center">
+				<h3 id="team2Name">Test</h3>
+			</div>
+		</div>
 		<div class="row">
 			<div class="col-lg-1 col-sm-2"></div>
 			<div class="col-lg-10 col-sm-8">
+				<br>
+
 				<canvas id="canvas" style="border: 1px solid lightgrey;"
 					width="3500">
     Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.

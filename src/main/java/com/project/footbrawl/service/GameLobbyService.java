@@ -66,9 +66,9 @@ public class GameLobbyService {
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
 		gs.pitch[0][1].addPlayer(team1Players.get(0));
-		gs.pitch[5][3].addPlayer(team1Players.get(1));
 		gs.pitch[7][5].addPlayer(team2Players.get(0));
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
+		gs.pitch[5][3].addPlayer(team1Players.get(1));
 		gs.setActiveTeam(gs.team1);
 		gs.activePlayer = team1Players.get(0);
 		team1Players.get(0).setActedThisTurn(false);
