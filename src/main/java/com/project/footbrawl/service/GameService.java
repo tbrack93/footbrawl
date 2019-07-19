@@ -441,11 +441,10 @@ public class GameService {
 		activeTeam.newTurn(); // reset players on pitch (able to move/ act)
 	}
 
-	public void showPossibleMovement(int playerId, int[] location) {
+	public void showPossibleMovement(int playerId, int[] location, int requester) {
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
-		PlayerInGame p = pitch[location[0]][location[1]].getPlayer();
-		System.out.println(p.getId());
+		PlayerInGame p = getPlayerById(playerId);
 		if(p.getId()!= playerId || p == null) {
 			throw new IllegalArgumentException("Invalid player or location");
 		}
@@ -486,7 +485,7 @@ public class GameService {
 			//System.out.println();
 		}
 		System.out.println(sender == null);
-		sender.sendMovementInfoMessage(game.getId(), p.getTeam(), p.getId(), squares);
+		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 	}
 
 	// breadth first search to determine where can move
@@ -1598,6 +1597,19 @@ public class GameService {
 			}
 		}
 		return null; // should be impossible during main gameplay
+	}
+	
+	public PlayerInGame getPlayerById(int playerId) {
+		PlayerInGame p1 = team1.getPlayerById(playerId);
+		if(p1 == null) {
+			PlayerInGame p2 = team2.getPlayerById(playerId);
+			if(p2 == null) {
+				return null;
+			} else {
+				return p2;
+			}
+		}
+		return p1;
 	}
 
 	

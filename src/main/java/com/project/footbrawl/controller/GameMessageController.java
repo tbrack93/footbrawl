@@ -24,7 +24,7 @@ public class GameMessageController {
 		@MessageMapping("/game/gameplay/{game}/{team}")
 		public void specificTeam(@DestinationVariable int game, @DestinationVariable int team, MessageFromClient message) throws Exception {
 		  System.out.println(message);
-		  decoder.decode(message, game);
+		  decoder.decode(message, game, team);
 		}
 		
 		@MessageMapping("/game/gameplay/{game}")

@@ -5,6 +5,8 @@ import java.util.List;
 
 public class Player {
 	
+	public static int counter = 1;
+	
 	private int id;
 	private String name;
 	private int MA;
@@ -18,7 +20,8 @@ public class Player {
 	
 	public Player() {
 		skills = new ArrayList<>();
-		id = 1;
+		id = counter;
+		counter++;
 	}
 
 	public int getId() {

@@ -15,11 +15,11 @@ public class MessageDecoderService {
 		
 	}
 	
-	public void decode(MessageFromClient message, int gameId) {
+	public void decode(MessageFromClient message, int gameId, int team) {
 		String type = message.getType();
 		if(type.equals("INFO")) {
 			if(message.getAction().equals("MOVEMENT")){
-				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation());
+				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), team);
 			}
 		}
 	}
