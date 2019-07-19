@@ -118,7 +118,7 @@ function drawPlayer(player) {
 	context.restore();
 }
 
-function drawSquare(tile){
+function drawMovementSquare(tile){
 	    context.save();
 	    context.globalAlpha = 0.3;
 	    var squareH = canvas.height/15;
@@ -154,6 +154,35 @@ function drawSquare(tile){
 	    context.restore(); 
 	}
 
+function drawRouteSquare(tile){
+    context.save();
+    context.globalAlpha = 0.5;
+    var squareH = canvas.height/15;
+    var colour = "white";
+    if(tile.dodgeRoll != null || tile.goingForItRoll != null){
+    	colour = "orange";
+    }
+    context.fillStyle = colour;
+    var column = tile.position[0];
+    var row = 14 - tile.position[1];
+    context.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
+    if(tile.goingForItRoll != null){
+    	context.globalAlpha = 1;
+	    context.fillStyle = "white";
+	    context.font = "bold 30px Arial";
+	    context.fillText("GFI: " + tile.goingForItRoll + "+",column*squareH + squareH/8, row*squareH + squareH/4);
+    }
+    if(tile.dodgeRoll != null){
+    	context.globalAlpha = 1;
+    	context.textAlign = "center"; 
+	    context.fillStyle = "white";
+	    context.font = "bold 30px Arial";
+	    context.fillText("Dodge:", column*squareH+ squareH/2, row*squareH + squareH/2+10);
+	    context.fillText(tile.dodgeRoll + "+", column*squareH+ squareH/2, row*squareH + squareH/1.25)
+    }
+    context.restore(); 
+}
+
 function decodeMessage(message){
 	console.log("Decoding message");
 	if(message.type == "INFO"){
@@ -170,9 +199,9 @@ function decodeMessage(message){
 
 function showMovement(message){
 	console.log("in show movement");
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.clearRect(0, 0, canvas.width/2, canvas.height);
 	message.squares.forEach(tile => {
-		drawSquare(tile);
+		drawMovementSquare(tile);
 	});
 	drawBoard();
 	drawPlayers();
@@ -187,20 +216,26 @@ function updateTeamDetails(message){
 
 function actOnClick(click){
 	var square = determineSquare(click);
+	var done = false;
 	players.forEach(player => {
 		 // console.log("checking");
 		 if(player.location[0] == square[0] && player.location[1] == square[1]) {
-			 if(player != activePlayer){
+			 if(player == activePlayer){
+				 resetMovement();
+				 done = true; // needed as return just escapes forEach block
+				 return;
+			 } else{
 			   activePlayer = player;
 			   // console.log(player);
 			   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			         JSON.stringify({"type": "INFO", action: "MOVEMENT", "player": player.id,
 			                         "location": player.location}));
+			   done = true;
 			   return;
 			 }
-		 } // else will be for blitz/ block/ throw actions
+		 } //will be more options for blitz/ block/ throw actions
 	 });
-	if(activePlayer != null && activePlayer.team == team && yourTurn == true){ 
+	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
 		 console.log(click);
 		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 		         JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id,
@@ -219,26 +254,30 @@ function determineSquare(click){
 }
 
 function showRoute(message){
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.clearRect(0, 0, canvas.width/2, canvas.height);
 	message.route.forEach(tile => {
-		drawSquare(tile);
+		drawRouteSquare(tile);
 	});
 	drawBoard();
 	drawPlayers();
 }
 
 function escCheck (e) {
-	console.log("keyPressTime");
+	console.log("keyPress Time");
 	console.log(e);
     if(e.keyCode === "Escape" || e.keyCode === "Esc" || e.keyCode === 27) {
     	console.log("escape");
     	if(activePlayer != null && activePlayer.movement != null){
-    		context.clearRect(0, 0, canvas.width, canvas.height);
-    		activePlayer.movement.forEach(tile => {
-    			drawSquare(tile);
-    		});
-    		drawBoard();
-    		drawPlayers();
+    		resetMovement();
         }
     }
+}
+
+function resetMovement(){
+	context.clearRect(0, 0, canvas.width/2, canvas.height);
+	activePlayer.movement.forEach(tile => {
+		drawMovementSquare(tile);
+	});
+	drawBoard();
+	drawPlayers();
 }

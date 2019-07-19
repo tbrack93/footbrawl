@@ -46,7 +46,7 @@ public class jsonTile {
 		return goingForItRoll;
 	}
 
-	public void setGoingForItRoll(int goingForItRoll) {
+	public void setGoingForItRoll(Integer goingForItRoll) {
 		this.goingForItRoll = goingForItRoll;
 	}
 

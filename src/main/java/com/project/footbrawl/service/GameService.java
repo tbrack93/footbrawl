@@ -634,11 +634,14 @@ public class GameService {
 				//System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
 				jt.setStandUpRoll((p.getRemainingMA() < 3 ? 4 : 0));
 			}
-			System.out.print(i + standingCost > p.getRemainingMA() && standingCost == 0 ? " Going For It: 2+" : "");
+			if(i + standingCost > p.getRemainingMA() && standingCost == 0) {
+				jt.setGoingForItRoll(2);;
+			}
 			if (i > 0) {
-				if (route.get(i - 1).getTackleZones() != 0)
+				if (route.get(i - 1).getTackleZones() != 0) {
 					//System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
 					jt.setDodgeRoll(calculateDodge(p, route.get(i - 1)));
+				}
 			}
 			if (t.containsBall()) {
 				//System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
