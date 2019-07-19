@@ -17,12 +17,18 @@ public class MessageDecoderService {
 	
 	public void decode(MessageFromClient message, int gameId, int team) {
 		String type = message.getType();
+		String action = message.getAction();
 		if(type.equals("INFO")) {
-			if(message.getAction().equals("MOVEMENT")){
+			if(action.equals("MOVEMENT")){
 				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), team);
+				return;
 			}
-			if(message.getAction().equals("TEAMS")){
+			if(action.equals("TEAMS")){
 				lobby.getGameService(gameId).sendTeamsInfo(team);
+				return;
+			}
+			if(action.equals("ROUTE")) {
+				lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getTarget(), team);
 			}
 		}
 	}

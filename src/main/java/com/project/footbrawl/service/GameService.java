@@ -516,7 +516,8 @@ public class GameService {
 
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
-	public List<Tile> getOptimisedPath(PlayerInGame p, int[] goal) {
+	public List<Tile> getOptimisedRoute(int playerId, int[] goal) {
+		PlayerInGame p = getPlayerById(playerId);
 		actionCheck(p);
 		addTackleZones(p);
 		Tile origin = p.getTile();
@@ -617,7 +618,8 @@ public class GameService {
 		return route;
 	}
 
-	public void showTravelPath(List<Tile> route) {
+	public List<jsonTile> jsonRoute(List<Tile> route) {
+		List<jsonTile> jsonRoute = new ArrayList<>();
 		PlayerInGame p = route.get(0).getPlayer();
 		addTackleZones(p);
 		int standingCost = 0;
@@ -626,19 +628,25 @@ public class GameService {
 		}
 		for (int i = 0; i < route.size(); i++) {
 			Tile t = route.get(i);
+			jsonTile jt = new jsonTile(t);
 			System.out.print("\n" + t.getPosition()[0] + " " + t.getPosition()[1]);
 			if (i == 0 && standingCost > 0) {
-				System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
+				//System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
+				jt.setStandUpRoll((p.getRemainingMA() < 3 ? 4 : 0));
 			}
 			System.out.print(i + standingCost > p.getRemainingMA() && standingCost == 0 ? " Going For It: 2+" : "");
 			if (i > 0) {
 				if (route.get(i - 1).getTackleZones() != 0)
-					System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
+					//System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
+					jt.setDodgeRoll(calculateDodge(p, route.get(i - 1)));
 			}
 			if (t.containsBall()) {
-				System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
+				//System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
+				jt.setPickUpBallRoll(calculatePickUpBall(p, t));
 			}
+			jsonRoute.add(jt);
 		}
+		return jsonRoute;
 	}
 
 	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
@@ -648,7 +656,7 @@ public class GameService {
 		Tile origin = p.getTile();
 		List<Tile> forReset = new ArrayList<>();
 		for (int[] i : waypoints) {
-			totalRoute.addAll(getOptimisedPath(p, i));
+			totalRoute.addAll(getOptimisedRoute(p.getId(), i));
 			totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
 			p.setRemainingMA(p.getRemainingMA() - totalRoute.size());
 			Tile t = pitch[i[0]][i[1]];
@@ -657,7 +665,7 @@ public class GameService {
 				forReset.add(t);
 			}
 		}
-		totalRoute.addAll(getOptimisedPath(p, goal));
+		totalRoute.addAll(getOptimisedRoute(p.getId(), goal));
 		p.setRemainingMA(startingMA);
 		for (Tile t : forReset) {
 			t.removePlayer();
@@ -691,7 +699,6 @@ public class GameService {
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
 		PlayerInGame opponent = pitch[goal[0]][goal[1]].getPlayer();
-		showTravelPath(route);
 		int[] block = calculateBlock(attacker, route.get(route.size() - 1), opponent);
 		System.out.println();
 		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
@@ -712,7 +719,7 @@ public class GameService {
 		if (waypoints != null) {
 			route = getRouteWithWaypoints(attacker, waypoints, goal);
 		} else {
-			route = getOptimisedPath(attacker, goal);
+			route = getOptimisedRoute(attacker.getId(), goal);
 		}
 		target = pitch[goal[0]][goal[1]];
 		route.remove(route.size() - 1); // remove movement to opponent's square
@@ -788,7 +795,6 @@ public class GameService {
 		if (defender.getStatus().contentEquals("standing")) {
 			throw new IllegalArgumentException("Can only foul a player on the ground");
 		}
-		showTravelPath(route);
 		System.out.println();
 		int[] assists = calculateAssists(attacker, defender);
 		int modifier = assists[0] - assists[1];
@@ -1614,6 +1620,11 @@ public class GameService {
 	
 	public void sendTeamsInfo(int teamId) {
 		sender.sendTeamsInfo(game.getId(), teamId, team1, team2);
+	}
+	
+	public void sendRoute(int playerId, int[] target, int teamId) {
+		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, target));
+		sender.sendRoute(game.getId(), teamId, playerId, route);
 	}
 
 	
