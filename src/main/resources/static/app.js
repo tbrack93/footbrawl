@@ -8,6 +8,7 @@ var timeSinceClick;
 var debounceInterval = 500;
 var game;
 var team;
+var activePlayer;
 
 window.onload = init;
 
@@ -21,8 +22,10 @@ function init() {
 	drawBoard();
 	timeSinceClick = new Date();
 	var player = {id: 1, name:"John", location: [0, 1]};
+	var player2 = {id: 4, name:"Sam", location: [5,3]};
 	players.push(player);
-	drawPlayer(player);
+	players.push(player2);
+	drawPlayers();
 	    
 	    canvas.addEventListener('click', (e) => {
 	    	var time = new Date();
@@ -34,11 +37,13 @@ function init() {
 	    	    players.forEach(player => {
 	    		 // console.log("checking");
 	    		 if(isIntersect(e, player)) {
-	    			 console.log(player);
-	    			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	    			 if(player != activePlayer){
+	    			   activePlayer = player;
+	    			   console.log(player);
+	    			   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 					         JSON.stringify({"type": "INFO", action: "MOVEMENT", "player": player.id,
 					                         "location": player.location}));
-	    			 
+	    			 }
 	    		 }
 	    	  });
 	    	}});
@@ -96,8 +101,8 @@ function drawPlayers(){
 }
 
 function drawPlayer(player) {
-	var column = player.location[0];
-	var row = player.location[1];
+	var column = player.location[1];
+	var row = player.location[0];
 	var img = new Image();
 	var squareH = canvas.height / 15;
 	img.src = "/images/human_blitzer.png";
@@ -105,7 +110,11 @@ function drawPlayer(player) {
 		context.drawImage(img, column * squareH, row * squareH, squareH,
 				squareH);	
 		context.strokeStyle = "white";
-		context.lineWidth = 3;
+		var line =3;
+		if(player == activePlayer){
+			line = 6;
+		}
+		context.lineWidth = line;
 		context.strokeRect(column * squareH, row * squareH, squareH,
 				squareH);
 	}
@@ -122,13 +131,25 @@ function drawSquare(tile){
         // need to add logic for showing going for it
 	    context.fillStyle = colour;
 	    context.fillRect(tile.position[1]*squareH+3, tile.position[0]*squareH+3 , squareH-5, squareH-5);
+	    if(tile.tackleZones !=null){
+	    	context.globalAlpha = 1;
+		    context.fillStyle = "white";
+		    context.font = "30px Arial";
+		    context.fillText(tile.tackleZones, tile.position[1]*squareH +20, tile.position[0]*squareH +30);
+	    }
+	    if(tile.goingForItRoll != null){
+	    	context.globalAlpha = 1;
+		    context.fillStyle = "white";
+		    context.font = "30px Arial";
+		    context.fillText("GFI", tile.position[1]*squareH + squareH/3, tile.position[0]*squareH + squareH/2+10);
+	    }
 	}
 
 function isIntersect(click, player){
 	var rect = canvas.getBoundingClientRect()
 	var squareSize = canvas.offsetWidth/26;
-	var playerColumn = player.location[1];
-	var playerRow = player.location[0];
+	var playerColumn = player.location[0];
+	var playerRow = player.location[1];
 	var clickX = click.clientX - rect.left;
 	var clickY = click.clientY - rect.top;
 	console.log(clickX);
@@ -152,6 +173,7 @@ function decodeMessage(message){
 
 function showMovement(message){
 	console.log("in show movement");
+	context.clearRect(0, 0, canvas.width, canvas.height);
 	message.squares.forEach(tile => {
 		drawSquare(tile);
 	});

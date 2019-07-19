@@ -9,6 +9,7 @@ import com.project.footbrawl.entity.Team;
 public class TeamInGame {
 	
 	private Team team; // related entity
+	private List<PlayerInGame> allPlayers;
 	private List<PlayerInGame> reserves;
 	private List<PlayerInGame> playersOnPitch;
 	private List<PlayerInGame> dugout; // KO'd
@@ -28,13 +29,16 @@ public class TeamInGame {
 		this.team = team;
 		turn = 0;
 		remainingTeamRerolls = team.getTeamRerolls();
+		allPlayers = new ArrayList<>();
 		reserves = new ArrayList<>();
 		playersOnPitch = new ArrayList<>();
 		injured = new ArrayList<>();
 		dugout = new ArrayList<>();
 		dungeon = new ArrayList<>();
 	    for(Player p : team.getPlayers()) {
-	    	playersOnPitch.add(new PlayerInGame(p, this)); // should start as reserves, but on pitch for testing
+	    	PlayerInGame pg = new PlayerInGame(p, this);
+	    	allPlayers.add(pg);
+	    	playersOnPitch.add(pg); // should start as reserves, but on pitch for testing
 	    }
 	}
 
@@ -218,5 +222,11 @@ public class TeamInGame {
 		return team.getName();
 	}
 	
-	
+	public PlayerInGame getPlayerById(int playerId) {
+		for(PlayerInGame pg : allPlayers) {
+			if (pg.getId() == playerId)
+				return pg;
+		}
+		return null;
+	}
 }
