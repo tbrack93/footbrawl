@@ -1,5 +1,6 @@
 
 var canvas;
+var background;
 // below used to determine canvas absolute pixel locations
 var canvasLeft;
 var canvasTop;
@@ -18,10 +19,13 @@ document.addEventListener("keydown", escCheck);
 function init() {
 	yourTurn = true; // just for testing
 	players = new Array();
-	canvas = document.getElementById('canvas');
-	context = canvas.getContext('2d');
+	canvas = document.getElementById("canvas");
+	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
 	canvasLeft = canvas.offsetLeft;
+	background = document.getElementById("canvasBackground");
+	background.width = canvas.width;
+	background.height = background.width * (15/26);
 	canvasTop = canvas.offsetTop;
 	drawBoard();
 	timeSinceClick = new Date();
@@ -63,30 +67,27 @@ function init() {
 	}
 
 function drawBoard() {
-	context.save();
+	var backgroundCtx = background.getContext("2d");
 	// size of canvas
-	var cw = canvas.width;
-	var ch = canvas.height;
+	var cw = background.width;
+	var ch = background.height;
 
 	var squareH = ch / 15;
-	context.globalAlpha = 1;
-	context.lineWidth = 1.1;
+	backgroundCtx.globalAlpha = 1;
+	backgroundCtx.lineWidth = 1.1;
 
 	for (var x = 0; x <= cw; x += squareH) {
-		context.moveTo(0.5 + x, 0);
-		context.lineTo(0.5 + x, ch);
+		backgroundCtx.moveTo(0.5 + x, 0);
+		backgroundCtx.lineTo(0.5 + x, ch);
 	}
 
 	for (var x = 0; x <= ch; x += squareH) {
-		context.moveTo(0, 0.5 + x);
-		context.lineTo(cw, 0.5 + x);
+		backgroundCtx.moveTo(0, 0.5 + x);
+		backgroundCtx.lineTo(cw, 0.5 + x);
 	}
 	
-	context.strokeStyle = "white";
-	console.log(context.globalAlpha);
-	console.log(context.lineWidth);
-	context.stroke();
-	context.restore();
+	backgroundCtx.strokeStyle = "white";
+	backgroundCtx.stroke();
 }
 
 function drawPlayers(){
@@ -203,7 +204,6 @@ function showMovement(message){
 	message.squares.forEach(tile => {
 		drawMovementSquare(tile);
 	});
-	drawBoard();
 	drawPlayers();
 	activePlayer.movement = message.squares;
 }
@@ -258,7 +258,6 @@ function showRoute(message){
 	message.route.forEach(tile => {
 		drawRouteSquare(tile);
 	});
-	drawBoard();
 	drawPlayers();
 }
 
@@ -278,6 +277,5 @@ function resetMovement(){
 	activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);
 	});
-	drawBoard();
 	drawPlayers();
 }
