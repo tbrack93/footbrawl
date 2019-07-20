@@ -29,7 +29,11 @@ public class MessageDecoderService {
 				return;
 			}
 			if(action.equals("ROUTE")) {
-				lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getTarget(), team);
+				if(message.getWaypoints().size() != 0) {
+					lobby.getGameService(gameId).sendWaypointRoute(message.getPlayer(), message.getTarget(), message.getWaypoints(), team);
+				} else {
+				lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getLocation(), message.getTarget(), team);
+				}
 			}
 		}
 	}

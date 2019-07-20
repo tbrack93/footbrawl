@@ -7,13 +7,14 @@ var canvasLeft;
 var canvasTop;
 var players;
 var timeSinceClick;
-var debounceInterval = 500;
+var debounceInterval = 200;
 var game;
 var team;
 var activePlayer;
 var yourTurn;
 var route;
 var inRoute;
+var waypoints;
 
 window.onload = init;
 document.addEventListener("keydown", escCheck);
@@ -21,6 +22,7 @@ document.addEventListener("keydown", escCheck);
 function init() {
 	yourTurn = true; // just for testing
 	players = new Array();
+	waypoints = new Array();
 	canvas = document.getElementById("canvas");
 	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
@@ -254,10 +256,9 @@ function actOnClick(click){
 		 } // will be more options for blitz/ block/ throw actions
 	 });
 	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
-		 console.log(click);
 		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-		         JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id,
-		                         "target": square}));
+		         JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id, 
+		        	             "location": activePlayer.location, "target": square, "waypoints": waypoints}));
 	}
 	 
 }
@@ -272,13 +273,19 @@ function determineSquare(click){
 }
 
 function showRoute(message){
-	inRoute = true;
 	route = message.route;
-	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	var location = route[route.length -1].position;
-	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	if(route.length != 0){
+	  if(inRoute == false){
+	  	  waypoints.length = 0;
+		  inRoute = true;
+	  }
+	  squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	  var location = route[route.length -1].position;
+	  waypoints.push(location);
+	  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
 	                         "location": location, "routeMACost": message.routeMACost}));
+	} // else say it's empty
 }
 
 function escCheck (e) {
@@ -295,6 +302,7 @@ function escCheck (e) {
 
 function resetMovement(){
 	inRoute = false;
+	waypoints.length = 0;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);

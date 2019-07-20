@@ -5,6 +5,7 @@ import java.util.List;
 public class MessageFromClient extends Message {
 
 	private List<Integer[]> route;
+	private List<int[]> waypoints;
 	private int diceChoice;
 	private boolean useSkill;
 	private String skillName;
@@ -55,5 +56,15 @@ public class MessageFromClient extends Message {
 	public void setUseReroll(boolean useReroll) {
 		this.useReroll = useReroll;
 	}
+
+	public List<int[]> getWaypoints() {
+		return waypoints;
+	}
+
+	public void setWaypoints(List<int[]> waypoints) {
+		this.waypoints = waypoints;
+	}
+	
+	
 	
 }
