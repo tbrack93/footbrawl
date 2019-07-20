@@ -13,6 +13,7 @@ var team;
 var activePlayer;
 var yourTurn;
 var route;
+var playerImages;
 
 window.onload = init;
 document.addEventListener("keydown", escCheck);
@@ -20,6 +21,7 @@ document.addEventListener("keydown", escCheck);
 function init() {
 	yourTurn = true; // just for testing
 	players = new Array();
+	playerImages = new Map();
 	canvas = document.getElementById("canvas");
 	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
@@ -100,24 +102,25 @@ function drawPlayers(){
 
 function drawPlayer(player) {
 	context.save();
+	var img = playerImages.get(player.imgUrl);
+	if(img == null){
+	  img = new Image();
+	  img.src = "/images/human_blitzer.png";
+	  playerImages.set(player.imgUrl, img);
+	  img.onload;
+	}
 	context.globalAlpha = 1;
 	var column = player.location[0];
 	var row = 14 -player.location[1];
-	var img = new Image();
 	var squareH = canvas.height / 15;
-	img.src = "/images/human_blitzer.png";
-	img.onload = function(){
-		context.drawImage(img, column * squareH, row * squareH, squareH,
-				squareH);	
-		context.strokeStyle = "white";
-		var line = 4;
-		if(player == activePlayer){
-			line = 6;
-		}
-		context.lineWidth = line;
-		context.strokeRect(column * squareH, row * squareH, squareH,
-				squareH);
+	context.drawImage(img, column * squareH, row * squareH, squareH, squareH);	
+	context.strokeStyle = "white";
+	var line = 4;
+	if(player == activePlayer){
+		line = 6;
 	}
+	context.lineWidth = line;
+	context.strokeRect(column * squareH, row * squareH, squareH, squareH);
 	context.restore();
 }
 
@@ -237,7 +240,7 @@ function actOnClick(click){
 			   done = true;
 			   return;
 			 }
-		 } //will be more options for blitz/ block/ throw actions
+		 } // will be more options for blitz/ block/ throw actions
 	 });
 	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
 		 console.log(click);
