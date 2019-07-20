@@ -13,7 +13,7 @@ public class jsonTile {
 	private Integer standUpRoll; // standUpRoll
 
 	public jsonTile(Tile tile) {
-		this.position = tile.getPosition();
+		this.position = tile.getLocation();
 		this.tackleZones = tile.getTackleZones();
 		if(tackleZones == 0) tackleZones = null;
 	}

@@ -13,7 +13,6 @@ var team;
 var activePlayer;
 var yourTurn;
 var route;
-var playerImages;
 
 window.onload = init;
 document.addEventListener("keydown", escCheck);
@@ -21,7 +20,6 @@ document.addEventListener("keydown", escCheck);
 function init() {
 	yourTurn = true; // just for testing
 	players = new Array();
-	playerImages = new Map();
 	canvas = document.getElementById("canvas");
 	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
@@ -33,15 +31,15 @@ function init() {
 	canvasTop = canvas.offsetTop;
 	drawBoard();
 	timeSinceClick = new Date();
-	var player = {id: 1, team: 1, name:"John", location: [0, 1]};
-	var player2 = {id: 2, team: 2, name:"Bobby", location: [7,5]};
-	var player3 = {id: 3, team: 2, name:"Sam", location: [7,7]};
-	var player4 = {id: 4, team: 1, name:"Sarah", location: [5,3]};
-	players.push(player);
-	players.push(player2);
-	players.push(player3);
-	players.push(player4);
-	drawPlayers();
+// var player = {id: 1, team: 1, name:"John", location: [0, 1]};
+// var player2 = {id: 2, team: 2, name:"Bobby", location: [7,5]};
+// var player3 = {id: 3, team: 2, name:"Sam", location: [7,7]};
+// var player4 = {id: 4, team: 1, name:"Sarah", location: [5,3]};
+// players.push(player);
+// players.push(player2);
+// players.push(player3);
+// players.push(player4);
+// drawPlayers();
 	    
 	    canvas.addEventListener('click', (e) => {
 	    	var time = new Date();
@@ -95,34 +93,33 @@ function drawBoard() {
 }
 
 function drawPlayers(){
+	context.clearRect(0, 0, canvas.width, canvas.height);
 	players.forEach(player => {
 		drawPlayer(player);
 	});
 }
 
 function drawPlayer(player) {
-	context.save();
-	var img = playerImages.get(player.imgUrl);
-	if(img == null){
-	  img = new Image();
-	  img.src = "/images/human_blitzer.png";
-	  playerImages.set(player.imgUrl, img);
-	  img.onload;
-	}
-	context.globalAlpha = 1;
-	var column = player.location[0];
-	var row = 14 -player.location[1];
-	var squareH = canvas.height / 15;
-	context.drawImage(img, column * squareH, row * squareH, squareH, squareH);	
-	context.strokeStyle = "white";
-	var line = 4;
-	if(player == activePlayer){
-		line = 6;
-	}
-	context.lineWidth = line;
-	context.strokeRect(column * squareH, row * squareH, squareH, squareH);
-	context.restore();
+	  var img = new Image();
+	  img.src = player.imgUrl;
+	  img.onload = function() {
+		  context.globalAlpha = 1;
+			var column = player.location[0];
+			var row = 14 -player.location[1];
+			var squareH = canvas.height / 15;
+				context.drawImage(img, column * squareH, row * squareH, squareH,
+						squareH);	
+				context.strokeStyle = "white";
+				var line = 4;
+				if(player == activePlayer){
+					line = 6;
+				}
+				context.lineWidth = line;
+				context.strokeRect(column * squareH, row * squareH, squareH,
+						squareH);
+	  }
 }
+
 
 function drawMovementSquare(tile){
 	    squareCtx = squares.getContext("2d");
@@ -219,6 +216,13 @@ function updateTeamDetails(message){
 	console.log("in team details");
 	document.getElementById("team1Name").innerHTML = message.team1Name;
 	document.getElementById("team2Name").innerHTML = message.team2Name;
+	message.team1.forEach(player =>{
+		players.push(player);
+	});
+	message.team2.forEach(player =>{
+		players.push(player);
+	});
+	drawPlayers();
 }
 
 function actOnClick(click){

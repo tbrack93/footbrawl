@@ -54,8 +54,8 @@ public class GameLobbyService {
 		p4.setTeam(1);
 		p4.setST(3);
 		p.setImgUrl("/images/human_blitzer.png");
-		p2.setImgUrl("/images/human_blitzer.png");
-		p3.setImgUrl("/images/human_blitzer.png");
+		p2.setImgUrl("/images/orc_lineman.png");
+		p3.setImgUrl("/images/orc_lineman.png");
 		p4.setImgUrl("/images/human_blitzer.png");
 		Team team1 = new Team("bobcats");
 		Team team2 = new Team("murderers");
