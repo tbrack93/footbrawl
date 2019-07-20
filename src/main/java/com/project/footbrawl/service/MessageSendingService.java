@@ -44,10 +44,11 @@ public class MessageSendingService {
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
 	
-	public void sendRoute(int gameId, int teamId, int playerId, List<jsonTile> route) {
+	public void sendRoute(int gameId, int teamId, int playerId, List<jsonTile> route, int routeMACost) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("ROUTE");
+		message.setRouteMACost(routeMACost);
 		message.setPlayer(playerId);
 	    message.setRoute(route);
 	    controller.sendMessageToUser(gameId,  teamId, message);

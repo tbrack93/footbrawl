@@ -13,6 +13,7 @@ var team;
 var activePlayer;
 var yourTurn;
 var route;
+var inRoute;
 
 window.onload = init;
 document.addEventListener("keydown", escCheck);
@@ -204,12 +205,17 @@ function decodeMessage(message){
 }
 
 function showMovement(message){
-	console.log("in show movement");
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	message.squares.forEach(tile => {
 		drawMovementSquare(tile);
 	});
+	if(inRoute == true){
+	  route.forEach(tile => {
+	    drawRouteSquare(tile);
+	  });
+	} else{
 	activePlayer.movement = message.squares;
+	}
 }
 
 function updateTeamDetails(message){
@@ -236,11 +242,12 @@ function actOnClick(click){
 				 done = true; // needed as return just escapes forEach block
 				 return;
 			 } else{
+			   inRoute = false;
 			   activePlayer = player;
 			   // console.log(player);
 			   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-			         JSON.stringify({"type": "INFO", action: "MOVEMENT", "player": player.id,
-			                         "location": player.location}));
+			         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
+			                         "location": player.location, "routeMACost": 0}));
 			   done = true;
 			   return;
 			 }
@@ -265,10 +272,13 @@ function determineSquare(click){
 }
 
 function showRoute(message){
+	inRoute = true;
+	route = message.route;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	message.route.forEach(tile => {
-		drawRouteSquare(tile);
-	});
+	var location = route[route.length -1].position;
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
+	                         "location": location, "routeMACost": message.routeMACost}));
 }
 
 function escCheck (e) {
@@ -280,9 +290,11 @@ function escCheck (e) {
     		resetMovement();
         }
     }
+    inRoute = false;
 }
 
 function resetMovement(){
+	inRoute = false;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);

@@ -20,7 +20,8 @@ public class MessageDecoderService {
 		String action = message.getAction();
 		if(type.equals("INFO")) {
 			if(action.equals("MOVEMENT")){
-				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), team);
+				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), message.getRouteMACost(), team);
+				System.out.println("Decode MA Used: " + message.getRouteMACost());
 				return;
 			}
 			if(action.equals("TEAMS")){

@@ -11,6 +11,7 @@ public class Message {
 	private int [] location;
 	private int[] target;
 	private String description;
+	private Integer routeMACost;
 	
 	public Message() {
 		
@@ -63,5 +64,15 @@ public class Message {
 	public void setLocation(int[] location) {
 		this.location = location;
 	}
+
+	public Integer getRouteMACost() {
+		return routeMACost;
+	}
+
+	public void setRouteMACost(Integer routeMACost) {
+		this.routeMACost = routeMACost;
+	}
+	
+	
 
 }
