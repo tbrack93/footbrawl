@@ -441,7 +441,7 @@ public class GameService {
 		activeTeam.newTurn(); // reset players on pitch (able to move/ act)
 	}
 
-	public void showPossibleMovement(int playerId, int[] location, int requester) {
+	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = getPlayerById(playerId);
@@ -459,9 +459,12 @@ public class GameService {
 			}
 		}
 		resetTiles();
-		Tile position = p.getTile();
+		System.out.println("MA used: " + maUsed);
+		int originalMA = p.getRemainingMA();
+		p.setRemainingMA(originalMA - maUsed);
+		Tile position = pitch[location[0]][location[1]];
 		int cost = 0;
-		if (p.getStatus().equals("prone")) {
+		if (p.getStatus().equals("prone") && maUsed ==0) {
 			position.setCostToReach(3);
 			cost = 3;
 		}
@@ -471,7 +474,7 @@ public class GameService {
 				Tile t = pitch[i][j];
 				if(t.getCostToReach() != 99) {
 					jsonTile jTile = new jsonTile(t);
-					if(t.getCostToReach() == 77) {
+					if(t.getCostToReach() == 77 && t != position) {
 						jTile.setGoingForItRoll(2); // if blizzard this will be 3
 					}
 					squares.add(jTile);
@@ -484,6 +487,7 @@ public class GameService {
 			}
 			//System.out.println();
 		}
+		p.setRemainingMA(originalMA);
 		System.out.println(sender == null);
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 	}
@@ -634,7 +638,7 @@ public class GameService {
 				//System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
 				jt.setStandUpRoll((p.getRemainingMA() < 3 ? 4 : 0));
 			}
-			if(i + standingCost > p.getRemainingMA() && standingCost == 0) {
+			if(i + standingCost > p.getRemainingMA()) {
 				jt.setGoingForItRoll(2);;
 			}
 			if (i > 0) {
@@ -1627,7 +1631,8 @@ public class GameService {
 	
 	public void sendRoute(int playerId, int[] target, int teamId) {
 		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, target));
-		sender.sendRoute(game.getId(), teamId, playerId, route);
+		int routeMACost = route.size()-1 + (route.get(1).getStandUpRoll() != null ? 3 : 0);
+		sender.sendRoute(game.getId(), teamId, playerId, route, routeMACost);
 	}
 
 	
