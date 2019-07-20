@@ -23,6 +23,7 @@ function init() {
 	yourTurn = true; // just for testing
 	players = new Array();
 	waypoints = new Array();
+	route = new Array();
 	canvas = document.getElementById("canvas");
 	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
@@ -79,7 +80,7 @@ function drawBoard() {
 
 	var squareH = ch / 15;
 	backgroundCtx.globalAlpha = 1;
-	backgroundCtx.lineWidth = 1.1;
+	backgroundCtx.lineWidth = 0.6;
 
 	for (var x = 0; x <= cw; x += squareH) {
 		backgroundCtx.moveTo(0.5 + x, 0);
@@ -110,12 +111,13 @@ function drawPlayer(player) {
 			var column = player.location[0];
 			var row = 14 -player.location[1];
 			var squareH = canvas.height / 15;
+			context.clearRect(column * squareH-5, row * squareH-5, squareH+10,squareH+10);
 				context.drawImage(img, column * squareH, row * squareH, squareH,
 						squareH);	
 				context.strokeStyle = "white";
-				var line = 4;
+				var line = 3;
 				if(player == activePlayer){
-					line = 6;
+					line = 8;
 				}
 				context.lineWidth = line;
 				context.strokeRect(column * squareH, row * squareH, squareH,
@@ -127,7 +129,7 @@ function drawPlayer(player) {
 function drawMovementSquare(tile){
 	    squareCtx = squares.getContext("2d");
 	    squareCtx.save();
-	    squareCtx.globalAlpha = 0.3;
+	    squareCtx.globalAlpha = 0.4;
 	    var squareH = squares.height/15;
         var colour = "blue";
         if(tile.tackleZones != null){
@@ -243,22 +245,35 @@ function actOnClick(click){
 				 resetMovement();
 				 done = true; // needed as return just escapes forEach block
 				 return;
-			 } else{
-			   inRoute = false;
+			 } else{	
+			   var pTemp = activePlayer;
 			   activePlayer = player;
+			   if(pTemp != null){
+			     drawPlayer(pTemp);
+			   }
+			   drawPlayer(activePlayer);
+			   inRoute = false;
+			   waypoints.length = 0;
+			   route.length = 0;
+			   
 			   // console.log(player);
 			   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-			         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
-			                         "location": player.location, "routeMACost": 0}));
+			                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
+			                 "location": player.location, "routeMACost": 0}));
 			   done = true;
 			   return;
 			 }
 		 } // will be more options for blitz/ block/ throw actions
 	 });
 	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
-		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-		         JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id, 
-		        	             "location": activePlayer.location, "target": square, "waypoints": waypoints}));
+		if(playerCanReach(square) && route.length <= activePlayer.remainingMA +2){
+		   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+		                    JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id, 
+		        	        "location": activePlayer.location, "target": square, "waypoints": waypoints}));
+		} else{
+			console.log("player can't reach that square");
+		}
+		
 	}
 	 
 }
@@ -297,14 +312,24 @@ function escCheck (e) {
     		resetMovement();
         }
     }
-    inRoute = false;
 }
 
 function resetMovement(){
 	inRoute = false;
 	waypoints.length = 0;
+	route.length = 0;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);
 	});
+}
+
+function playerCanReach(square){
+	var result = false;
+	activePlayer.movement.forEach(tile => {
+		if(tile.position[0] == square[0] && tile.position[1] == square[1]){
+			result = true;
+		}
+	});
+	return result;
 }
