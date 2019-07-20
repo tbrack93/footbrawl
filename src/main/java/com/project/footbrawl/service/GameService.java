@@ -29,10 +29,10 @@ import com.project.footbrawl.instance.jsonTile;
 @Service
 @Scope("prototype")
 public class GameService {
-	
+
 	@Autowired
 	MessageSendingService sender;
-	
+
 	// for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
@@ -75,11 +75,11 @@ public class GameService {
 //		}
 //		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
 //	}
-	
+
 	public GameService(MessageSendingService sender) {
 		this.sender = sender;
 	}
-	
+
 	public void setGame(Game game) {
 		this.game = game;
 		team1 = new TeamInGame(game.getTeam1());
@@ -95,7 +95,7 @@ public class GameService {
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
 	}
-	
+
 	public int getGameId() {
 		return game.getId();
 	}
@@ -383,7 +383,7 @@ public class GameService {
 			} else {
 				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
 			}
-		} else if (half == 3){
+		} else if (half == 3) {
 			if (game.getTeam1Score() == game.getTeam2Score()) {
 				penaltyShootOuts();
 			}
@@ -445,47 +445,40 @@ public class GameService {
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = getPlayerById(playerId);
-		if(p.getId()!= playerId || p == null) {
-			throw new IllegalArgumentException("Invalid player or location");
-		}
-		if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
-																// player
-			if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already
-																							// acted this turn,
-																							// deselecting them ends
-																							// their action
-				endOfAction(activePlayer);
-				activePlayer = p;
-			}
-		}
-		resetTiles();
-		System.out.println("MA used: " + maUsed);
 		int originalMA = p.getRemainingMA();
-		p.setRemainingMA(originalMA - maUsed);
-		Tile position = pitch[location[0]][location[1]];
-		int cost = 0;
-		if (p.getStatus().equals("prone") && maUsed ==0) {
-			position.setCostToReach(3);
-			cost = 3;
-		}
-		searchNeighbours(p, position, cost);
-		for (int i = 0; i < 26; i++) {
-			for (int j = 0; j < 15; j++) {
-				Tile t = pitch[i][j];
-				if(t.getCostToReach() != 99) {
-					jsonTile jTile = new jsonTile(t);
-					if(t.getCostToReach() == 77 && t != position) {
-						jTile.setGoingForItRoll(2); // if blizzard this will be 3
-					}
-					squares.add(jTile);
-				}
-//				int tackleZones = t.getTackleZones();
-//				if (t.getCostToReach() == 99){
-//					tackleZones = 0;
-//				}
-			//	System.out.printf("%5d %2d ", t.getCostToReach(), tackleZones);
+		if (maUsed < p.getMA() + 2) { // don't try to work out if given an impossibly high number for movement used
+			if (p.getId() != playerId || p == null) {
+				throw new IllegalArgumentException("Invalid player or location");
 			}
-			//System.out.println();
+			if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
+																	// player
+				if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already acted this turn,
+																								// deselecting them ends their action
+					endOfAction(activePlayer);
+					activePlayer = p;
+				}
+			}
+			resetTiles();
+			p.setRemainingMA(originalMA - maUsed);
+			Tile position = pitch[location[0]][location[1]];
+			int cost = 0;
+			if (p.getStatus().equals("prone") && maUsed == 0) {
+				position.setCostToReach(3);
+				cost = 3;
+			}
+			searchNeighbours(p, position, cost);
+			for (int i = 0; i < 26; i++) {
+				for (int j = 0; j < 15; j++) {
+					Tile t = pitch[i][j];
+					if (t.getCostToReach() != 99) {
+						jsonTile jTile = new jsonTile(t);
+						if (t.getCostToReach() == 77 && t != position) {
+							jTile.setGoingForItRoll(2); // if blizzard this will be 3
+						}
+						squares.add(jTile);
+					}
+				}
+			}
 		}
 		p.setRemainingMA(originalMA);
 		System.out.println(sender == null);
@@ -520,14 +513,15 @@ public class GameService {
 
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
-	public List<Tile> getOptimisedRoute(int playerId, int[] goal) {
+	public List<Tile> getOptimisedRoute(int playerId, int[] from, int[] goal) {
 		PlayerInGame p = getPlayerById(playerId);
 		actionCheck(p);
 		addTackleZones(p);
-		Tile origin = p.getTile();
+		Tile origin = pitch[from[0]][from[1]];
 		// Tile origin = selectedPlayer.getTile();
 		Tile target = pitch[goal[0]][goal[1]];
 		int MA = p.getRemainingMA();
+		System.out.println("optimised remaining MA " + MA);
 
 		Comparator<Tile> comp = new Comparator<Tile>() {
 			@Override
@@ -624,6 +618,9 @@ public class GameService {
 
 	public List<jsonTile> jsonRoute(List<Tile> route) {
 		List<jsonTile> jsonRoute = new ArrayList<>();
+		if (route.isEmpty()) {
+			return new ArrayList<jsonTile>();
+		}
 		PlayerInGame p = route.get(0).getPlayer();
 		addTackleZones(p);
 		int standingCost = 0;
@@ -635,54 +632,54 @@ public class GameService {
 			jsonTile jt = new jsonTile(t);
 			System.out.print("\n" + t.getLocation()[0] + " " + t.getLocation()[1]);
 			if (i == 0 && standingCost > 0) {
-				//System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
+				// System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
 				jt.setStandUpRoll((p.getRemainingMA() < 3 ? 4 : 0));
 			}
-			if(i + standingCost > p.getRemainingMA()) {
-				jt.setGoingForItRoll(2);;
+			if (i + standingCost > p.getRemainingMA()) {
+				jt.setGoingForItRoll(2);
 			}
 			if (i > 0) {
 				if (route.get(i - 1).getTackleZones() != 0) {
-					//System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
+					// System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
 					jt.setDodgeRoll(calculateDodge(p, route.get(i - 1)));
 				}
 			}
 			if (t.containsBall()) {
-				//System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
+				// System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
 				jt.setPickUpBallRoll(calculatePickUpBall(p, t));
 			}
 			jsonRoute.add(jt);
+			System.out.println(jt.getPosition());
 		}
 		return jsonRoute;
 	}
 
-	public List<Tile> getRouteWithWaypoints(PlayerInGame p, int[][] waypoints, int[] goal) {
+	public List<Tile> getRouteWithWaypoints(int playerId, List<int[]> waypoints, int[] goal) {
+		PlayerInGame p = getPlayerById(playerId);
 		actionCheck(p);
 		int startingMA = p.getRemainingMA();
 		List<Tile> totalRoute = new ArrayList<>();
 		Tile origin = p.getTile();
-		List<Tile> forReset = new ArrayList<>();
-		for (int[] i : waypoints) {
-			totalRoute.addAll(getOptimisedRoute(p.getId(), i));
-			totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
-			p.setRemainingMA(p.getRemainingMA() - totalRoute.size());
-			Tile t = pitch[i[0]][i[1]];
-			if (!t.containsPlayer()) {
-				t.addPlayer(p);
-				forReset.add(t);
+		try {
+			for (int[] i : waypoints) {
+				totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), i));
+				origin = totalRoute.get(totalRoute.size() - 1);
+				totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
+				p.setRemainingMA(startingMA - (totalRoute.size()));
+				System.out.println("remaining MA: " + p.getRemainingMA());
 			}
+			totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), goal));
+		} catch (Exception e) {
+			System.out.println("Can't reach here");
+			return new ArrayList<Tile>();
+		} finally {
+			p.setRemainingMA(startingMA);
+			// queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		}
-		totalRoute.addAll(getOptimisedRoute(p.getId(), goal));
-		p.setRemainingMA(startingMA);
-		for (Tile t : forReset) {
-			t.removePlayer();
-		}
-		origin.addPlayer(p);
-		// queue.add(() -> getRouteWithWaypoints((PlayerInGame) p, waypoints, goal));
 		return totalRoute;
 	}
 
-	public void blitzAction(PlayerInGame attacker, int[][] waypoints, int[] goal, boolean followUp) {
+	public void blitzAction(PlayerInGame attacker, List<int[]> waypoints, int[] goal, boolean followUp) {
 		actionCheck(attacker);
 		if (attacker.getTeamIG().hasBlitzed()) {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
@@ -699,7 +696,7 @@ public class GameService {
 		}
 	}
 
-	public void calculateBlitz(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+	public void calculateBlitz(PlayerInGame attacker, List<int[]> waypoints, int[] goal) {
 		actionCheck(attacker);
 		if (attacker.getTeamIG().hasBlitzed()) {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
@@ -712,7 +709,7 @@ public class GameService {
 				+ " chooses");
 	}
 
-	public List<Tile> calculateBlitzRoute(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+	public List<Tile> calculateBlitzRoute(PlayerInGame attacker, List<int[]> waypoints, int[] goal) {
 		Tile target = pitch[goal[0]][goal[1]];
 		if (!target.containsPlayer() || target.getPlayer().getTeam() == attacker.getTeam()) {
 			throw new IllegalArgumentException("No opponent in target square");
@@ -724,9 +721,9 @@ public class GameService {
 		opponent.setTile(target); // but player needs to keep tile to prevent null exception
 		List<Tile> route;
 		if (waypoints != null) {
-			route = getRouteWithWaypoints(attacker, waypoints, goal);
+			route = getRouteWithWaypoints(attacker.getId(), waypoints, goal);
 		} else {
-			route = getOptimisedRoute(attacker.getId(), goal);
+			route = getOptimisedRoute(attacker.getId(), attacker.getLocation(), goal);
 		}
 		target = pitch[goal[0]][goal[1]];
 		route.remove(route.size() - 1); // remove movement to opponent's square
@@ -734,7 +731,7 @@ public class GameService {
 		return route;
 	}
 
-	public void foulAction(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+	public void foulAction(PlayerInGame attacker, List<int[]> waypoints, int[] goal) {
 		actionCheck(attacker);
 		if (attacker.getTeamIG().hasFouled()) {
 			throw new IllegalArgumentException("Can only attempt foul once per turn");
@@ -792,7 +789,7 @@ public class GameService {
 		}
 	}
 
-	public void calculateFoul(PlayerInGame attacker, int[][] waypoints, int[] goal) {
+	public void calculateFoul(PlayerInGame attacker, List<int[]> waypoints, int[] goal) {
 		actionCheck(attacker);
 		if (attacker.getTeamIG().hasFouled()) {
 			throw new IllegalArgumentException("Can only attempt foul once per turn");
@@ -1611,12 +1608,12 @@ public class GameService {
 		}
 		return null; // should be impossible during main gameplay
 	}
-	
+
 	public PlayerInGame getPlayerById(int playerId) {
 		PlayerInGame p1 = team1.getPlayerById(playerId);
-		if(p1 == null) {
+		if (p1 == null) {
 			PlayerInGame p2 = team2.getPlayerById(playerId);
-			if(p2 == null) {
+			if (p2 == null) {
 				return null;
 			} else {
 				return p2;
@@ -1624,16 +1621,30 @@ public class GameService {
 		}
 		return p1;
 	}
-	
+
 	public void sendTeamsInfo(int teamId) {
 		sender.sendTeamsInfo(game.getId(), teamId, team1, team2);
 	}
-	
-	public void sendRoute(int playerId, int[] target, int teamId) {
-		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, target));
-		int routeMACost = route.size()-1 + (route.get(1).getStandUpRoll() != null ? 3 : 0);
+
+	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
+		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target));
+		int routeMACost;
+		if (route.isEmpty()) {
+			routeMACost = 0;
+		} else {
+			routeMACost = route.size() - 1 + (route.get(1).getStandUpRoll() != null ? 3 : 0);
+		}
 		sender.sendRoute(game.getId(), teamId, playerId, route, routeMACost);
 	}
 
-	
+	public void sendWaypointRoute(int playerId, int[] target, List<int[]> waypoints, int teamId) {
+		List<jsonTile> route = jsonRoute(getRouteWithWaypoints(playerId, waypoints, target));
+		int routeMACost;
+		if (route.isEmpty()) {
+			routeMACost = 0;
+		} else {
+			routeMACost = route.size() - 1 + (route.get(1).getStandUpRoll() != null ? 3 : 0);
+		}
+		sender.sendRoute(game.getId(), teamId, playerId, route, routeMACost);
+	}
 }
