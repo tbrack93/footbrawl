@@ -1,6 +1,7 @@
 
 var canvas;
 var background;
+var squares;
 // below used to determine canvas absolute pixel locations
 var canvasLeft;
 var canvasTop;
@@ -23,9 +24,10 @@ function init() {
 	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
 	canvasLeft = canvas.offsetLeft;
-	background = document.getElementById("canvasBackground");
-	background.width = canvas.width;
+	background = document.getElementById("backgroundCanvas");
 	background.height = background.width * (15/26);
+	squares = document.getElementById("squaresCanvas");
+	squares.height = squares.width * (15/26);
 	canvasTop = canvas.offsetTop;
 	drawBoard();
 	timeSinceClick = new Date();
@@ -120,68 +122,71 @@ function drawPlayer(player) {
 }
 
 function drawMovementSquare(tile){
-	    context.save();
-	    context.globalAlpha = 0.3;
-	    var squareH = canvas.height/15;
+	    squareCtx = squares.getContext("2d");
+	    squareCtx.save();
+	    squareCtx.globalAlpha = 0.3;
+	    var squareH = squares.height/15;
         var colour = "blue";
         if(tile.tackleZones != null){
         	colour = "red";
         	// need to add logic for number of tacklezones
         }
-	    context.fillStyle = colour;
+        squareCtx.fillStyle = colour;
 	    var column = tile.position[0];
 	    var row = 14 - tile.position[1];
-	    context.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
+	    squareCtx.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
 	    if(tile.tackleZones !=null){
-	    	context.globalAlpha = 1;
-		    context.fillStyle = "white";
-		    context.font = "30px Arial";
-		    context.fillText(tile.tackleZones, column*squareH +20, row*squareH +30);
+	    	squareCtx.globalAlpha = 1;
+	    	squareCtx.fillStyle = "white";
+	    	squareCtx.font = "30px Arial";
+	    	squareCtx.fillText(tile.tackleZones, column*squareH +20, row*squareH +30);
 	    }
 	    if(tile.goingForItRoll != null){
-	    	context.globalAlpha = 1;
-		    context.fillStyle = "white";
-		    context.font = "30px Arial";
-		    context.fillText("GFI",column*squareH + squareH/3, row*squareH + squareH/2+10);
+	    	squareCtx.globalAlpha = 1;
+	    	squareCtx.fillStyle = "white";
+	    	squareCtx.font = "30px Arial";
+	    	squareCtx.fillText("GFI",column*squareH + squareH/3, row*squareH + squareH/2+10);
 	    }
 	    if(tile.dodgeRoll != null){
-	    	context.globalAlpha = 1;
-	    	context.textAlign = "center"; 
-		    context.fillStyle = "white";
-		    context.font = "bold 30px Arial";
-		    context.fillText("Dodge", column*squareH+ squareH/2, row*squareH + squareH/2+10);
-		    context.fillText(tile.dodgeRoll + "+", column*squareH+ squareH/2, row*squareH + squareH/1.25)
+	    	squareCtx.globalAlpha = 1;
+	    	squareCtx.textAlign = "center"; 
+	    	squareCtx.fillStyle = "white";
+	    	squareCtx.font = "bold 30px Arial";
+	    	squareCtx.fillText("Dodge", column*squareH+ squareH/2, row*squareH + squareH/2+10);
+	    	squareCtx.fillText(tile.dodgeRoll + "+", column*squareH+ squareH/2, row*squareH + squareH/1.25)
 	    }
-	    context.restore(); 
+	    squareCtx.restore(); 
 	}
 
 function drawRouteSquare(tile){
-    context.save();
-    context.globalAlpha = 0.5;
+    squareCtx = squares.getContext("2d");
+    squareCtx.save();
+    squareCtx.globalAlpha = 0.5;
     var squareH = canvas.height/15;
     var colour = "white";
     if(tile.dodgeRoll != null || tile.goingForItRoll != null){
     	colour = "orange";
     }
-    context.fillStyle = colour;
+    squareCtx.fillStyle = colour;
     var column = tile.position[0];
     var row = 14 - tile.position[1];
-    context.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
+    squareCtx.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
     if(tile.goingForItRoll != null){
-    	context.globalAlpha = 1;
-	    context.fillStyle = "white";
-	    context.font = "bold 30px Arial";
-	    context.fillText("GFI: " + tile.goingForItRoll + "+",column*squareH + squareH/8, row*squareH + squareH/4);
+    	squareCtx.globalAlpha = 1;
+    	squareCtx.fillStyle = "white";
+    	squareCtx.textAlign = "center"; 
+    	squareCtx.font = "bold 30px Arial";
+    	squareCtx.fillText("GFI: " + tile.goingForItRoll + "+",column*squareH + squareH/2, row*squareH + squareH/4);
     }
     if(tile.dodgeRoll != null){
-    	context.globalAlpha = 1;
-    	context.textAlign = "center"; 
-	    context.fillStyle = "white";
-	    context.font = "bold 30px Arial";
-	    context.fillText("Dodge:", column*squareH+ squareH/2, row*squareH + squareH/2+10);
-	    context.fillText(tile.dodgeRoll + "+", column*squareH+ squareH/2, row*squareH + squareH/1.25)
+    	squareCtx.globalAlpha = 1;
+    	squareCtx.textAlign = "center"; 
+    	squareCtx.fillStyle = "white";
+    	squareCtx.font = "bold 30px Arial";
+    	squareCtx.fillText("Dodge:", column*squareH+ squareH/2, row*squareH + squareH/2+10);
+    	squareCtx.fillText(tile.dodgeRoll + "+", column*squareH+ squareH/2, row*squareH + squareH/1.25)
     }
-    context.restore(); 
+    squareCtx.restore();
 }
 
 function decodeMessage(message){
@@ -200,11 +205,10 @@ function decodeMessage(message){
 
 function showMovement(message){
 	console.log("in show movement");
-	context.clearRect(0, 0, canvas.width/2, canvas.height);
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	message.squares.forEach(tile => {
 		drawMovementSquare(tile);
 	});
-	drawPlayers();
 	activePlayer.movement = message.squares;
 }
 
@@ -254,11 +258,10 @@ function determineSquare(click){
 }
 
 function showRoute(message){
-	context.clearRect(0, 0, canvas.width/2, canvas.height);
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	message.route.forEach(tile => {
 		drawRouteSquare(tile);
 	});
-	drawPlayers();
 }
 
 function escCheck (e) {
@@ -273,9 +276,8 @@ function escCheck (e) {
 }
 
 function resetMovement(){
-	context.clearRect(0, 0, canvas.width/2, canvas.height);
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);
 	});
-	drawPlayers();
 }
