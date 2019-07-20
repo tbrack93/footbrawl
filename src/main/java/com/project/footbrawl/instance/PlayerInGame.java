@@ -177,6 +177,10 @@ public class PlayerInGame{
 		this.teamIG = teamIG;
 	}
 	
+	public String getImgUrl() {
+		return player.getImgUrl();
+	}
+	
 	
 	
 }
