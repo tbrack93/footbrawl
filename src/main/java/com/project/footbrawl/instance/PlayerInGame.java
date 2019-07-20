@@ -181,6 +181,8 @@ public class PlayerInGame{
 		return player.getImgUrl();
 	}
 	
-	
+	public int[] getLocation() {
+		return tile.getLocation();
+	}
 	
 }

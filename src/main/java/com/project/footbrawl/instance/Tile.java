@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class Tile {
 
-	private int[] position;
+	private int[] location;
 	private List<Tile> neighbours;
 	private PlayerInGame player;
 	private boolean containsBall;
@@ -33,7 +33,7 @@ public class Tile {
 	}
 
 	public Tile(int row, int column) {
-		position = new int[] { row, column };
+		location = new int[] { row, column };
 		empty = true;
 		containsBall = false;
 		moveTo = false;
@@ -100,8 +100,8 @@ public class Tile {
 		moveTo = true;
 	}
 
-	public int[] getPosition() {
-		return position;
+	public int[] getLocation() {
+		return location;
 	}
 
 	public void resetMovement() {
@@ -142,7 +142,7 @@ public class Tile {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(position);
+		result = prime * result + Arrays.hashCode(location);
 		return result;
 	}
 
@@ -155,7 +155,7 @@ public class Tile {
 		if (getClass() != obj.getClass())
 			return false;
 		Tile other = (Tile) obj;
-		if (!Arrays.equals(position, other.position))
+		if (!Arrays.equals(location, other.location))
 			return false;
 		return true;
 	}
