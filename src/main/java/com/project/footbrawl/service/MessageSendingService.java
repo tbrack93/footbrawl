@@ -63,4 +63,18 @@ public class MessageSendingService {
 	    controller.sendMessageToBothUsers(gameId, message);
 	}
 	
+	public void sendRollResult(int gameId, int playerId, String rollFailed, int rollNeeded, List<Integer> rolled, int[] origin, int[]target) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("ROLL");
+		message.setRollType("DODGE");
+		message.setPlayer(playerId);
+		message.setRollNeeded(rollNeeded);
+		message.setRolled(rolled);
+		message.setRollOutcome("failed");
+		message.setLocation(origin);
+		message.setTarget(target);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
 }

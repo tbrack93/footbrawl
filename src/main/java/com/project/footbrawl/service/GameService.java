@@ -19,6 +19,7 @@ import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
 import com.project.footbrawl.entity.Team;
+import com.project.footbrawl.instance.MessageToClient;
 import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
 import com.project.footbrawl.instance.Tile;
@@ -59,6 +60,9 @@ public class GameService {
 	private Tile ballToScatter;
 	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
 	// chain of events
+	private String rollFailed;
+	private int rollNeeded;
+	private List<Integer> rolled;
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -85,6 +89,7 @@ public class GameService {
 		team1 = new TeamInGame(game.getTeam1());
 		team2 = new TeamInGame(game.getTeam2());
 		queue = new LinkedList<>();
+		rolled = new ArrayList<>();
 		activePlayer = null;
 		ballToScatter = null;
 		pitch = new Tile[26][15];
@@ -445,21 +450,22 @@ public class GameService {
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = getPlayerById(playerId);
-		if(activePlayer == null) {
+		if (activePlayer == null) {
 			activePlayer = p;
 		}
 		System.out.println("active : " + activePlayer.getName());
 		int originalMA = p.getRemainingMA();
-		if (maUsed < p.getMA() + 2 && p.getActionOver() == false) { // don't try to work out if given an impossibly high number for movement used
+		if (maUsed < p.getMA() + 2 && p.getActionOver() == false) { // don't try to work out if given an impossibly high
+																	// number for movement used
 			System.out.println("action not over");
-			if (p != activePlayer && p.getTeamIG() == activeTeam) { 
-					System.out.println(p.getActionOver());	        
-					System.out.println(activePlayer.getActedThisTurn());
+			if (p != activePlayer && p.getTeamIG() == activeTeam) {
+				System.out.println(p.getActionOver());
+				System.out.println(activePlayer.getActedThisTurn());
 				if (activePlayer.getActedThisTurn() == true) { // if active player has
-																								// already acted this
-																								// turn,
-																								// deselecting them ends
-																								// their action
+																// already acted this
+																// turn,
+																// deselecting them ends
+																// their action
 					System.out.println("updating activePlayer");
 					endOfAction(activePlayer);
 					activePlayer = p;
@@ -501,7 +507,7 @@ public class GameService {
 		}
 		addTackleZones(p);
 		for (Tile t : location.getNeighbours()) {
-			if (!t.containsPlayer()) {
+			if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
 				int currentCost = t.getCostToReach();
 
 				// checking if visited (not default of 99) or visited and new has route better
@@ -514,7 +520,7 @@ public class GameService {
 					}
 					searchNeighbours(p, t, cost + 1);
 				}
-			} else if (t.getPlayer() == p) {
+			} else if (t.getLocation() == location.getLocation()) {
 				t.setCostToReach(p.getStatus().equals("prone") ? 3 : 0);
 			}
 		}
@@ -877,10 +883,14 @@ public class GameService {
 		} else {
 			System.out.println(p.getName() + " failed to dodge and was tripped into " + to.getLocation()[0] + " "
 					+ to.getLocation()[1]);
-			if (rerollCheck() == true) {
-				return dodgeAction(p, from, to);
-			}
+			rollFailed = "dodge";
+			rollNeeded = roll;
+			rolled.clear();
+			rolled.add(result);
+			System.out.println(rollNeeded);
+			System.out.println(rolled.get(0));
 			knockDown(p);
+			
 			return false;
 		}
 	}
@@ -1629,6 +1639,17 @@ public class GameService {
 			jsonMoved.add(jt);
 		}
 		sender.sendRouteAction(game.getId(), playerId, jsonMoved);
+		if(jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
+			sender.sendRollResult(game.getId(), playerId, rollFailed, rollNeeded, rolled, route.get(jsonMoved.size()-1), route.get(jsonMoved.size()));
+			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()-1);
+			Runnable task = new Runnable(){
+			    @Override
+			    public void run(){
+			    	carryOutRouteAction(playerId, remaining, teamId);
+			    }
+			};
+			queue.add(task);
+		}
 	}
 
 	public List<Tile> movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
@@ -1655,8 +1676,19 @@ public class GameService {
 			}
 			if (tempT.getTackleZones() != 0) {
 				if (!dodgeAction(p, tempT, t)) {
-					turnover();
-					return movedSoFar;
+					Runnable task = new Runnable(){
+					    @Override
+					    public void run(){
+					    	dodgeAction(p, tempT, t);
+					    }
+					};
+					queue.add(task);
+//					if (rerollCheck() == true) {
+//						if (!dodgeAction(p, tempT, t)) {
+//							turnover();
+							return movedSoFar;
+//						}
+//					}
 				}
 			}
 			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);

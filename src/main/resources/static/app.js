@@ -354,11 +354,6 @@ function showMoved(message){
 	    player.location = route[route.length-1].position;
 	    waypoints.length = 0;
 	    inRoute = false;
-	    if(player.team == team){
-	      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-		         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
-		                         "location": player.location, "routeMACost": 0}));
-	    }
 	}
 }
 
@@ -372,6 +367,12 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 		console.log(counter);
 		if(counter == route.length-1){
 			route.length = 0;
+		    drawPlayer(activePlayer);
+		    if(activePlayer.team == team){
+			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
+				                         "location": activePlayer.location, "routeMACost": 0}));
+			    }
 			return;
 		}
 		console.log("there");
