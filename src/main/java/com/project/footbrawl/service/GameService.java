@@ -33,7 +33,7 @@ public class GameService {
 	@Autowired
 	MessageSendingService sender;
 
-	// for finding neighbouring tiles
+	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
 	private static final int[][] TOPLEFTTHROW = { { 0, 1 }, { 1, 1 }, { 1, 0 } };
@@ -445,20 +445,30 @@ public class GameService {
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = getPlayerById(playerId);
+		if(activePlayer == null) {
+			activePlayer = p;
+		}
+		System.out.println("active : " + activePlayer.getName());
 		int originalMA = p.getRemainingMA();
-		if (maUsed < p.getMA() + 2) { // don't try to work out if given an impossibly high number for movement used
-			if (p.getId() != playerId || p == null) {
-				throw new IllegalArgumentException("Invalid player or location");
-			}
-			if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
-																	// player
-				if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already acted this turn,
-																								// deselecting them ends their action
+		if (maUsed < p.getMA() + 2 && p.getActionOver() == false) { // don't try to work out if given an impossibly high number for movement used
+			System.out.println("action not over");
+			if (p != activePlayer && p.getTeamIG() == activeTeam) { 
+					System.out.println(p.getActionOver());	        
+					System.out.println(activePlayer.getActedThisTurn());
+				if (activePlayer.getActedThisTurn() == true) { // if active player has
+																								// already acted this
+																								// turn,
+																								// deselecting them ends
+																								// their action
+					System.out.println("updating activePlayer");
 					endOfAction(activePlayer);
 					activePlayer = p;
+					System.out.println("active player is: " + activePlayer.getName());
 				}
 			}
+			System.out.println("resetting");
 			resetTiles();
+			System.out.println("reset");
 			p.setRemainingMA(originalMA - maUsed);
 			Tile position = pitch[location[0]][location[1]];
 			int cost = 0;
@@ -481,7 +491,6 @@ public class GameService {
 			}
 		}
 		p.setRemainingMA(originalMA);
-		System.out.println(sender == null);
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 	}
 
@@ -819,49 +828,6 @@ public class GameService {
 			scatterBall(location, 1);
 		}
 		turnover();
-	}
-
-	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
-		actionCheck(p);
-		addTackleZones(p);
-		checkRouteValid(p, route);
-		p.setActedThisTurn(true);
-		if (p.getStatus().equals("prone")) {
-			if (!standUpAction(p)) {
-				return;
-			}
-		}
-		route.remove(0);
-		for (Tile t : route) {
-			Tile tempT = p.getTile();
-			t.addPlayer(p);
-			tempT.setPlayer(null);
-			p.decrementRemainingMA();
-			if (p.getRemainingMA() < 0) {
-				if (!goingForItAction(p, tempT, t)) {
-					return;
-				}
-			}
-			if (tempT.getTackleZones() != 0) {
-				if (!dodgeAction(p, tempT, t)) {
-					turnover();
-					return;
-				}
-			}
-			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
-			if (t.containsBall()) {
-				if (!pickUpBallAction(p)) {
-					turnover();
-					return;
-				}
-			}
-			if (p.hasBall()) { // checking if touchdown
-				if ((t.getLocation()[0] == 0 && p.getTeamIG() == team2)
-						|| t.getLocation()[0] == 25 && p.getTeamIG() == team1) {
-					touchdown(p);
-				}
-			}
-		}
 	}
 
 	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
@@ -1570,6 +1536,7 @@ public class GameService {
 	}
 
 	public void endOfAction(PlayerInGame player) { // will involve informing front end
+		System.out.println("end of action");
 		player.setActionOver(true);
 	}
 
@@ -1646,5 +1613,67 @@ public class GameService {
 			routeMACost = route.size() - 1 + (route.get(1).getStandUpRoll() != null ? 3 : 0);
 		}
 		sender.sendRoute(game.getId(), teamId, playerId, route, routeMACost);
+	}
+
+	public void carryOutRouteAction(int playerId, List<int[]> route, int teamId) {
+		PlayerInGame p = getPlayerById(playerId);
+		List<Tile> tileRoute = new ArrayList<>();
+		for (int[] i : route) {
+			tileRoute.add(pitch[i[0]][i[1]]);
+		}
+		List<Tile> moved = movePlayerRouteAction(p, tileRoute);
+		List<jsonTile> jsonMoved = new ArrayList<>();
+		for (Tile t : moved) {
+			jsonTile jt = new jsonTile(t);
+			jt.setTackleZones(null);
+			jsonMoved.add(jt);
+		}
+		sender.sendRouteAction(game.getId(), playerId, jsonMoved);
+	}
+
+	public List<Tile> movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
+		List<Tile> movedSoFar = new ArrayList<>();
+		actionCheck(p);
+		addTackleZones(p);
+		checkRouteValid(p, route);
+		p.setActedThisTurn(true);
+		if (p.getStatus().equals("prone")) {
+			if (!standUpAction(p)) {
+				return movedSoFar;
+			}
+		}
+		movedSoFar.add(route.remove(0));
+		for (Tile t : route) {
+			Tile tempT = p.getTile();
+			t.addPlayer(p);
+			tempT.setPlayer(null);
+			p.decrementRemainingMA();
+			if (p.getRemainingMA() < 0) {
+				if (!goingForItAction(p, tempT, t)) {
+					return movedSoFar;
+				}
+			}
+			if (tempT.getTackleZones() != 0) {
+				if (!dodgeAction(p, tempT, t)) {
+					turnover();
+					return movedSoFar;
+				}
+			}
+			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
+			movedSoFar.add(t);
+			if (t.containsBall()) {
+				if (!pickUpBallAction(p)) {
+					turnover();
+					return movedSoFar;
+				}
+			}
+			if (p.hasBall()) { // checking if touchdown
+				if ((t.getLocation()[0] == 0 && p.getTeamIG() == team2)
+						|| t.getLocation()[0] == 25 && p.getTeamIG() == team1) {
+					touchdown(p);
+				}
+			}
+		}
+		return movedSoFar;
 	}
 }
