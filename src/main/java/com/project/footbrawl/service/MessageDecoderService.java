@@ -12,7 +12,6 @@ public class MessageDecoderService {
 	GameLobbyService lobby;
 
 	public MessageDecoderService() {
-		
 	}
 	
 	public void decode(MessageFromClient message, int gameId, int team) {
