@@ -447,9 +447,6 @@ public class GameService {
 		PlayerInGame p = getPlayerById(playerId);
 		int originalMA = p.getRemainingMA();
 		if (maUsed < p.getMA() + 2) { // don't try to work out if given an impossibly high number for movement used
-			if (p.getId() != playerId || p == null) {
-				throw new IllegalArgumentException("Invalid player or location");
-			}
 			if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
 																	// player
 				if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has
@@ -1621,7 +1618,7 @@ public class GameService {
 			jt.setTackleZones(null);
 			jsonMoved.add(jt);
 		}
-		sender.sendRouteAction(game.getId(), teamId, playerId, jsonMoved);
+		sender.sendRouteAction(game.getId(), playerId, jsonMoved);
 	}
 
 	public List<Tile> movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
@@ -1635,6 +1632,7 @@ public class GameService {
 				return movedSoFar;
 			}
 		}
+		movedSoFar.add(route.remove(0));
 		for (Tile t : route) {
 			Tile tempT = p.getTile();
 			t.addPlayer(p);
