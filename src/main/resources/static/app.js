@@ -354,7 +354,7 @@ function showMoved(message){
 	    player.location = route[route.length-1].position;
 	    waypoints.length = 0;
 	    inRoute = false;
-	    if(yourTurn == true){
+	    if(player.team == team){
 	      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 		         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
 		                         "location": player.location, "routeMACost": 0}));
