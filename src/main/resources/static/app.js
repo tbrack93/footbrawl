@@ -2,7 +2,7 @@
 var canvas;
 var background;
 var squares;
-// below used to determine canvas absolute pixel locations
+// below used todetermine canvas absolute pixel locations
 var canvasLeft;
 var canvasTop;
 var players;
@@ -15,6 +15,7 @@ var activePlayer;
 var yourTurn;
 var route;
 var inRoute;
+var postRouteSquares;
 var waypoints;
 var xIncrement;
 var yIncrement;
@@ -184,6 +185,9 @@ function drawRouteSquare(tile){
     var column = tile.position[0];
     var row = 14 - tile.position[1];
     squareCtx.fillRect(column*squareH+3, row*squareH+3 , squareH-5, squareH-5);
+    if(tile.position[0] == activePlayer.location[0] && tile.position[1] == activePlayer.location[1]){
+    	return;
+    }
     if(tile.goingForItRoll != null){
     	squareCtx.globalAlpha = 1;
     	squareCtx.fillStyle = "white";
@@ -226,6 +230,7 @@ function showMovement(message){
 		drawMovementSquare(tile);
 	});
 	if(inRoute == true){
+	  postRouteSquares = message.squares;
 	  route.forEach(tile => {
 	    drawRouteSquare(tile);
 	  });
@@ -253,6 +258,8 @@ function actOnClick(click){
 	players.forEach(player => {
 		 // console.log("checking");
 		 if(player.location[0] == square[0] && player.location[1] == square[1]) {
+			 console.log(player.name);
+			 console.log(player.id);
 			 if(player == activePlayer){
 				 resetMovement();
 				 done = true; // needed as return just escapes forEach block
@@ -342,14 +349,16 @@ function showMoved(message){
 		var targetY = (14 - route[1].position[1]) * squareH;
 		xIncrement = (targetX - startingX) / 10;
 	    yIncrement = (targetY - startingY) / 10;
-		context.clearRect(startingX-5, startingY-5, squareH+5, squareH+5)
+		context.clearRect(startingX-5, startingY-5, squareH+10, squareH+10)
 		animateMovement(message.route, 0, playerImg, startingX, startingY, targetX, targetY, squareH, xIncrement, yIncrement); 
 	    player.location = route[route.length-1].position;
 	    waypoints.length = 0;
 	    inRoute = false;
-	    stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	    if(yourTurn == true){
+	      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 		         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
 		                         "location": player.location, "routeMACost": 0}));
+	    }
 	}
 }
 
@@ -373,7 +382,6 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 	    yIncrement = (targetY - newY) / 10;
 	}
 	requestAnimationFrame(function() { animateMovement(route, counter, playerImg, newX, newY, targetX, targetY, squareH); });	
-
 }
 
 function escCheck (e) {
@@ -390,6 +398,7 @@ function resetMovement(){
 	inRoute = false;
 	waypoints.length = 0;
 	route.length = 0;
+	lastSquareClicked = null;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	if(activePlayer.movement.length>0){
 	  activePlayer.movement.forEach(tile => {

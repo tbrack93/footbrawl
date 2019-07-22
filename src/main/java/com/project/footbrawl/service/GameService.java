@@ -445,20 +445,30 @@ public class GameService {
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = getPlayerById(playerId);
+		if(activePlayer == null) {
+			activePlayer = p;
+		}
+		System.out.println("active : " + activePlayer.getName());
 		int originalMA = p.getRemainingMA();
-		if (maUsed < p.getMA() + 2) { // don't try to work out if given an impossibly high number for movement used
-			if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
-																	// player
-				if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has
+		if (maUsed < p.getMA() + 2 && p.getActionOver() == false) { // don't try to work out if given an impossibly high number for movement used
+			System.out.println("action not over");
+			if (p != activePlayer && p.getTeamIG() == activeTeam) { 
+					System.out.println(p.getActionOver());	        
+					System.out.println(activePlayer.getActedThisTurn());
+				if (activePlayer.getActedThisTurn() == true) { // if active player has
 																								// already acted this
 																								// turn,
 																								// deselecting them ends
 																								// their action
+					System.out.println("updating activePlayer");
 					endOfAction(activePlayer);
 					activePlayer = p;
+					System.out.println("active player is: " + activePlayer.getName());
 				}
 			}
+			System.out.println("resetting");
 			resetTiles();
+			System.out.println("reset");
 			p.setRemainingMA(originalMA - maUsed);
 			Tile position = pitch[location[0]][location[1]];
 			int cost = 0;
@@ -481,7 +491,6 @@ public class GameService {
 			}
 		}
 		p.setRemainingMA(originalMA);
-		System.out.println(sender == null);
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 	}
 
@@ -1527,6 +1536,7 @@ public class GameService {
 	}
 
 	public void endOfAction(PlayerInGame player) { // will involve informing front end
+		System.out.println("end of action");
 		player.setActionOver(true);
 	}
 
