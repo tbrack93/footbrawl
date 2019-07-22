@@ -54,4 +54,13 @@ public class MessageSendingService {
 	    controller.sendMessageToUser(gameId,  teamId, message);
 	}
 	
+	public void sendRouteAction(int gameId, int playerId, List<jsonTile> route) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("ROUTE");
+		message.setPlayer(playerId);
+	    message.setRoute(route);
+	    controller.sendMessageToBothUsers(gameId, message);
+	}
+	
 }

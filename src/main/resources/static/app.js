@@ -6,6 +6,7 @@ var squares;
 var canvasLeft;
 var canvasTop;
 var players;
+var lastSquareClicked;
 var timeSinceClick;
 var debounceInterval = 200;
 var game;
@@ -15,6 +16,13 @@ var yourTurn;
 var route;
 var inRoute;
 var waypoints;
+var xIncrement;
+var yIncrement;
+
+var requestAnimationFrame = window.requestAnimationFrame || 
+window.mozRequestAnimationFrame || 
+window.webkitRequestAnimationFrame || 
+window.msRequestAnimationFrame;
 
 window.onload = init;
 document.addEventListener("keydown", escCheck);
@@ -205,6 +213,10 @@ function decodeMessage(message){
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		}
+	} else if(message.type == "ACTION"){
+	    if(message.action == "ROUTE"){
+		  showMoved(message);
+	  }
 	}
 }
 
@@ -266,10 +278,21 @@ function actOnClick(click){
 		 } // will be more options for blitz/ block/ throw actions
 	 });
 	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
-		if(playerCanReach(square) && route.length <= activePlayer.remainingMA +2){
+		if(lastSquareClicked != null && square[0] == lastSquareClicked[0] && square[1] == lastSquareClicked[1]){
+			var messageRoute = new Array();
+			route.forEach(tile => {
+				var t = tile.position;
+				messageRoute.push(t);
+			});
+			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	                    JSON.stringify({"type": "ACTION", "action": "ROUTE", "player": activePlayer.id, 
+	        	        "location": activePlayer.location, "route": messageRoute}));
+		}
+		else if(playerCanReach(square) && route.length <= activePlayer.remainingMA +2){
 		   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-		                    JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id, 
+		                    JSON.stringify({"type": "INFO", "action": "ROUTE", "player": activePlayer.id, 
 		        	        "location": activePlayer.location, "target": square, "waypoints": waypoints}));
+		   lastSquareClicked = square;
 		} else{
 			console.log("player can't reach that square");
 		}
@@ -289,13 +312,14 @@ function determineSquare(click){
 
 function showRoute(message){
 	route = message.route;
-	if(route.length != 0){
+	if(route.length > 0){
 	  if(inRoute == false){
 	  	  waypoints.length = 0;
 		  inRoute = true;
 	  }
 	  squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	  var location = route[route.length -1].position;
+	  
 	  waypoints.push(location);
 	  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
@@ -303,9 +327,57 @@ function showRoute(message){
 	} // else say it's empty
 }
 
+function showMoved(message){
+	if(message.route.length >1){
+		route = message.route;
+		console.log(route.length)
+	    var player = getPlayerById(message.player);
+	    var playerImg = new Image();
+		playerImg.src = player.imgUrl;
+	    var squareH = canvas.height / 15;
+	    squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	    var startingX = route[0].position[0] * squareH;
+		var startingY = (14 - route[0].position[1]) * squareH;
+		var targetX = route[1].position[0] * squareH;
+		var targetY = (14 - route[1].position[1]) * squareH;
+		xIncrement = (targetX - startingX) / 10;
+	    yIncrement = (targetY - startingY) / 10;
+		context.clearRect(startingX-5, startingY-5, squareH+5, squareH+5)
+		animateMovement(message.route, 0, playerImg, startingX, startingY, targetX, targetY, squareH, xIncrement, yIncrement); 
+	    player.location = route[route.length-1].position;
+	    waypoints.length = 0;
+	    inRoute = false;
+	    stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+		         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
+		                         "location": player.location, "routeMACost": 0}));
+	}
+}
+
+function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH){
+	context.clearRect(startingX, startingY, squareH, squareH);
+	var newX = startingX + xIncrement;
+	var newY = startingY + yIncrement;
+	context.drawImage(playerImg, newX, newY, squareH, squareH);
+	if(Math.round(newX) == Math.round(targetX) && Math.round(newY) == Math.round(targetY)){
+		console.log(route.length);
+		console.log(counter);
+		if(counter == route.length-1){
+			route.length = 0;
+			return;
+		}
+		console.log("there");
+		counter++;
+	    targetX = route[counter].position[0] * squareH;
+	    targetY = (14 - route[counter].position[1]) * squareH;
+		xIncrement = (targetX - newX) / 10;
+	    yIncrement = (targetY - newY) / 10;
+	}
+	requestAnimationFrame(function() { animateMovement(route, counter, playerImg, newX, newY, targetX, targetY, squareH); });	
+
+}
+
 function escCheck (e) {
 	console.log("keyPress Time");
-	console.log(e);
     if(e.keyCode === "Escape" || e.keyCode === "Esc" || e.keyCode === 27) {
     	console.log("escape");
     	if(activePlayer != null && activePlayer.movement != null){
@@ -319,9 +391,11 @@ function resetMovement(){
 	waypoints.length = 0;
 	route.length = 0;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	activePlayer.movement.forEach(tile => {
+	if(activePlayer.movement.length>0){
+	  activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);
-	});
+	  });
+	}
 }
 
 function playerCanReach(square){
@@ -333,3 +407,20 @@ function playerCanReach(square){
 	});
 	return result;
 }
+
+function getPlayerById(id){
+	for(i = 0; i< players.length ; i++){
+		if(players[i].id == id){
+			return players[i]
+		}
+	}
+}
+
+function sleep(milliseconds) {
+	  var start = new Date().getTime();
+	  for (var i = 0; i < 1e7; i++) {
+	    if ((new Date().getTime() - start) > milliseconds){
+	      break;
+	    }
+	  }
+	}

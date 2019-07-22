@@ -21,7 +21,6 @@ public class MessageDecoderService {
 		if(type.equals("INFO")) {
 			if(action.equals("MOVEMENT")){
 				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), message.getRouteMACost(), team);
-				System.out.println("Decode MA Used: " + message.getRouteMACost());
 				return;
 			}
 			if(action.equals("TEAMS")){
@@ -35,7 +34,13 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getLocation(), message.getTarget(), team);
 				}
 			}
+		}else if(type.equals("ACTION")) {
+			if(action.equals("ROUTE")){
+				lobby.getGameService(gameId).carryOutRouteAction(message.getPlayer(), message.getRoute(), team);
+				return;
+			}
 		}
+		
 	}
 	
 }
