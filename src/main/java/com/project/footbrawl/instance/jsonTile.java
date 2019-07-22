@@ -30,8 +30,8 @@ public class jsonTile {
 		return tackleZones;
 	}
 
-	public void setTackleZones(int tackleZones) {
-		this.tackleZones = tackleZones;
+	public void setTackleZones(Integer tackleZones) {
+		  this.tackleZones = tackleZones;
 	}
 
 	public Integer getDodgeRoll() {

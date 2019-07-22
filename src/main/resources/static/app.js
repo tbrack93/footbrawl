@@ -6,6 +6,7 @@ var squares;
 var canvasLeft;
 var canvasTop;
 var players;
+var lastSquareClicked;
 var timeSinceClick;
 var debounceInterval = 200;
 var game;
@@ -266,10 +267,21 @@ function actOnClick(click){
 		 } // will be more options for blitz/ block/ throw actions
 	 });
 	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
-		if(playerCanReach(square) && route.length <= activePlayer.remainingMA +2){
+		if(lastSquareClicked != null && square[0] == lastSquareClicked[0] && square[1] == lastSquareClicked[1]){
+			var messageRoute = new Array();
+			route.forEach(tile => {
+				var t = tile.position;
+				messageRoute.push(t);
+			});
+			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	                    JSON.stringify({"type": "ACTION", "action": "ROUTE", "player": activePlayer.id, 
+	        	        "location": activePlayer.location, "route": messageRoute}));
+		}
+		else if(playerCanReach(square) && route.length <= activePlayer.remainingMA +2){
 		   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-		                    JSON.stringify({"type": "INFO", action: "ROUTE", "player": activePlayer.id, 
+		                    JSON.stringify({"type": "INFO", "action": "ROUTE", "player": activePlayer.id, 
 		        	        "location": activePlayer.location, "target": square, "waypoints": waypoints}));
+		   lastSquareClicked = square;
 		} else{
 			console.log("player can't reach that square");
 		}

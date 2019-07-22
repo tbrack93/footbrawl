@@ -452,8 +452,11 @@ public class GameService {
 			}
 			if (p != activePlayer && p.getTeamIG() == activeTeam) { // when new player selected will become the active
 																	// player
-				if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has already acted this turn,
-																								// deselecting them ends their action
+				if (activePlayer.getActedThisTurn() == true && p.getActionOver() == false) { // if active player has
+																								// already acted this
+																								// turn,
+																								// deselecting them ends
+																								// their action
 					endOfAction(activePlayer);
 					activePlayer = p;
 				}
@@ -819,49 +822,6 @@ public class GameService {
 			scatterBall(location, 1);
 		}
 		turnover();
-	}
-
-	public void movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
-		actionCheck(p);
-		addTackleZones(p);
-		checkRouteValid(p, route);
-		p.setActedThisTurn(true);
-		if (p.getStatus().equals("prone")) {
-			if (!standUpAction(p)) {
-				return;
-			}
-		}
-		route.remove(0);
-		for (Tile t : route) {
-			Tile tempT = p.getTile();
-			t.addPlayer(p);
-			tempT.setPlayer(null);
-			p.decrementRemainingMA();
-			if (p.getRemainingMA() < 0) {
-				if (!goingForItAction(p, tempT, t)) {
-					return;
-				}
-			}
-			if (tempT.getTackleZones() != 0) {
-				if (!dodgeAction(p, tempT, t)) {
-					turnover();
-					return;
-				}
-			}
-			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
-			if (t.containsBall()) {
-				if (!pickUpBallAction(p)) {
-					turnover();
-					return;
-				}
-			}
-			if (p.hasBall()) { // checking if touchdown
-				if ((t.getLocation()[0] == 0 && p.getTeamIG() == team2)
-						|| t.getLocation()[0] == 25 && p.getTeamIG() == team1) {
-					touchdown(p);
-				}
-			}
-		}
 	}
 
 	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
@@ -1646,5 +1606,66 @@ public class GameService {
 			routeMACost = route.size() - 1 + (route.get(1).getStandUpRoll() != null ? 3 : 0);
 		}
 		sender.sendRoute(game.getId(), teamId, playerId, route, routeMACost);
+	}
+
+	public void carryOutRouteAction(int playerId, List<int[]> route, int teamId) {
+		PlayerInGame p = getPlayerById(playerId);
+		List<Tile> tileRoute = new ArrayList<>();
+		for (int[] i : route) {
+			tileRoute.add(pitch[i[0]][i[1]]);
+		}
+		List<Tile> moved = movePlayerRouteAction(p, tileRoute);
+		List<jsonTile> jsonMoved = new ArrayList<>();
+		for (Tile t : moved) {
+			jsonTile jt = new jsonTile(t);
+			jt.setTackleZones(null);
+			jsonMoved.add(jt);
+		}
+		sender.sendRouteAction(game.getId(), teamId, playerId, jsonMoved);
+	}
+
+	public List<Tile> movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
+		List<Tile> movedSoFar = new ArrayList<>();
+		actionCheck(p);
+		addTackleZones(p);
+		checkRouteValid(p, route);
+		p.setActedThisTurn(true);
+		if (p.getStatus().equals("prone")) {
+			if (!standUpAction(p)) {
+				return movedSoFar;
+			}
+		}
+		for (Tile t : route) {
+			Tile tempT = p.getTile();
+			t.addPlayer(p);
+			tempT.setPlayer(null);
+			p.decrementRemainingMA();
+			if (p.getRemainingMA() < 0) {
+				if (!goingForItAction(p, tempT, t)) {
+					return movedSoFar;
+				}
+			}
+			if (tempT.getTackleZones() != 0) {
+				if (!dodgeAction(p, tempT, t)) {
+					turnover();
+					return movedSoFar;
+				}
+			}
+			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
+			movedSoFar.add(t);
+			if (t.containsBall()) {
+				if (!pickUpBallAction(p)) {
+					turnover();
+					return movedSoFar;
+				}
+			}
+			if (p.hasBall()) { // checking if touchdown
+				if ((t.getLocation()[0] == 0 && p.getTeamIG() == team2)
+						|| t.getLocation()[0] == 25 && p.getTeamIG() == team1) {
+					touchdown(p);
+				}
+			}
+		}
+		return movedSoFar;
 	}
 }

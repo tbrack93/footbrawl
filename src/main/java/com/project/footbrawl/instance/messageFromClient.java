@@ -4,7 +4,7 @@ import java.util.List;
 
 public class MessageFromClient extends Message {
 
-	private List<Integer[]> route;
+	private List<int[]> route;
 	private List<int[]> waypoints;
 	private int diceChoice;
 	private boolean useSkill;
@@ -15,11 +15,11 @@ public class MessageFromClient extends Message {
 		
 	}
 
-	public List<Integer[]> getRoute() {
+	public List<int[]> getRoute() {
 		return route;
 	}
 
-	public void setRoute(List<Integer[]> route) {
+	public void setRoute(List<int[]> route) {
 		this.route = route;
 	}
 
