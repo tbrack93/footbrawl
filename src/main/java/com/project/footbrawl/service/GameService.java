@@ -33,7 +33,7 @@ public class GameService {
 	@Autowired
 	MessageSendingService sender;
 
-	// for finding neighbouring tiles
+	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
 	private static final int[][] TOPLEFTTHROW = { { 0, 1 }, { 1, 1 }, { 1, 0 } };
