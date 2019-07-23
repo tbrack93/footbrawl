@@ -122,13 +122,30 @@ function drawPlayer(player) {
 	  var img = new Image();
 	  img.src = player.imgUrl;
 	  img.onload = function() {
+		  context.save();
 		  context.globalAlpha = 1;
 			var column = player.location[0];
 			var row = 14 -player.location[1];
 			var squareH = canvas.height / 15;
 			context.clearRect(column * squareH-5, row * squareH-5, squareH+10,squareH+10);
-				context.drawImage(img, column * squareH, row * squareH, squareH,
-						squareH);	
+			if(player.status != "standing"){
+				context.save();
+				var angle = 270;
+				if(player.status == "stunned"){
+					angle = 90;
+					context.translate(column * squareH + squareH, row * squareH) ;
+				} else {
+				context.translate(column * squareH, row * squareH + squareH) ;
+				}
+				context.rotate(angle * Math.PI / 180);
+				 context.drawImage(img, 0, 0, squareH,
+							squareH);
+	
+				context.restore();
+			} else {
+			  context.drawImage(img, column * squareH, row * squareH, squareH,
+						squareH);
+			}
 				context.strokeStyle = "white";
 				var line = 3;
 				if(player == activePlayer){
@@ -137,7 +154,9 @@ function drawPlayer(player) {
 				context.lineWidth = line;
 				context.strokeRect(column * squareH, row * squareH, squareH,
 						squareH);
+				context.restore();
 	  }
+	  context.restore();
 }
 
 
@@ -227,7 +246,7 @@ function decodeMessage(message){
 	    if(message.action == "ROUTE"){
 	      if(animating == true){
 	    	  var task = function(m){
-	    		  showMoved(message, "normal");
+	    		  showMoved(m, "normal");
 	    	  };
 	    	  var t2 = animateWrapFunction(task, this, [message]);
 	    	  taskQueue.push(t2);
@@ -236,8 +255,9 @@ function decodeMessage(message){
 	      }
 	  } else if(message.action == "ROLL"){
 		  if(animating == true){
-			  var task = function(message){
-	    		  showRoll(message);
+			  var task = function(m){
+				  console.log("task time");
+	    		  showRoll(m);
 	    	  };
 	    	  var t2 = animateWrapFunction(task, this, [message]);
 	    	  taskQueue.push(t2);
@@ -360,6 +380,7 @@ function showRoute(message){
 
 function showMoved(message, type){
 	if(message.route.length >1 || type != "normal"){
+		context.save();
 		console.log("Type " + type);
 		animating = true;
 		route = message.route;
@@ -376,24 +397,27 @@ function showMoved(message, type){
 		var targetX = route[1].position[0] * squareH;
 		var targetY = (14 - route[1].position[1]) * squareH;
 		var speed = 10;
-		if(type === "tripped"){
+		xIncrement = (targetX - startingX) / speed;
+	    yIncrement = (targetY - startingY) / speed;
+	    if(type === "tripped"){
+	    	player.status = "prone";
+			console.log("tripping time");
 			speed = 5; // lower is faster
-			 context.rotate(90*Math.PI/180);
 		}
 		if(type === "dodge"){
 			speed = 5;
 		}
-		xIncrement = (targetX - startingX) / speed;
-	    yIncrement = (targetY - startingY) / speed;
 		context.clearRect(startingX-5, startingY-5, squareH+10, squareH+10);
 		animateMovement(message.route, 0, playerImg, startingX, startingY, targetX, targetY, squareH, end); 
 		player.location = route[route.length-1].position;
 	    waypoints.length = 0;
 	    inRoute = false;
+	    //context.restore();
 	}
 }
 
 function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH, end){
+	console.log("animate time");
 	context.clearRect(startingX, startingY, squareH, squareH);
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
@@ -403,9 +427,9 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 		console.log(counter);
 		if(counter == route.length-1){
 			route.length = 0;
-			if(end == "Y"){		
+			if(end == "Y" || activePlayer.status == "prone"){		
 		      drawPlayer(activePlayer);
-		      if(activePlayer.team == team){
+		      if(activePlayer.team == team && end == "Y"){
 			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
 				                         "location": activePlayer.location, "routeMACost": 0}));
@@ -417,7 +441,6 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 		    }
 			return;
 		}
-		console.log("there");
 		counter++;
 	    targetX = route[counter].position[0] * squareH;
 	    targetY = (14 - route[counter].position[1]) * squareH;
