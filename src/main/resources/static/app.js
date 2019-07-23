@@ -2,6 +2,8 @@
 var canvas;
 var background;
 var squares;
+var animation;
+var animationContext;
 // below used todetermine canvas absolute pixel locations
 var canvasLeft;
 var canvasTop;
@@ -45,6 +47,9 @@ function init() {
 	background.height = background.width * (15/26);
 	squares = document.getElementById("squaresCanvas");
 	squares.height = squares.width * (15/26);
+	animation = document.getElementById("animationCanvas");
+	animation.height = animation.width * (15/26);
+	animationContext = animation.getContext("2d");
 	canvasTop = canvas.offsetTop;
 	rolls = document.getElementById("rolls");
 	rolls.style.paddingTop = "" + canvas.clientHeight + "px";
@@ -60,7 +65,7 @@ function init() {
 // players.push(player4);
 // drawPlayers();
 	    
-	    canvas.addEventListener('click', (e) => {
+	    animationCanvas.addEventListener('click', (e) => {
 	    	var time = new Date();
 	    	if(time - timeSinceClick > debounceInterval){
 	    		timeSinceClick = new Date();
@@ -135,18 +140,18 @@ function drawPlayer(player) {
 					angle = 90;
 					context.translate(column * squareH + squareH, row * squareH) ;
 				} else {
-				context.translate(column * squareH, row * squareH + squareH) ;
+					context.translate(column * squareH, row * squareH + squareH) ;
 				}
 				context.rotate(angle * Math.PI / 180);
-				 context.drawImage(img, 0, 0, squareH,
+				context.drawImage(img, 0, 0, squareH,
 							squareH);
 	
 				context.restore();
 			} else {
-			  context.drawImage(img, column * squareH, row * squareH, squareH,
+				context.drawImage(img, column * squareH, row * squareH, squareH,
 						squareH);
 			}
-				context.strokeStyle = "white";
+			context.strokeStyle = "white";
 				var line = 3;
 				if(player == activePlayer){
 					line = 8;
@@ -154,9 +159,7 @@ function drawPlayer(player) {
 				context.lineWidth = line;
 				context.strokeRect(column * squareH, row * squareH, squareH,
 						squareH);
-				context.restore();
 	  }
-	  context.restore();
 }
 
 
@@ -418,16 +421,17 @@ function showMoved(message, type){
 
 function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH, end){
 	console.log("animate time");
-	context.clearRect(startingX, startingY, squareH, squareH);
+	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
-	context.drawImage(playerImg, newX, newY, squareH, squareH);
+	animationContext.drawImage(playerImg, newX, newY, squareH, squareH);
 	if(Math.round(newX) == Math.round(targetX) && Math.round(newY) == Math.round(targetY)){
 		console.log(route.length);
 		console.log(counter);
 		if(counter == route.length-1){
 			route.length = 0;
-			if(end == "Y" || activePlayer.status == "prone"){		
+			if(end == "Y" || activePlayer.status == "prone"){	
+			  animationContext.clearRect(0, 0, animation.height, animation.width);
 		      drawPlayer(activePlayer);
 		      if(activePlayer.team == team && end == "Y"){
 			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 

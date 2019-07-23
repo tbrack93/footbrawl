@@ -24,3 +24,9 @@
   z-index:5;
 }
 
+#animationCanvas{
+	position: absolute;
+	width: 100%;
+	z-index:30;
+}
+}
