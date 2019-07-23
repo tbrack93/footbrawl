@@ -16,6 +16,7 @@ public class PlayerInGame{
 	private String status;
 	private boolean hasTackleZones;
 	private boolean hasBall;
+	private List<String> skillsUsedThisTurn;
 	@JsonIgnore
 	private Tile tile;
 	@JsonIgnore
@@ -183,6 +184,21 @@ public class PlayerInGame{
 	
 	public int[] getLocation() {
 		return tile.getLocation();
+	}
+
+	public List<String> getSkillsUsedThisTurn() {
+		return skillsUsedThisTurn;
+	}
+	
+	public boolean hasUsedSkill(String skill) {
+		if(skillsUsedThisTurn.contains(skill)) {
+			return true;
+		}
+		return false;
+	}
+
+	public void setSkillsUsedThisTurn(List<String> skillsUsedThisTurn) {
+		this.skillsUsedThisTurn = skillsUsedThisTurn;
 	}
 	
 }

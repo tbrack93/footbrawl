@@ -12,11 +12,16 @@ public class MessageToClient extends Message {
 	private List<jsonTile> route; // for moving to a specific point
 	private List<jsonTile> squares; // for seeing all squares player can move to
 	private Integer rollNeeded;
-	private Integer rolled;
+	private List<Integer> rolled;
+	private String rollOutcome;
+	private String rollType;
 	private String team1Name;
 	private String team2Name;
+	private String playerName;
 	private List<PlayerInGame> team1;
 	private List<PlayerInGame> team2;
+	private List<String> rerollOptions;
+	private String end; // if more messages to follow
 	
 	public MessageToClient() {
         route = null;
@@ -71,12 +76,8 @@ public class MessageToClient extends Message {
 		this.rollNeeded = rollNeeded;
 	}
 
-	public Integer getRolled() {
+	public List<Integer> getRolled() {
 		return rolled;
-	}
-
-	public void setRolled(int rolled) {
-		this.rolled = rolled;
 	}
 
 	public String getTeam1Name() {
@@ -110,8 +111,61 @@ public class MessageToClient extends Message {
 	public void setTeam2(List<PlayerInGame> team2) {
 		this.team2 = team2;
 	}
-	
-	
-	
+
+	public void setNumberOfDice(Integer numberOfDice) {
+		this.numberOfDice = numberOfDice;
+	}
+
+	public void setUserToChoose(Integer userToChoose) {
+		this.userToChoose = userToChoose;
+	}
+
+	public void setRollNeeded(Integer rollNeeded) {
+		this.rollNeeded = rollNeeded;
+	}
+
+	public void setRolled(List<Integer> rolled) {
+		this.rolled = rolled;
+	}
+
+	public String getRollOutcome() {
+		return rollOutcome;
+	}
+
+	public void setRollOutcome(String rollOutcome) {
+		this.rollOutcome = rollOutcome;
+	}
+
+	public String getRollType() {
+		return rollType;
+	}
+
+	public void setRollType(String rollType) {
+		this.rollType = rollType;
+	}
+
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
+	}
+
+	public List<String> getRerollOptions() {
+		return rerollOptions;
+	}
+
+	public void setRerollOptions(List<String> rerollOptions) {
+		this.rerollOptions = rerollOptions;
+	}
+
+	public String getEnd() {
+		return end;
+	}
+
+	public void setEnd(String end) {
+		this.end = end;
+	}
 	
 }
