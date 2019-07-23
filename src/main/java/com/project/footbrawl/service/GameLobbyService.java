@@ -83,8 +83,8 @@ public class GameLobbyService {
 		gs.pitch[5][3].addPlayer(team1Players.get(1));
 		gs.pitch[20][12].addPlayer(team1Players.get(2));
 		gs.setActiveTeam(gs.team1);
-		team1Players.get(0).setActedThisTurn(false);
-		team1Players.get(0).setActionOver(false);
+		//team1Players.get(0).setStatus("prone");
+		//team1Players.get(1).setStatus("stunned");
 		activeGames.put(gs.getGameId(), gs);
 	}
 	
