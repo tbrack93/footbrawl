@@ -17,8 +17,11 @@ public class MessageToClient extends Message {
 	private String rollType;
 	private String team1Name;
 	private String team2Name;
+	private String playerName;
 	private List<PlayerInGame> team1;
 	private List<PlayerInGame> team2;
+	private List<String> rerollOptions;
+	private String end; // if more messages to follow
 	
 	public MessageToClient() {
         route = null;
@@ -139,6 +142,30 @@ public class MessageToClient extends Message {
 
 	public void setRollType(String rollType) {
 		this.rollType = rollType;
+	}
+
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
+	}
+
+	public List<String> getRerollOptions() {
+		return rerollOptions;
+	}
+
+	public void setRerollOptions(List<String> rerollOptions) {
+		this.rerollOptions = rerollOptions;
+	}
+
+	public String getEnd() {
+		return end;
+	}
+
+	public void setEnd(String end) {
+		this.end = end;
 	}
 	
 }

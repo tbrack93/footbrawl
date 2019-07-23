@@ -56,13 +56,15 @@ public class GameService {
 	private boolean waitingForPlayers;
 	private boolean kickingSetupDone;
 	private boolean receivingSetupDone;
-	private Queue<Runnable> queue;
+	private Queue<Runnable> taskQueue;
 	private Tile ballToScatter;
 	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
 	// chain of events
-	private String rollFailed;
+	private String rollType;
 	private int rollNeeded;
 	private List<Integer> rolled;
+	private String rollResult;
+	private String[] awaitingReroll;  // Y/N, Action relates to, player relates to
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -88,7 +90,7 @@ public class GameService {
 		this.game = game;
 		team1 = new TeamInGame(game.getTeam1());
 		team2 = new TeamInGame(game.getTeam2());
-		queue = new LinkedList<>();
+		taskQueue = new LinkedList<>();
 		rolled = new ArrayList<>();
 		activePlayer = null;
 		ballToScatter = null;
@@ -837,6 +839,9 @@ public class GameService {
 	}
 
 	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
+		if(route.isEmpty()) {
+			return;
+		}
 		List<Tile> tempR = new ArrayList<>(route);
 		int startingMA = p.getRemainingMA();
 		if (p.getTile() != tempR.get(0)) {
@@ -859,14 +864,17 @@ public class GameService {
 
 	private boolean goingForItAction(PlayerInGame p, Tile tempT, Tile t) {
 		int result = diceRoller(1, 6)[0];
+		rollType = "GFI";
+		rollNeeded = 2;
+		rolled.clear();
+		rolled.add(result);
 		if (result >= 2) {
 			System.out.println(p.getName() + " went for it!");
+			rollResult = "success";
 			return true;
 		} else {
 			System.out.println(p.getName() + " went for it and tripped!");
-			if (rerollCheck() == true) {
-				return goingForItAction(p, tempT, t);
-			}
+		    rollResult = "failed";
 			knockDown(p);
 			return false;
 		}
@@ -876,21 +884,22 @@ public class GameService {
 		int roll = calculateDodge(p, from);
 		int result = diceRoller(1, 6)[0];
 		System.out.println("Needed " + roll + "+" + " Rolled: " + result);
+		rollType = "DODGE";
+		rollNeeded = roll;
+		rolled.clear();
+		rolled.add(result);
 		if (result >= roll) {
 			System.out.println(p.getName() + " dodged from " + from.getLocation()[0] + " " + from.getLocation()[1]
 					+ " to " + to.getLocation()[0] + " " + to.getLocation()[1] + " with a roll of " + result);
+			rollResult = "success";
 			return true;
 		} else {
 			System.out.println(p.getName() + " failed to dodge and was tripped into " + to.getLocation()[0] + " "
 					+ to.getLocation()[1]);
-			rollFailed = "dodge";
-			rollNeeded = roll;
-			rolled.clear();
-			rolled.add(result);
-			System.out.println(rollNeeded);
-			System.out.println(rolled.get(0));
+
+			rollResult = "failed";
 			knockDown(p);
-			
+
 			return false;
 		}
 	}
@@ -1638,17 +1647,30 @@ public class GameService {
 			jt.setTackleZones(null);
 			jsonMoved.add(jt);
 		}
-		sender.sendRouteAction(game.getId(), playerId, jsonMoved);
-		if(jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
-			sender.sendRollResult(game.getId(), playerId, rollFailed, rollNeeded, rolled, route.get(jsonMoved.size()-1), route.get(jsonMoved.size()));
-			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()-1);
-			Runnable task = new Runnable(){
-			    @Override
-			    public void run(){
-			    	carryOutRouteAction(playerId, remaining, teamId);
-			    }
-			};
-			queue.add(task);
+		if (jsonMoved.size() != route.size()) { 
+			if(jsonMoved.size() >1) {
+			sender.sendRouteAction(game.getId(), playerId, jsonMoved, "N");
+			}
+			// if smaller, means a roll carried out
+			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
+					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()));
+			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final index
+			if(awaitingReroll != null && awaitingReroll[0] == "Y") {
+				Runnable task = new Runnable() {
+					@Override
+					public void run() {
+						carryOutRouteAction(playerId, remaining, teamId);
+					}
+				};
+				taskQueue.add(task);
+				List<String> options = determineRerollOptions();
+			} else if(rollResult.equals("success")){ // no reroll needed so just continue route
+				System.out.println("remaining: " + remaining.size());
+				System.out.println(remaining.get(remaining.size()-1));
+				carryOutRouteAction(playerId, remaining, teamId);
+			}
+		} else if(jsonMoved.size()>1) {
+			sender.sendRouteAction(game.getId(), playerId, jsonMoved, "Y");
 		}
 	}
 
@@ -1670,26 +1692,46 @@ public class GameService {
 			tempT.setPlayer(null);
 			p.decrementRemainingMA();
 			if (p.getRemainingMA() < 0) {
+				awaitingReroll = null;
 				if (!goingForItAction(p, tempT, t)) {
-					return movedSoFar;
+					if (rerollCheck()) { // only save task if opportunity for reroll
+						awaitingReroll = new String[] {"Y", "GFI", "" + p.getId()};
+						
+						Runnable task = new Runnable() {
+							@Override
+							public void run() {
+								goingForItAction(p, tempT, t);
+								notify();
+							}
+						};
+						taskQueue.add(task);
+					}
 				}
+				return movedSoFar;
 			}
 			if (tempT.getTackleZones() != 0) {
+				awaitingReroll = null;
 				if (!dodgeAction(p, tempT, t)) {
-					Runnable task = new Runnable(){
-					    @Override
-					    public void run(){
-					    	dodgeAction(p, tempT, t);
-					    }
-					};
-					queue.add(task);
+					if (rerollCheck()) { // only save task if opportunity for reroll
+						awaitingReroll = new String[] {"Y", "DODGE", "" + p.getId()};
+						
+						Runnable task = new Runnable() {
+							@Override
+							public void run() {
+								dodgeAction(p, tempT, t);
+								notify();
+							}
+						};
+						taskQueue.add(task);
+					}
 //					if (rerollCheck() == true) {
 //						if (!dodgeAction(p, tempT, t)) {
 //							turnover();
-							return movedSoFar;
+					
 //						}
 //					}
 				}
+				return movedSoFar;
 			}
 			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
 			movedSoFar.add(t);
@@ -1707,5 +1749,19 @@ public class GameService {
 			}
 		}
 		return movedSoFar;
+	}
+	
+	public List<String> determineRerollOptions(){
+	   List<String> results = new ArrayList<>();
+	   if(!activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
+		   results.add("Team Reroll");
+	   }
+	   if(awaitingReroll[1] == "DODGE") {
+		   PlayerInGame p = getPlayerById(Integer.parseInt(awaitingReroll[2]));
+		   if(p.hasSkill("Dodge") && !p.hasUsedSkill("Dodge")) {
+			   results.add("Dodge Skill");
+		   }
+	   }
+	   return results;	
 	}
 }

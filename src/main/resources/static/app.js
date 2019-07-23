@@ -19,6 +19,9 @@ var postRouteSquares;
 var waypoints;
 var xIncrement;
 var yIncrement;
+var rolls; 
+var animating;
+var taskQueue;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
@@ -33,6 +36,7 @@ function init() {
 	players = new Array();
 	waypoints = new Array();
 	route = new Array();
+	taskQueue = new Array();
 	canvas = document.getElementById("canvas");
 	context = canvas.getContext("2d");
 	canvas.height = canvas.width * (15 / 26);
@@ -42,6 +46,8 @@ function init() {
 	squares = document.getElementById("squaresCanvas");
 	squares.height = squares.width * (15/26);
 	canvasTop = canvas.offsetTop;
+	rolls = document.getElementById("rolls");
+	rolls.style.paddingTop = "" + canvas.clientHeight + "px";
 	drawBoard();
 	timeSinceClick = new Date();
 // var player = {id: 1, team: 1, name:"John", location: [0, 1]};
@@ -219,9 +225,27 @@ function decodeMessage(message){
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
-		  showMoved(message);
-	  }
-	}
+	      if(animating == true){
+	    	  var task = function(m){
+	    		  showMoved(message, "normal");
+	    	  };
+	    	  var t2 = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t2);
+	      } else{ 	
+		    showMoved(message, "normal");
+	      }
+	  } else if(message.action == "ROLL"){
+		  if(animating == true){
+			  var task = function(message){
+	    		  showRoll(message);
+	    	  };
+	    	  var t2 = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t2);
+	      } else{ 	
+	    	  showRoll(message); 
+	      }
+	   }
+	}	    
 }
 
 function showMovement(message){
@@ -334,10 +358,14 @@ function showRoute(message){
 	} // else say it's empty
 }
 
-function showMoved(message){
-	if(message.route.length >1){
+function showMoved(message, type){
+	if(message.route.length >1 || type != "normal"){
+		console.log("Type " + type);
+		animating = true;
 		route = message.route;
 		console.log(route.length)
+		var end = message.end;
+		console.log(end);
 	    var player = getPlayerById(message.player);
 	    var playerImg = new Image();
 		playerImg.src = player.imgUrl;
@@ -347,17 +375,25 @@ function showMoved(message){
 		var startingY = (14 - route[0].position[1]) * squareH;
 		var targetX = route[1].position[0] * squareH;
 		var targetY = (14 - route[1].position[1]) * squareH;
-		xIncrement = (targetX - startingX) / 10;
-	    yIncrement = (targetY - startingY) / 10;
-		context.clearRect(startingX-5, startingY-5, squareH+10, squareH+10)
-		animateMovement(message.route, 0, playerImg, startingX, startingY, targetX, targetY, squareH, xIncrement, yIncrement); 
-	    player.location = route[route.length-1].position;
+		var speed = 10;
+		if(type === "tripped"){
+			speed = 5; // lower is faster
+			 context.rotate(90*Math.PI/180);
+		}
+		if(type === "dodge"){
+			speed = 5;
+		}
+		xIncrement = (targetX - startingX) / speed;
+	    yIncrement = (targetY - startingY) / speed;
+		context.clearRect(startingX-5, startingY-5, squareH+10, squareH+10);
+		animateMovement(message.route, 0, playerImg, startingX, startingY, targetX, targetY, squareH, end); 
+		player.location = route[route.length-1].position;
 	    waypoints.length = 0;
 	    inRoute = false;
 	}
 }
 
-function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH){
+function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH, end){
 	context.clearRect(startingX, startingY, squareH, squareH);
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
@@ -367,12 +403,18 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 		console.log(counter);
 		if(counter == route.length-1){
 			route.length = 0;
-		    drawPlayer(activePlayer);
-		    if(activePlayer.team == team){
+			if(end == "Y"){		
+		      drawPlayer(activePlayer);
+		      if(activePlayer.team == team){
 			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
 				                         "location": activePlayer.location, "routeMACost": 0}));
-			    }
+			  }
+		    }
+			animating = false;
+		    if(taskQueue.length != 0){
+		    	(taskQueue.shift())();
+		    }
 			return;
 		}
 		console.log("there");
@@ -382,7 +424,7 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 		xIncrement = (targetX - newX) / 10;
 	    yIncrement = (targetY - newY) / 10;
 	}
-	requestAnimationFrame(function() { animateMovement(route, counter, playerImg, newX, newY, targetX, targetY, squareH); });	
+	requestAnimationFrame(function() { animateMovement(route, counter, playerImg, newX, newY, targetX, targetY, squareH, end); });	
 }
 
 function escCheck (e) {
@@ -426,11 +468,46 @@ function getPlayerById(id){
 	}
 }
 
-function sleep(milliseconds) {
-	  var start = new Date().getTime();
-	  for (var i = 0; i < 1e7; i++) {
-	    if ((new Date().getTime() - start) > milliseconds){
-	      break;
-	    }
-	  }
+function showRoll(message){
+	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
+	var newRolls = document.getElementById("newRolls");
+	console.log(newRolls);
+	newRolls.innerHTML =  message.playerName + ": " +message.rollType + " Needed: " + message.rollNeeded + " Rolled: " +
+	                  +  message.rolled + " Result: " + message.rollOutcome + "</br>" + newRolls.innerHTML;
+	if(message.rollType == "DODGE"){
+		showDodgeResult(message);
 	}
+	if(message.rollType == "GFI"){
+		showGFIResult(message);
+	}
+}
+
+function resizeActions(){
+	console.log("resize");
+	rolls.style.paddingTop = "" + canvas.clientHeight + "px";
+}
+
+function showDodgeResult(message){
+	var type = "dodge";
+	if(message.rollOutcome === "failed"){
+		type = "tripped";
+	}
+	message.route = [{position: message.location}, {position: message.target}];
+	showMoved(message, type);	
+}
+
+function showGFIResult(message){
+	var type = "normal";
+	if(message.rollOutcome === "failed"){
+	  type = "tripped";
+	}
+	  message.route = [{position: message.location}, {position: message.target}];
+	  showMoved(message, type);
+}
+
+// adapted from https://stackoverflow.com/questions/899102/how-do-i-store-javascript-functions-in-a-queue-for-them-to-be-executed-eventuall
+var animateWrapFunction = function(func, context, params) {
+    return function() {
+        func.apply(context, params);
+    };
+}

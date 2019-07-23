@@ -54,24 +54,26 @@ public class MessageSendingService {
 	    controller.sendMessageToUser(gameId,  teamId, message);
 	}
 	
-	public void sendRouteAction(int gameId, int playerId, List<jsonTile> route) {
+	public void sendRouteAction(int gameId, int playerId, List<jsonTile> route, String end) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("ROUTE");
 		message.setPlayer(playerId);
 	    message.setRoute(route);
+	    message.setEnd(end);
 	    controller.sendMessageToBothUsers(gameId, message);
 	}
 	
-	public void sendRollResult(int gameId, int playerId, String rollFailed, int rollNeeded, List<Integer> rolled, int[] origin, int[]target) {
+	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded, List<Integer> rolled, String rollResult, int[] origin, int[]target) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("ROLL");
-		message.setRollType("DODGE");
+		message.setRollType(rollType);
 		message.setPlayer(playerId);
 		message.setRollNeeded(rollNeeded);
 		message.setRolled(rolled);
-		message.setRollOutcome("failed");
+		message.setRollOutcome(rollResult);
+		message.setPlayerName(playerName);
 		message.setLocation(origin);
 		message.setTarget(target);
 		controller.sendMessageToBothUsers(gameId, message);
