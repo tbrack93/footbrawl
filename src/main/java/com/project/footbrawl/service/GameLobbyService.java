@@ -71,6 +71,8 @@ public class GameLobbyService {
 		team2.addPlayer(p3);
 		team1.addPlayer(p4);
 		team1.addPlayer(p5);
+		team1.setTeamRerolls(4);
+		team2.setTeamRerolls(4);
 		Game g = new Game();
 		g.setTeam1(team1);
 		g.setTeam2(team2);
