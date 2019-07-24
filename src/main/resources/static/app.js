@@ -36,6 +36,7 @@ window.onload = init;
 document.addEventListener("keydown", escCheck);
 
 function init() {
+	setDraggable();
 	yourTurn = true; // just for testing
 	players = new Array();
 	waypoints = new Array();
@@ -591,6 +592,8 @@ function showFailedAction(message){
 	squareH = modal.clientHeight/15;
 	display.style.left = ""+ (column -1) * squareH-5 + "px";
 	display.style.top = "" + (row -3) * squareH-5 + "px";
-	
+	document.getElementById("modalTitle").innerHTML = message.playerName + " fell down";
+	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
+	                                                 "Needed: " + message.rollNeeded + "  Rolled: " + message.rolled;
 }
 

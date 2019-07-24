@@ -9,6 +9,7 @@
 <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
 <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
 <script th:src="@{/app.js}"></script>
+<script th:src="@{/dragModal.js}"></script>
 </head>
 <body onresize="resizeActions()">
 	<input type="hidden" id="gameId" th:value="${gameId}">
@@ -35,11 +36,12 @@
 			<div class="col-lg-10 col-sm-8">
 				<br>
 				<div id="modal" class="announcementModal">
-				 <div class="modal-header">
-				 <h4> Something something</h4>
+				 <div class="modalHeader">
+				 <h4 id="modalTitle"> Something something</h4>
 				 </div>
-				  <div class="modal-body">
-				     <p id="modal-text">test</p>
+				  <hr>
+				  <div class="modalBody">
+				     <p id="modalText">test</p>
 				  </div>
 				</div>
 				<canvas id="backgroundCanvas" width="3500">

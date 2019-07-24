@@ -34,13 +34,15 @@ canvas {
     padding: 10px;
     border: 1px solid #b4b4b4;
     border-radius: 5px;
-    left:100px;
-    top: 100px;
+    height: 125px;
+    width: 225px;
+    
 
 }
 
-.modal-header {
-  padding: 2px 8px;
+#modalTitle {
+  padding: 2px 2px;
+  margin: 0 0 5px;
 }
 
 #modalCanvas {
@@ -51,4 +53,9 @@ z-index: 30;
 
 #rolls {
 	
+}
+
+hr {
+	margin-top: 0px;
+	margin-bottom: 10px;
 }
