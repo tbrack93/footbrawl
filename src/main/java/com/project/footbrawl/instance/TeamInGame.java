@@ -133,11 +133,12 @@ public class TeamInGame {
 		this.remainingTeamRerolls = teamRerolls;
 	}
 	
-	public void useReroll() {
+	public void useTeamReroll() {
 		if(remainingTeamRerolls == 0) {
 			throw new IllegalArgumentException("No rerolls to use");
 		}
 		remainingTeamRerolls--;
+		rerolled = true;
 	}
 	
 	public void resetRerolls() {
