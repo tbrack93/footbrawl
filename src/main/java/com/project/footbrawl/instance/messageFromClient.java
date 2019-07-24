@@ -9,7 +9,7 @@ public class MessageFromClient extends Message {
 	private int diceChoice;
 	private boolean useSkill;
 	private String skillName;
-	private boolean useReroll;
+	private String rerollChoice;
 	
 	public MessageFromClient() {
 		
@@ -49,14 +49,6 @@ public class MessageFromClient extends Message {
 		this.skillName = skillName;
 	}
 
-	public boolean isUseReroll() {
-		return useReroll;
-	}
-
-	public void setUseReroll(boolean useReroll) {
-		this.useReroll = useReroll;
-	}
-
 	public List<int[]> getWaypoints() {
 		return waypoints;
 	}
@@ -64,7 +56,13 @@ public class MessageFromClient extends Message {
 	public void setWaypoints(List<int[]> waypoints) {
 		this.waypoints = waypoints;
 	}
-	
-	
+
+	public String getRerollChoice() {
+		return rerollChoice;
+	}
+
+	public void setRerollChoice(String rerollChoice) {
+		this.rerollChoice = rerollChoice;
+	}
 	
 }

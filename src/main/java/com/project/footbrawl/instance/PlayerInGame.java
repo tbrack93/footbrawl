@@ -1,5 +1,6 @@
 package com.project.footbrawl.instance;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,6 +29,7 @@ public class PlayerInGame{
 		hasTackleZones = true;
 		remainingMA = player.getMA();
 		status = "standing";
+		skillsUsedThisTurn = new ArrayList<>();
 	}
 	
 	public PlayerInGame(Player player, TeamInGame tig) {
@@ -36,6 +38,7 @@ public class PlayerInGame{
 		remainingMA = player.getMA();
 		status = "standing";
 		teamIG = tig;
+		skillsUsedThisTurn = new ArrayList<>();
 	}
 	
 	public void newTurn() {

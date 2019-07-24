@@ -1638,6 +1638,9 @@ public class GameService {
 	}
 
 	public void carryOutRouteAction(int playerId, List<int[]> route, int teamId) {
+		if(route.isEmpty()) {
+			return;
+		}
 		PlayerInGame p = getPlayerById(playerId);
 		List<Tile> tileRoute = new ArrayList<>();
 		for (int[] i : route) {
@@ -1650,26 +1653,28 @@ public class GameService {
 			jt.setTackleZones(null);
 			jsonMoved.add(jt);
 		}
-		if (jsonMoved.size() != route.size()) {
+		if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
 			if (jsonMoved.size() > 1) {
 				sender.sendRouteAction(game.getId(), playerId, jsonMoved, "N");
 			}
-			// if smaller, means a roll carried out
-			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
-					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()));
-			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final
-																					// index
+			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final index
+			List<String> options = new ArrayList<>();
 			if (awaitingReroll != null && awaitingReroll[0] == "Y") {
-				Runnable task = new Runnable() {
-					@Override
-					public void run() {
-						carryOutRouteAction(playerId, remaining, teamId);
-					}
-				};
-				taskQueue.add(task);
-				List<String> options = determineRerollOptions(awaitingReroll[1], Integer.parseInt(awaitingReroll[2]));
-				sender.sendRerollRequest(game.getId(), playerId, awaitingReroll[1], options, teamId, teamId == team1.getId() ? team2.getId() : team1.getId());
-			} else if (rollResult.equals("success")) { // no reroll needed so just continue route
+				options = determineRerollOptions(awaitingReroll[1], Integer.parseInt(awaitingReroll[2]));	
+				if (options.size() > 0) {
+					Runnable task = new Runnable() {
+						@Override
+						public void run() {
+							carryOutRouteAction(playerId, remaining, teamId);
+						}
+					};
+					taskQueue.add(task);
+				}
+			}
+			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
+					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), options, 
+					teamId);
+			if (rollResult.equals("success")) { // no reroll needed so just continue route
 				carryOutRouteAction(playerId, remaining, teamId);
 			}
 		} else if (jsonMoved.size() > 1) {
@@ -1697,7 +1702,8 @@ public class GameService {
 			if (p.getRemainingMA() < 0) {
 				awaitingReroll = null;
 				if (!goingForItAction(p, tempT, t)) {
-					if (!determineRerollOptions("GFI", p.getId()).isEmpty()) { // only save task if opportunity for reroll
+					if (!determineRerollOptions("GFI", p.getId()).isEmpty()) { // only save task if opportunity for
+																				// reroll
 						awaitingReroll = new String[] { "Y", "GFI", "" + p.getId() };
 
 						Runnable task = new Runnable() {
@@ -1715,7 +1721,8 @@ public class GameService {
 			if (tempT.getTackleZones() != 0) {
 				awaitingReroll = null;
 				if (!dodgeAction(p, tempT, t)) {
-					if (!determineRerollOptions("DODGE", p.getId()).isEmpty()) { // only save task if opportunity for reroll
+					if (!determineRerollOptions("DODGE", p.getId()).isEmpty()) { // only save task if opportunity for
+																					// reroll
 						awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
 
 						Runnable task = new Runnable() {

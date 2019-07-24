@@ -26,6 +26,7 @@ var yIncrement;
 var rolls; 
 var animating;
 var taskQueue;
+var inModal;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
@@ -59,7 +60,7 @@ function init() {
 	modal.height = modal.width * (15/26);
 	canvasTop = canvas.offsetTop;
 	rolls = document.getElementById("rolls");
-	rolls.style.paddingTop = "" + canvas.clientHeight + "px";
+	rolls.style.paddingTop = "" + (canvas.clientHeight + 10) +"px";
 	drawBoard();
 	timeSinceClick = new Date();
 // var player = {id: 1, team: 1, name:"John", location: [0, 1]};
@@ -279,8 +280,8 @@ function decodeMessage(message){
 	    	  var task = function(m){
 	    		  showMoved(m, "normal");
 	    	  };
-	    	  var t2 = animateWrapFunction(task, this, [message]);
-	    	  taskQueue.push(t2);
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
 	      } else{ 	
 		    showMoved(message, "normal");
 	      }
@@ -289,11 +290,22 @@ function decodeMessage(message){
 			  var task = function(m){
 	    		  showRoll(m);
 	    	  };
-	    	  var t2 = animateWrapFunction(task, this, [message]);
-	    	  taskQueue.push(t2);
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
 	      } else{ 	
 	    	  showRoll(message); 
 	      }
+	   } else if(message.action == "REROLL"){
+		   if(animating == true){
+				  var task = function(m){
+		    		  requestReroll(m);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  requestReroll(message); 
+		      }
+		   
 	   }
 	}	    
 }
@@ -327,6 +339,9 @@ function updateTeamDetails(message){
 }
 
 function actOnClick(click){
+	if(inModal == true){
+		return;
+	}
 	var square = determineSquare(click);
 	var done = false;
 	players.forEach(player => {
@@ -418,6 +433,7 @@ function showMoved(message, type){
 		var end = message.end;
 		console.log(end);
 	    var player = getPlayerById(message.player);
+	    activePlayer = player;
 	    var playerImg = new Image();
 		playerImg.src = player.imgUrl;
 	    var squareH = canvas.height / 15;
@@ -448,15 +464,12 @@ function showMoved(message, type){
 }
 
 function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH, end){
-	console.log("animate time");
 	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	drawPlayerBorders();
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
 	animationContext.drawImage(playerImg, newX, newY, squareH, squareH);
 	if(Math.round(newX) == Math.round(targetX) && Math.round(newY) == Math.round(targetY)){
-		console.log(route.length);
-		console.log(counter);
 		if(counter == route.length-1){
 			route.length = 0;
 			if(end == "Y" || activePlayer.status == "prone"){	
@@ -576,13 +589,14 @@ var animateWrapFunction = function(func, context, params) {
 }
 
 function showFailedAction(message){
+	inModal = true;
 	console.log("showingFailed");
 	var shadow = modal.getContext("2d");
    // shadow.clearRect(0, 0, shadow.width, shadow.height);
     shadow.globalAlpha = 0.4;
     shadow.fillStyle = "black";
     shadow.fillRect(0,0, modal.width, modal.height);
-    var player = getPlayerById(message.player);
+    var player = getPlayerById(message.player); 
     var column = player.location[0];
 	var row = 14 -player.location[1];
 	var squareH = modal.height / 15;
@@ -590,10 +604,41 @@ function showFailedAction(message){
 	var display = document.getElementById("modal");
 	display.style.display = "block";
 	squareH = modal.clientHeight/15;
-	display.style.left = ""+ (column -1) * squareH-5 + "px";
-	display.style.top = "" + (row -3) * squareH-5 + "px";
+	display.style.left = ""+ (column +2) * squareH-5 + "px";
+	display.style.top = "" + (row -5) * squareH-5 + "px";
 	document.getElementById("modalTitle").innerHTML = message.playerName + " fell down";
 	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
 	                                                 "Needed: " + message.rollNeeded + "  Rolled: " + message.rolled;
+	if(message.rerollOptions == null || message.rerollOptions.length == 0){
+	  document.getElementById("modalOptions").innerHTML = "<p> No possible rerolls </p>";
+	} else if(message.userToChoose != team){
+	   document.getElementById("modalOptions").innerHTML = "<p> Awaiting opponent reroll decision </p>" +
+	                          "Possible rerolls: " + message.rerollOptions;
+	} else{
+		requestReroll(message.rerollOptions);
+	}
+
 }
 
+function requestReroll(options){
+	var modalOptions = document.getElementById("modalOptions");
+	modalOptions.innerHTML = "Reroll Options </br> </br>";
+	for(i = 0; i < options.length; i++){
+		var button = document.createElement("BUTTON");
+        button.innerHTML = options[i];
+        button.onclick = function() {sendRerollChoice(this.innerHTML)};
+        modalOptions.appendChild(button);
+	}
+    var button = document.createElement("BUTTON")
+    button.innerHTML = "Don't reroll";
+    button.id = "dontReroll";
+    button.onclick = function() {sendRerollChoice("none")};
+    modalOptions.appendChild(button);
+}
+
+function sendRerollChoice(choice){
+	console.log(choice);
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+             JSON.stringify({"type": "ACTION", "action": "REROLL", "player": activePlayer.id,
+             "rerollChoice": choice}));
+}
