@@ -64,7 +64,8 @@ public class MessageSendingService {
 	    controller.sendMessageToBothUsers(gameId, message);
 	}
 	
-	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded, List<Integer> rolled, String rollResult, int[] origin, int[]target) {
+	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded, List<Integer> rolled, String rollResult, int[] origin, int[]target, List<String> rerollOptions,
+			                  int teamId) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("ROLL");
@@ -76,6 +77,8 @@ public class MessageSendingService {
 		message.setPlayerName(playerName);
 		message.setLocation(origin);
 		message.setTarget(target);
+		message.setUserToChoose(teamId);
+		message.setRerollOptions(rerollOptions);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 

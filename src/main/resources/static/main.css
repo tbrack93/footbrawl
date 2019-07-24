@@ -34,10 +34,7 @@ canvas {
     padding: 10px;
     border: 1px solid #b4b4b4;
     border-radius: 5px;
-    height: 125px;
     width: 225px;
-    
-
 }
 
 #modalTitle {
@@ -53,6 +50,20 @@ z-index: 30;
 
 #rolls {
 	
+}
+
+#modalOptions{
+	text-align: center;
+}
+
+button{
+	   margin-left: 4px;
+	   margin-right: 4px;
+	   margin-bottom: 8px;
+}
+
+#dontReroll{
+	margin-top: 10px;
 }
 
 hr {
