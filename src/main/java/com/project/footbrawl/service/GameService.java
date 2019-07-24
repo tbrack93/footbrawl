@@ -10,6 +10,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -56,7 +58,9 @@ public class GameService {
 	private boolean waitingForPlayers;
 	private boolean kickingSetupDone;
 	private boolean receivingSetupDone;
-	private Queue<Runnable> taskQueue;
+	private LinkedList<Runnable> taskQueue;
+	private BlockingQueue<Boolean> runnableResults;
+	private int[][]runnableLocation;
 	private Tile ballToScatter;
 	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
 	// chain of events
@@ -92,6 +96,7 @@ public class GameService {
 		team2 = new TeamInGame(game.getTeam2());
 		taskQueue = new LinkedList<>();
 		rolled = new ArrayList<>();
+		runnableResults = new LinkedBlockingQueue<>();
 		activePlayer = null;
 		ballToScatter = null;
 		pitch = new Tile[26][15];
@@ -878,7 +883,7 @@ public class GameService {
 		} else {
 			System.out.println(p.getName() + " went for it and tripped!");
 			rollResult = "failed";
-			knockDown(p);
+			//knockDown(p);
 			return false;
 		}
 	}
@@ -901,7 +906,7 @@ public class GameService {
 					+ to.getLocation()[1]);
 
 			rollResult = "failed";
-			knockDown(p);
+			//knockDown(p);
 
 			return false;
 		}
@@ -1638,7 +1643,7 @@ public class GameService {
 	}
 
 	public void carryOutRouteAction(int playerId, List<int[]> route, int teamId) {
-		if(route.isEmpty()) {
+		if (route.isEmpty()) {
 			return;
 		}
 		PlayerInGame p = getPlayerById(playerId);
@@ -1657,14 +1662,16 @@ public class GameService {
 			if (jsonMoved.size() > 1) {
 				sender.sendRouteAction(game.getId(), playerId, jsonMoved, "N");
 			}
-			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final index
+			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final
+																					// index
 			List<String> options = new ArrayList<>();
 			if (awaitingReroll != null && awaitingReroll[0] == "Y") {
-				options = determineRerollOptions(awaitingReroll[1], Integer.parseInt(awaitingReroll[2]));	
+				options = determineRerollOptions(awaitingReroll[1], Integer.parseInt(awaitingReroll[2]));
 				if (options.size() > 0) {
 					Runnable task = new Runnable() {
 						@Override
 						public void run() {
+							System.out.println("in runnable");
 							carryOutRouteAction(playerId, remaining, teamId);
 						}
 					};
@@ -1672,8 +1679,7 @@ public class GameService {
 				}
 			}
 			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
-					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), options, 
-					teamId);
+					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), options, teamId);
 			if (rollResult.equals("success")) { // no reroll needed so just continue route
 				carryOutRouteAction(playerId, remaining, teamId);
 			}
@@ -1705,12 +1711,13 @@ public class GameService {
 					if (!determineRerollOptions("GFI", p.getId()).isEmpty()) { // only save task if opportunity for
 																				// reroll
 						awaitingReroll = new String[] { "Y", "GFI", "" + p.getId() };
+						runnableLocation = new int[][] {tempT.getLocation(), t.getLocation()};
 
 						Runnable task = new Runnable() {
 							@Override
 							public void run() {
-								goingForItAction(p, tempT, t);
-								notify();
+								System.out.println("in runnable");
+								runnableResults.add(goingForItAction(p, tempT, t));
 							}
 						};
 						taskQueue.add(task);
@@ -1724,12 +1731,12 @@ public class GameService {
 					if (!determineRerollOptions("DODGE", p.getId()).isEmpty()) { // only save task if opportunity for
 																					// reroll
 						awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
+						runnableLocation = new int[][] {tempT.getLocation(), t.getLocation()};
 
 						Runnable task = new Runnable() {
 							@Override
 							public void run() {
-								dodgeAction(p, tempT, t);
-								notify();
+								runnableResults.add(dodgeAction(p, tempT, t));
 							}
 						};
 						taskQueue.add(task);
@@ -1773,5 +1780,37 @@ public class GameService {
 			}
 		}
 		return results;
+	}
+	
+	public void carryOutReroll(int playerId, int team, String rerollChoice) {
+		System.out.println("in reroll");
+		if(awaitingReroll == null || Integer.parseInt(awaitingReroll[2]) != playerId) {
+			throw new IllegalArgumentException("Invalid details");
+		}
+		System.out.println(rerollChoice);
+		if(rerollChoice.equals("Team Reroll")) {
+			System.out.println("In Team Reroll");
+			activeTeam.useTeamReroll();
+		    taskQueue.pop().run();
+		    boolean result = false;
+		    try {
+		    	System.out.println("waiting for result");
+				result = runnableResults.take();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		    sender.sendRollResult(game.getId(), playerId, activePlayer.getName(), rollType, rollNeeded, rolled, rollResult,
+					runnableLocation[0], runnableLocation[1], new ArrayList<String>(),  activeTeam.getId());
+		    if(result == true) {
+		    	if(!taskQueue.isEmpty()) {
+		    		taskQueue.pop().run();
+		    	}
+		    } else {
+		    	if(rollType == "DODGE" || rollType == "GFI") {
+		    		PlayerInGame p = getPlayerById(playerId);
+		    		knockDown(p);	
+		    	}
+		    }
+		}
 	}
 }

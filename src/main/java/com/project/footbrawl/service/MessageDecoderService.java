@@ -37,6 +37,8 @@ public class MessageDecoderService {
 			if(action.equals("ROUTE")){
 				lobby.getGameService(gameId).carryOutRouteAction(message.getPlayer(), message.getRoute(), team);
 				return;
+			} else if(action.equals("REROLL")){
+				lobby.getGameService(gameId).carryOutReroll(message.getPlayer(), team, message.getRerollChoice());
 			}
 		}
 		
