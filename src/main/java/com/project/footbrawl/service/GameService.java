@@ -1667,10 +1667,9 @@ public class GameService {
 					}
 				};
 				taskQueue.add(task);
-				List<String> options = determineRerollOptions();
+				List<String> options = determineRerollOptions(awaitingReroll[1], Integer.parseInt(awaitingReroll[2]));
+				sender.sendRerollRequest(game.getId(), playerId, awaitingReroll[1], options, teamId, teamId == team1.getId() ? team2.getId() : team1.getId());
 			} else if (rollResult.equals("success")) { // no reroll needed so just continue route
-				System.out.println("remaining: " + remaining.size());
-				System.out.println(remaining.get(remaining.size() - 1));
 				carryOutRouteAction(playerId, remaining, teamId);
 			}
 		} else if (jsonMoved.size() > 1) {
@@ -1698,7 +1697,7 @@ public class GameService {
 			if (p.getRemainingMA() < 0) {
 				awaitingReroll = null;
 				if (!goingForItAction(p, tempT, t)) {
-					if (rerollCheck()) { // only save task if opportunity for reroll
+					if (!determineRerollOptions("GFI", p.getId()).isEmpty()) { // only save task if opportunity for reroll
 						awaitingReroll = new String[] { "Y", "GFI", "" + p.getId() };
 
 						Runnable task = new Runnable() {
@@ -1716,7 +1715,7 @@ public class GameService {
 			if (tempT.getTackleZones() != 0) {
 				awaitingReroll = null;
 				if (!dodgeAction(p, tempT, t)) {
-					if (rerollCheck()) { // only save task if opportunity for reroll
+					if (!determineRerollOptions("DODGE", p.getId()).isEmpty()) { // only save task if opportunity for reroll
 						awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
 
 						Runnable task = new Runnable() {
@@ -1755,13 +1754,13 @@ public class GameService {
 		return movedSoFar;
 	}
 
-	public List<String> determineRerollOptions() {
+	public List<String> determineRerollOptions(String action, int playerId) {
 		List<String> results = new ArrayList<>();
 		if (!activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
 			results.add("Team Reroll");
 		}
-		if (awaitingReroll[1] == "DODGE") {
-			PlayerInGame p = getPlayerById(Integer.parseInt(awaitingReroll[2]));
+		if (action == "DODGE") {
+			PlayerInGame p = getPlayerById(playerId);
 			if (p.hasSkill("Dodge") && !p.hasUsedSkill("Dodge")) {
 				results.add("Dodge Skill");
 			}

@@ -5,6 +5,7 @@ var squares;
 var animation;
 var animationContext;
 var selection;
+var modal;
 // below used todetermine canvas absolute pixel locations
 var canvasLeft;
 var canvasTop;
@@ -35,6 +36,7 @@ window.onload = init;
 document.addEventListener("keydown", escCheck);
 
 function init() {
+	setDraggable();
 	yourTurn = true; // just for testing
 	players = new Array();
 	waypoints = new Array();
@@ -53,6 +55,8 @@ function init() {
 	animationContext = animation.getContext("2d");
 	selection = document.getElementById("selectionCanvas");
 	selection.height = selection.width * (15/26);
+	modal = document.getElementById("modalCanvas");
+	modal.height = modal.width * (15/26);
 	canvasTop = canvas.offsetTop;
 	rolls = document.getElementById("rolls");
 	rolls.style.paddingTop = "" + canvas.clientHeight + "px";
@@ -68,7 +72,7 @@ function init() {
 // players.push(player4);
 // drawPlayers();
 	    
-	    document.getElementById("selectionCanvas").addEventListener('click', (e) => {
+	    document.getElementById("modalCanvas").addEventListener('click', (e) => {
 	    	var time = new Date();
 	    	if(time - timeSinceClick > debounceInterval){
 	    		timeSinceClick = new Date();
@@ -283,7 +287,6 @@ function decodeMessage(message){
 	  } else if(message.action == "ROLL"){
 		  if(animating == true){
 			  var task = function(m){
-				  console.log("task time");
 	    		  showRoll(m);
 	    	  };
 	    	  var t2 = animateWrapFunction(task, this, [message]);
@@ -533,6 +536,13 @@ function showRoll(message){
 	if(message.rollType == "GFI"){
 		showGFIResult(message);
 	}
+	if(message.rollOutcome == "failed"){
+		var task = function(m){
+		  showFailedAction(m);
+  	  };
+  	  var t = animateWrapFunction(task, this, [message]);
+  	  taskQueue.push(t);
+	}
 }
 
 function resizeActions(){
@@ -564,3 +574,26 @@ var animateWrapFunction = function(func, context, params) {
         func.apply(context, params);
     };
 }
+
+function showFailedAction(message){
+	console.log("showingFailed");
+	var shadow = modal.getContext("2d");
+   // shadow.clearRect(0, 0, shadow.width, shadow.height);
+    shadow.globalAlpha = 0.4;
+    shadow.fillStyle = "black";
+    shadow.fillRect(0,0, modal.width, modal.height);
+    var player = getPlayerById(message.player);
+    var column = player.location[0];
+	var row = 14 -player.location[1];
+	var squareH = modal.height / 15;
+	shadow.clearRect(column * squareH-5, row * squareH-5, squareH+10,squareH+10);
+	var display = document.getElementById("modal");
+	display.style.display = "block";
+	squareH = modal.clientHeight/15;
+	display.style.left = ""+ (column -1) * squareH-5 + "px";
+	display.style.top = "" + (row -3) * squareH-5 + "px";
+	document.getElementById("modalTitle").innerHTML = message.playerName + " fell down";
+	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
+	                                                 "Needed: " + message.rollNeeded + "  Rolled: " + message.rolled;
+}
+

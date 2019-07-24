@@ -1,38 +1,61 @@
-#rolls{
-	position:absolute;
-	width:100%;
+canvas {
+	position: absolute;
+	width: 100%;
+}
+
+#backgroundCanvas {
+	background: url(/images/board.jpg);
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	z-index: -1;
 }
 
 #canvas {
-  position: absolute;
-  width: 100%;
-  z-index:20;
+	z-index: 5;
 }
 
-#backgroundCanvas{
-  position: absolute;
-  width: 100%;
-  background: url(/images/board.jpg);
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  z-index:-1;
+#squaresCanvas {
+	z-index: 1;
 }
 
-#squaresCanvas{
-  position: absolute;
-  width: 100%;
-  z-index:5;
+#animationCanvas {
+	z-index: 10;
 }
 
-#animationCanvas{
+#selectionCanvas {
+	z-index: 20;
+}
+
+#modal {
+	display: none;
 	position: absolute;
-	width: 100%;
-	z-index:30;
+	z-index:100;
+	background-color: #FBFBFB;
+    padding: 10px;
+    border: 1px solid #b4b4b4;
+    border-radius: 5px;
+    height: 125px;
+    width: 225px;
+    
+
 }
 
-#selectionCanvas{
-	position: absolute;
-	width: 100%;
-	z-index:40;
+#modalTitle {
+  padding: 2px 2px;
+  margin: 0 0 5px;
 }
+
+#modalCanvas {
+z-index: 30;
+}
+
+
+
+#rolls {
+	
+}
+
+hr {
+	margin-top: 0px;
+	margin-bottom: 10px;
 }

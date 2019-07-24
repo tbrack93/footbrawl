@@ -9,6 +9,7 @@
 <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
 <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
 <script th:src="@{/app.js}"></script>
+<script th:src="@{/dragModal.js}"></script>
 </head>
 <body onresize="resizeActions()">
 	<input type="hidden" id="gameId" th:value="${gameId}">
@@ -30,10 +31,19 @@
 				<h4 id="team2Name"></h4>
 			</div>
 		</div>
-		<div class="row" id ="canvases">
+		<div class="row" id="canvases">
 			<div class="col-lg-1 col-sm-2"></div>
 			<div class="col-lg-10 col-sm-8">
 				<br>
+				<div id="modal" class="announcementModal">
+				 <div class="modalHeader">
+				 <h4 id="modalTitle"> Something something</h4>
+				 </div>
+				  <hr>
+				  <div class="modalBody">
+				     <p id="modalText">test</p>
+				  </div>
+				</div>
 				<canvas id="backgroundCanvas" width="3500">
     Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
                 </canvas>
@@ -49,6 +59,10 @@
     Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
                </canvas>
                <canvas id="selectionCanvas" style="border: 1px solid lightgrey;"
+					width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+               </canvas>
+               <canvas id="modalCanvas" style="border: 1px solid lightgrey;"
 					width="3500">
     Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
                </canvas>

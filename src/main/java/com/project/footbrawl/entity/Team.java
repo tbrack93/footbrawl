@@ -4,22 +4,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Team {
+
+	public static int idCounter = 1;
 	
-	private int idCounter;
 	private int id;
 	private String name;
 	private List<Player> players;
 	private int teamRerolls;
-	
+
 	public Team() {
-      this.id = ++idCounter;
-	  players = new ArrayList<Player>();	
+		this.id = idCounter;
+		idCounter++;
+		players = new ArrayList<Player>();
 	}
-	
+
 	public Team(String name) {
-	  this.id = ++idCounter;
-	  players = new ArrayList<Player>();
-	  this.name = name;
+		this.id = idCounter;
+		idCounter++;
+		players = new ArrayList<Player>();
+		this.name = name;
 	}
 
 	public int getIdCounter() {
@@ -53,16 +56,16 @@ public class Team {
 	public void setPlayers(List<Player> players) {
 		this.players = players;
 	}
-	
+
 	public Player getPlayer(int id) {
-		for(Player p : players) {
-			if(p.getId() == id) {
+		for (Player p : players) {
+			if (p.getId() == id) {
 				return p;
 			}
 		}
 		return null;
 	}
-	
+
 	public void addPlayer(Player p) {
 		players.add(p);
 	}
@@ -74,8 +77,5 @@ public class Team {
 	public void setTeamRerolls(int teamRerolls) {
 		this.teamRerolls = teamRerolls;
 	}
-	
-	
-	
 
 }
