@@ -19,8 +19,12 @@ public class MessageToClient extends Message {
 	private String team2Name;
 	private String teamName;
 	private String playerName;
+	private TeamInGame team1FullDetails;
+	private TeamInGame team2FullDetails;
 	private List<PlayerInGame> team1;
 	private List<PlayerInGame> team2;
+	private Integer team1Score;
+	private Integer team2Score;
 	private List<String> rerollOptions;
 	private String end; // if more messages to follow
 	private String playerStatus;
@@ -184,6 +188,38 @@ public class MessageToClient extends Message {
 
 	public void setPlayerStatus(String playerStatus) {
 		this.playerStatus = playerStatus;
+	}
+
+	public TeamInGame getTeam1FullDetails() {
+		return team1FullDetails;
+	}
+
+	public void setTeam1FullDetails(TeamInGame team1FullDetails) {
+		this.team1FullDetails = team1FullDetails;
+	}
+
+	public TeamInGame getTeam2FullDetails() {
+		return team2FullDetails;
+	}
+
+	public void setTeam2FullDetails(TeamInGame team2FullDetails) {
+		this.team2FullDetails = team2FullDetails;
+	}
+
+	public Integer getTeam1Score() {
+		return team1Score;
+	}
+
+	public void setTeam1Score(Integer team1Score) {
+		this.team1Score = team1Score;
+	}
+
+	public Integer getTeam2Score() {
+		return team2Score;
+	}
+
+	public void setTeam2Score(Integer team2Score) {
+		this.team2Score = team2Score;
 	}
 	
 }

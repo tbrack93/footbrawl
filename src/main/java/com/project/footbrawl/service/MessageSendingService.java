@@ -126,4 +126,28 @@ public class MessageSendingService {
 	    controller.sendMessageToBothUsers(gameId, message);
 	}
 	
+	public void sendTurnover(int gameId,int teamId, String teamName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("TURNOVER");
+		message.setTeamName(teamName);
+		message.setUserToChoose(teamId);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
+	public void sendGameStatus(int gameId, int teamId, String teamName, TeamInGame team1, TeamInGame team2, int team1Score, int team2Score) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("NEWTURN");
+		message.setUserToChoose(teamId);
+		message.setTeamName(teamName);
+		message.setTeam1Name(team1.getName());
+		message.setTeam2Name(team2.getName());
+		message.setTeam1FullDetails(team1);
+		message.setTeam2FullDetails(team2);
+		message.setTeam1Score(team1Score);
+		message.setTeam2Score(team2Score);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
 }

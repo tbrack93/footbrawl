@@ -15,6 +15,8 @@ var timeSinceClick;
 var debounceInterval = 200;
 var game;
 var team;
+var team1;
+var team2;
 var activePlayer;
 var yourTurn;
 var route;
@@ -272,8 +274,6 @@ function decodeMessage(message){
 		console.log("in info");
 		if(message.action == "MOVEMENT"){
 			showMovement(message);
-		} else if(message.action == "TEAMS"){
-			updateTeamDetails(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		} else if(message.action == "REROLLCHOICE"){
@@ -282,6 +282,16 @@ function decodeMessage(message){
 			showArmourRoll(message);
 		} else if(message.action == "INJURYROLL"){
 			showInjuryRoll(message);
+		} else if(message.action == "TURNOVER"){
+			showTurnover(message);
+		} else if(message.action == "NEWTURN"){
+			var delay = 2000;
+			if(team1 == null){
+				delay = 0;
+			}
+			setTimeout(function() {
+				showNewTurn(message);
+			}, delay);
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
@@ -321,19 +331,6 @@ function showMovement(message){
 	} else{
 	activePlayer.movement = message.squares;
 	}
-}
-
-function updateTeamDetails(message){
-	console.log("in team details");
-	document.getElementById("team1Name").innerHTML = message.team1Name;
-	document.getElementById("team2Name").innerHTML = message.team2Name;
-	message.team1.forEach(player =>{
-		players.push(player);
-	});
-	message.team2.forEach(player =>{
-		players.push(player);
-	});
-	drawPlayers();
 }
 
 function actOnClick(click){
@@ -691,5 +688,45 @@ function showInjuryRoll(message){
 	var player = getPlayerById(message.player);
     player.status = message.playerStatus;
     player.location = message.location;
+	drawPlayers();
+}
+
+function showTurnover(message){
+	var existing = document.getElementById("modalOptions").innerHTML;
+	var name = message.teamName;
+	if(message.userToChoose == team){
+		name = "You";
+	}
+	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
+}
+
+function showNewTurn(message){
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
+	document.getElementById("modal").style.display = "none";
+	team1 = message.team1FullDetails;
+	team2 = message.team2FullDetails;
+	players.length = 0;
+	team1.playersOnPitch.forEach(player =>{
+		players.push(player);
+	});
+	team2.playersOnPitch.forEach(player =>{
+		players.push(player);
+	});
+	activePlayer = null;
+	var teamName = message.teamName + "'s Turn";
+	yourTurn = false;
+	if(message.userToChoose == team){
+		teamName = "Your turn";
+		yourTurn = true;
+	}
+	document.getElementById("team1Name").innerHTML = message.team1Name;
+	document.getElementById("team2Name").innerHTML = message.team2Name;
+	document.getElementById("activeTeam").innerHTML = teamName;
+	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
+	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
+	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
+	document.getElementById('team1Rerolls').innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
+	document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 	drawPlayers();
 }

@@ -3,12 +3,17 @@ package com.project.footbrawl.instance;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Team;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TeamInGame {
 	
+	@JsonIgnore
 	private Team team; // related entity
+	@JsonIgnore
 	private List<PlayerInGame> allPlayers;
 	private List<PlayerInGame> reserves;
 	private List<PlayerInGame> playersOnPitch;
