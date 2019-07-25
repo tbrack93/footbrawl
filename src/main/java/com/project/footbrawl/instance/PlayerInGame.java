@@ -204,4 +204,8 @@ public class PlayerInGame{
 		this.skillsUsedThisTurn = skillsUsedThisTurn;
 	}
 	
+	public void useSkill(String skill) {
+		skillsUsedThisTurn.add(skill);
+	}
+	
 }
