@@ -670,8 +670,18 @@ function showRerollUsed(message){
     		chooser = "You"
     	}
     	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
+    } if(message.rerollChoice == "Team Reroll"){
+    	var rerolls = "";
+    	if(message.userToChoose == team1.id){
+    		rerolls = "team1Rerolls";
+    		team1.remainingTeamRerolls--;
+    	} else{
+    		rerolls = "team2Rerolls";
+    		team2.remainingTeamRerolls--;
+    	}
+    		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
+    	}
     }
-}
 
 function showArmourRoll(message){
 	var newRolls = document.getElementById("newRolls");
