@@ -70,8 +70,7 @@ public class GameService {
 	private String rollResult;
 	private String[] awaitingReroll; // Y/N, Action relates to, player relates to
 	private List<String> rerollOptions;
-	private static List<Integer>diceRolls = new ArrayList<>(Arrays.asList(new Integer[]{3, 6, 3, 6, 5, 5}));
-	
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 3, 6, 3, 3, 5, 3 }));
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -457,7 +456,7 @@ public class GameService {
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
-		if(awaitingReroll != null) {
+		if (awaitingReroll != null) {
 			throw new IllegalArgumentException("Can't do anything whilst waiting for reroll decision");
 		}
 		List<jsonTile> squares = new ArrayList<>();
@@ -1580,9 +1579,9 @@ public class GameService {
 //		for (int i = 0; i < quantity; i++) {
 //			result[i] = rand.nextInt(number) + 1;
 //		}
-        result[0] = diceRolls.get(0);
-        diceRolls.remove(0);
-        return result;
+		result[0] = diceRolls.get(0);
+		diceRolls.remove(0);
+		return result;
 	}
 
 	public void actionCheck(PlayerInGame p) {
@@ -1596,7 +1595,7 @@ public class GameService {
 		if (p.getStatus() == "stunned") {
 			throw new IllegalArgumentException("A stunned player cannot act");
 		}
-		if(awaitingReroll != null) {
+		if (awaitingReroll != null) {
 			throw new IllegalArgumentException("We're in a reroll situation");
 		}
 	}
@@ -1677,7 +1676,7 @@ public class GameService {
 			}
 			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final
 																					// index
-		
+
 			if (awaitingReroll != null && awaitingReroll[0] == "Y") {
 				if (rerollOptions.size() > 0) {
 					Runnable task = new Runnable() {
@@ -1695,11 +1694,11 @@ public class GameService {
 					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), rerollOptions, teamId);
 			if (rollResult.equals("success")) { // no reroll needed so just continue route
 				carryOutRouteAction(playerId, remaining, teamId);
-			} else if (awaitingReroll != null && rerollOptions.isEmpty()){
-				if(rollType == "DODGE" || rollType == "GFI") {
-						knockDown(p);
-					}
+			} else if (awaitingReroll != null && rerollOptions.isEmpty()) {
+				if (rollType == "DODGE" || rollType == "GFI") {
+					knockDown(p);
 				}
+			}
 		} else if (jsonMoved.size() > 1) {
 			sender.sendRouteAction(game.getId(), playerId, jsonMoved, "Y");
 		}
@@ -1723,13 +1722,13 @@ public class GameService {
 			t.addPlayer(p);
 			tempT.setPlayer(null);
 			p.decrementRemainingMA();
-			int[][]tempLocation = new int[][] { tempT.getLocation(), t.getLocation() };
+			int[][] tempLocation = new int[][] { tempT.getLocation(), t.getLocation() };
 			if (p.getRemainingMA() < 0) {
 				if (!goingForItAction(p, tempT, t)) {
 					rerollOptions = determineRerollOptions("GFI", p.getId(), tempLocation);
 					if (!rerollOptions.isEmpty()) { // only save task if opportunity for
-																				// reroll
-						awaitingReroll = new String[] { "Y", "GFI", "" + p.getId()};
+													// reroll
+						awaitingReroll = new String[] { "Y", "GFI", "" + p.getId() };
 						runnableLocation = tempLocation;
 
 						Runnable task = new Runnable() {
@@ -1750,7 +1749,7 @@ public class GameService {
 				if (!dodgeAction(p, tempT, t)) {
 					rerollOptions = determineRerollOptions("DODGE", p.getId(), tempLocation);
 					if (!rerollOptions.isEmpty()) { // only save task if opportunity for
-																					// reroll
+													// reroll
 						awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
 						runnableLocation = tempLocation;
 
@@ -1795,10 +1794,15 @@ public class GameService {
 		return movedSoFar;
 	}
 
-	public List<String> determineRerollOptions(String action, int playerId, int[][]location) {
+	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
 		List<String> results = new ArrayList<>();
-		if(awaitingReroll != null && location[0].equals(runnableLocation[0]) && location[1].equals(runnableLocation[1]) && playerId == Integer.parseInt(awaitingReroll[2])
-	       && action == awaitingReroll[1]) { // means in a reroll - can't reroll something more than once
+		if (awaitingReroll != null && location[0].equals(runnableLocation[0]) && location[1].equals(runnableLocation[1])
+				&& playerId == Integer.parseInt(awaitingReroll[2]) && action == awaitingReroll[1]) { // means in a
+																										// reroll -
+																										// can't reroll
+																										// something
+																										// more than
+																										// once
 			return results;
 		}
 		if (!activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
@@ -1814,38 +1818,42 @@ public class GameService {
 	}
 
 	public void carryOutReroll(int playerId, int team, String rerollChoice) {
+	
+		sender.sendRerollChoice(game.getId(), playerId, team, (team == team1.getId() ? team1.getName() : team2.getName()), rerollChoice, runnableLocation);
 		System.out.println("in reroll");
 		PlayerInGame p = getPlayerById(playerId);
 		if (awaitingReroll == null || Integer.parseInt(awaitingReroll[2]) != playerId) {
 			throw new IllegalArgumentException("Invalid details");
 		}
-		System.out.println(rerollChoice);
-		if (rerollChoice.equals("Team Reroll")) {
-			System.out.println("In Team Reroll");
-			activeTeam.useTeamReroll();
-		} else if (rerollChoice.contains("Skill")) {
-			p.useSkill(rerollChoice.replace(" Skill", ""));
-			System.out.println("In skill reroll");
-		}
-		taskQueue.pop().run();
-		boolean result = false;
-		try {
-			System.out.println("waiting for result");
-			result = runnableResults.take();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		sender.sendRollResult(game.getId(), playerId, activePlayer.getName(), rollType, rollNeeded, rolled, rollResult,
-				runnableLocation[0], runnableLocation[1], new ArrayList<String>(), activeTeam.getId());
-		if (result == true) {
-			if (!taskQueue.isEmpty()) {
-				System.out.println("continuing route");
-				taskQueue.pop().run();
+		if (!rerollChoice.contains("Don't reroll")) {
+			System.out.println(rerollChoice);
+			if (rerollChoice.equals("Team Reroll")) {
+				System.out.println("In Team Reroll");
+				activeTeam.useTeamReroll();
+			} else if (rerollChoice.contains("Skill")) {
+				p.useSkill(rerollChoice.replace(" Skill", ""));
+				System.out.println("In skill reroll");
 			}
-		} else {
-			if (rollType == "DODGE" || rollType == "GFI") {
-				knockDown(p);
+			taskQueue.pop().run();
+			boolean result = false;
+			try {
+				System.out.println("waiting for result");
+				result = runnableResults.take();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
+			sender.sendRollResult(game.getId(), playerId, activePlayer.getName(), rollType, rollNeeded, rolled,
+					rollResult, runnableLocation[0], runnableLocation[1], new ArrayList<String>(), activeTeam.getId());
+			if (result == true) {
+				if (!taskQueue.isEmpty()) {
+					System.out.println("continuing route");
+					taskQueue.pop().run();
+				}
+				return;
+			}
+		}
+		if (rollType == "DODGE" || rollType == "GFI") {
+			knockDown(p);
 		}
 	}
 }

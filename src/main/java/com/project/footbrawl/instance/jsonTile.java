@@ -18,6 +18,10 @@ public class jsonTile {
 		if(tackleZones == 0) tackleZones = null;
 	}
 
+	public jsonTile() {
+		
+	}
+
 	public int[] getPosition() {
 		return position;
 	}

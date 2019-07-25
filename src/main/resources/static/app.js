@@ -274,6 +274,8 @@ function decodeMessage(message){
 			updateTeamDetails(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
+		} else if(message.action == "REROLLCHOICE"){
+			showRerollUsed(message);
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
@@ -623,7 +625,7 @@ function requestReroll(options){
     var button = document.createElement("BUTTON")
     button.innerHTML = "Don't reroll";
     button.id = "dontReroll";
-    button.onclick = function() {sendRerollChoice("none")};
+    button.onclick = function() {sendRerollChoice("Don't reroll")};
     modalOptions.appendChild(button);
 }
 
@@ -632,20 +634,38 @@ function sendRerollChoice(choice){
 	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
              JSON.stringify({"type": "ACTION", "action": "REROLL", "player": activePlayer.id,
              "rerollChoice": choice}));
-	 if(choice != "Don't reroll"){
-	   resetModal();
-	 }
 }
 
-function resetModal(){
+function resetModal(message){
 	console.log("resetting Modal");
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	document.getElementById("modal").style.display = "none";
-	activePlayer.status = "standing";
-    activePlayer.location = rerollRoute[0]
+	var p = getPlayerById(message.player);
+    p.status = "standing";
+    p.location = message.location;
     drawPlayers();
 	inModal = false;
 	if(taskQueue.length != 0){
 	  timeOut((taskQueue.shift())(), 500);
 	}
+}
+
+function showRerollUsed(message){
+	var newRolls = document.getElementById("newRolls");
+	var choice = "";
+	if(message.rerollChoice === "Don't reroll"){
+		choice = " chose not to use a reroll.";
+	} else{
+		choice = " chose to reroll using " + message.rerollChoice + ".";
+	}
+	newRolls.innerHTML =  message.teamName + choice + "</br>" + newRolls.innerHTML;
+	if(message.rerollChoice != "Don't reroll"){
+		   resetModal(message);
+    } else{
+    	var chooser = message.teamName;
+    	if(message.userToChoose == team){
+    		chooser = "You"
+    	}
+    	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
+    }
 }
