@@ -27,8 +27,8 @@ public class GameLobbyService {
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
-		p.setMA(4);
-		p.setAG(2);
+		p.setMA(10);
+		p.setAG(3);
 		p.setTeam(1);
 		p.setST(9);
 		Player p2 = new Player();
@@ -51,8 +51,8 @@ public class GameLobbyService {
 		p.setSkills(skills);
 		Player p4 = new Player();
 		p4.setName("Sarah");
-		p4.setMA(3);
-		p4.setAG(2);
+		p4.setMA(10);
+		p4.setAG(4);
 		p4.setTeam(1);
 		p4.setST(3);
 		p4.setSkills(skills);

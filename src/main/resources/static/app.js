@@ -27,6 +27,7 @@ var rolls;
 var animating;
 var taskQueue;
 var inModal;
+var rerollRoute;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
@@ -286,7 +287,7 @@ function decodeMessage(message){
 		    showMoved(message, "normal");
 	      }
 	  } else if(message.action == "ROLL"){
-		  if(animating == true){
+		  if(animating == true || inModal == true){
 			  var task = function(m){
 	    		  showRoll(m);
 	    	  };
@@ -295,19 +296,8 @@ function decodeMessage(message){
 	      } else{ 	
 	    	  showRoll(message); 
 	      }
-	   } else if(message.action == "REROLL"){
-		   if(animating == true){
-				  var task = function(m){
-		    		  requestReroll(m);
-		    	  };
-		    	  var t = animateWrapFunction(task, this, [message]);
-		    	  taskQueue.push(t);
-		      } else{ 	
-		    	  requestReroll(message); 
-		      }
-		   
-	   }
-	}	    
+	  }	    
+   }
 }
 
 function showMovement(message){
@@ -615,6 +605,7 @@ function showFailedAction(message){
 	   document.getElementById("modalOptions").innerHTML = "<p> Awaiting opponent reroll decision </p>" +
 	                          "Possible rerolls: " + message.rerollOptions;
 	} else{
+		rerollRoute = [{position: message.location}, {position: message.target}]; 
 		requestReroll(message.rerollOptions);
 	}
 
@@ -641,4 +632,20 @@ function sendRerollChoice(choice){
 	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
              JSON.stringify({"type": "ACTION", "action": "REROLL", "player": activePlayer.id,
              "rerollChoice": choice}));
+	 if(choice != "Don't reroll"){
+	   resetModal();
+	 }
+}
+
+function resetModal(){
+	console.log("resetting Modal");
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("modal").style.display = "none";
+	activePlayer.status = "standing";
+    activePlayer.location = rerollRoute[0]
+    drawPlayers();
+	inModal = false;
+	if(taskQueue.length != 0){
+	  timeOut((taskQueue.shift())(), 500);
+	}
 }
