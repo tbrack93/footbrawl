@@ -285,7 +285,13 @@ function decodeMessage(message){
 		} else if(message.action == "TURNOVER"){
 			showTurnover(message);
 		} else if(message.action == "NEWTURN"){
-			showNewTurn(message);
+			var delay = 2000;
+			if(team1 == null){
+				delay = 0;
+			}
+			setTimeout(function() {
+				showNewTurn(message);
+			}, delay);
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
