@@ -81,20 +81,18 @@ public class MessageSendingService {
 		message.setRerollOptions(rerollOptions);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-
-	public void sendRerollRequest(int gameId, int playerId, String type, List<String> options, int teamId, int otherTeam) {
-		System.out.println(teamId);
-		System.out.println(otherTeam);
+	
+	public void sendRerollChoice(int gameId, int playerId, int team, String teamName, String choice, int[][] tiles) {
 		MessageToClient message = new MessageToClient();
-		message.setType("ACTION");
-		message.setAction("REROLL");
-		message.setRollType(type);
-		message.setPlayer(playerId);
-		message.setRerollOptions(options);
-		controller.sendMessageToUser(gameId, teamId, message);
 		message.setType("INFO");
-		message.setRerollOptions(null);
-		controller.sendMessageToUser(gameId, otherTeam, message);
+		message.setAction("REROLLCHOICE");
+		message.setPlayer(playerId);
+		message.setUserToChoose(team);
+		message.setRerollChoice(choice);
+		message.setTeamName(teamName);
+		message.setLocation(tiles[0]);
+		message.setTarget(tiles[1]);
+		controller.sendMessageToBothUsers(gameId, message);
 	}
 	
 }

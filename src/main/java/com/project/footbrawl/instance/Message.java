@@ -12,6 +12,7 @@ public class Message {
 	private int[] target;
 	private String description;
 	private Integer routeMACost;
+	private String rerollChoice;
 	
 	public Message() {
 		
@@ -73,6 +74,13 @@ public class Message {
 		this.routeMACost = routeMACost;
 	}
 	
+	public String getRerollChoice() {
+		return rerollChoice;
+	}
+
+	public void setRerollChoice(String rerollChoice) {
+		this.rerollChoice = rerollChoice;
+	}
 	
 
 }

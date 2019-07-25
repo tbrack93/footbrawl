@@ -17,6 +17,7 @@ public class MessageToClient extends Message {
 	private String rollType;
 	private String team1Name;
 	private String team2Name;
+	private String teamName;
 	private String playerName;
 	private List<PlayerInGame> team1;
 	private List<PlayerInGame> team2;
@@ -166,6 +167,14 @@ public class MessageToClient extends Message {
 
 	public void setEnd(String end) {
 		this.end = end;
+	}
+
+	public String getTeamName() {
+		return teamName;
+	}
+
+	public void setTeamName(String teamName) {
+		this.teamName = teamName;
 	}
 	
 }
