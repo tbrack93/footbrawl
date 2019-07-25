@@ -70,7 +70,7 @@ public class GameService {
 	private String rollResult;
 	private String[] awaitingReroll; // Y/N, Action relates to, player relates to
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 3, 3, 3, 3, 5, 3 }));
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 3, 5, 3 }));
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -1677,7 +1677,7 @@ public class GameService {
 		if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
 			if (jsonMoved.size() > 1) {
 				sender.sendRouteAction(game.getId(), playerId, jsonMoved, "N");
-			}
+			} 
 			List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final
 																					// index
 
@@ -1694,8 +1694,14 @@ public class GameService {
 					taskQueue.add(task);
 				}
 			}
+			String finalRoll = "N";
+			if (route.get(jsonMoved.size())[0] == route.get(route.size()-1)[0] &&
+			   route.get(jsonMoved.size())[1] == route.get(route.size()-1)[1] &&
+			   awaitingReroll == null) {
+				finalRoll = "Y";
+			}
 			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
-					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), rerollOptions, teamId);
+					route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), rerollOptions, teamId, finalRoll);
 			if (rollResult.equals("success")) { // no reroll needed so just continue route
 				carryOutRouteAction(playerId, remaining, teamId);
 			} else if (awaitingReroll != null && rerollOptions.isEmpty()) {
@@ -1822,7 +1828,6 @@ public class GameService {
 	}
 
 	public void carryOutReroll(int playerId, int team, String rerollChoice) {
-	
 		sender.sendRerollChoice(game.getId(), playerId, team, (team == team1.getId() ? team1.getName() : team2.getName()), rerollChoice, runnableLocation);
 		System.out.println("in reroll");
 		PlayerInGame p = getPlayerById(playerId);
@@ -1846,8 +1851,12 @@ public class GameService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			String end = "N";
+			if(result == true && taskQueue.isEmpty()) {
+				end = "Y";
+			}
 			sender.sendRollResult(game.getId(), playerId, activePlayer.getName(), rollType, rollNeeded, rolled,
-					rollResult, runnableLocation[0], runnableLocation[1], new ArrayList<String>(), activeTeam.getId());
+					rollResult, runnableLocation[0], runnableLocation[1], new ArrayList<String>(), activeTeam.getId(), end);
 			if (result == true) {
 				if (!taskQueue.isEmpty()) {
 					System.out.println("continuing route");
