@@ -276,6 +276,8 @@ function decodeMessage(message){
 			showRoute(message);
 		} else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
+		} else if(message.action == "ARMOURROLL"){
+			showArmourRoll(message);
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
@@ -668,4 +670,11 @@ function showRerollUsed(message){
     	}
     	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
     }
+}
+
+function showArmourRoll(message){
+	var newRolls = document.getElementById("newRolls");
+	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
+	                      message.rolled + "</br>" + newRolls.innerHTML;
+	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + "'s " + message.rollOutcome + "." + "</p>";
 }

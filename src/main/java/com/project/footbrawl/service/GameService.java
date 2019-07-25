@@ -1108,11 +1108,12 @@ public class GameService {
 		int armour = p.getAV();
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
+		sender.sendArmourRoll(game.getId(), p.getId(), p.getName(), armour, rolls, total > armour ? "armour was broken": "armour held");
 		if (total > armour) {
-			System.out.println(p.getName() + "'s armour was broken");
+			System.out.println(p.getName() + "'s armour was broken.");
 			injuryRoll(p);
 		} else {
-			System.out.println(p.getName() + "'s armour held");
+			System.out.println(p.getName() + "'s armour held.");
 		}
 		if (p.hasBall()) {
 			p.setHasBall(false);
@@ -1576,11 +1577,10 @@ public class GameService {
 		// manually setting for testing
 //		Random rand = new Random();
 		int[] result = new int[quantity];
-//		for (int i = 0; i < quantity; i++) {
-//			result[i] = rand.nextInt(number) + 1;
-//		}
-		result[0] = diceRolls.get(0);
-		diceRolls.remove(0);
+		for (int i = 0; i < quantity; i++) {
+			result[i] = diceRolls.get(0);
+			diceRolls.remove(0);
+		}
 		return result;
 	}
 
