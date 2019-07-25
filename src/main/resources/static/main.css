@@ -1,6 +1,8 @@
 canvas {
 	position: absolute;
 	width: 100%;
+	padding: 0px;
+	margin-top: -15px;
 }
 
 #backgroundCanvas {
@@ -70,3 +72,17 @@ hr {
 	margin-top: 0px;
 	margin-bottom: 10px;
 }
+
+.teamInfo{
+	
+}
+
+#gameStatus{
+  padding: 0px;	
+  margin-left:15px;
+}
+
+#score {
+  margin: 0px;
+}
+

@@ -435,10 +435,12 @@ public class GameService {
 
 	public void turnover() {
 		System.out.println(activeTeam.getName() + " suffered a turnover");
+		sender.sendTurnover(game.getId(), activeTeam.getId(), activeTeam.getName());
 		endTurn();
 	}
 
 	public void endTurn() { // may be additional steps or user actions at end of turn
+		awaitingReroll = null;
 		inPassOrHandOff = false;
 		activePlayer = null;
 		activeTeam.endTurn();
@@ -452,7 +454,8 @@ public class GameService {
 	}
 
 	public void newTurn() {
-		activeTeam.newTurn(); // reset players on pitch (able to move/ act)
+		activeTeam.newTurn();// reset players on pitch (able to move/ act)
+		sender.sendGameStatus(game.getId(),activeTeam.getId(), activeTeam.getName(), team1, team2, game.getTeam1Score(), game.getTeam2Score());
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
@@ -1119,6 +1122,7 @@ public class GameService {
 			p.setHasBall(false);
 			scatterBall(location, 1);
 		}
+		turnover();
 	}
 
 	public void injuryRoll(PlayerInGame p) {
@@ -1137,8 +1141,8 @@ public class GameService {
 				p.getTeamIG().addToDugout(p);
 			} else {
 				System.out.println(p.getName() + " is injured");
-				outcome = "injured";
-				p.setStatus("injured and removed from the pitch");
+				outcome = "injured and removed from the pitch";
+				p.setStatus("injured");
 				p.getTeamIG().addToInjured(p);
 			}
 			p.getTile().removePlayer();
@@ -1633,7 +1637,7 @@ public class GameService {
 	}
 
 	public void sendTeamsInfo(int teamId) {
-		sender.sendTeamsInfo(game.getId(), teamId, team1, team2);
+		sender.sendGameStatus(game.getId(),activeTeam.getId(), activeTeam.getName(), team1, team2, game.getTeam1Score(), game.getTeam2Score());
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
