@@ -128,7 +128,9 @@ function drawBoard() {
 function drawPlayers(){
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	players.forEach(player => {
-		drawPlayer(player);
+		if(player.location != null){
+		  drawPlayer(player);
+		}
 	});
 }
 
@@ -278,6 +280,8 @@ function decodeMessage(message){
 			showRerollUsed(message);
 		} else if(message.action == "ARMOURROLL"){
 			showArmourRoll(message);
+		} else if(message.action == "INJURYROLL"){
+			showInjuryRoll(message);
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
@@ -677,4 +681,15 @@ function showArmourRoll(message){
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
 	                      message.rolled + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + "'s " + message.rollOutcome + "." + "</p>";
+}
+
+function showInjuryRoll(message){
+	var newRolls = document.getElementById("newRolls");
+	newRolls.innerHTML =  message.playerName + " was "+ message.rollOutcome + ". " + "Rolled: " + message.rolled + "</br>" + newRolls.innerHTML;
+	var existing = document.getElementById("modalOptions").innerHTML;
+	document.getElementById("modalOptions").innerHTML = existing + "<p>" + message.playerName + " is " + message.rollOutcome + "." + "</p>";
+	var player = getPlayerById(message.player);
+    player.status = message.playerStatus;
+    player.location = message.location;
+	drawPlayers();
 }

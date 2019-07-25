@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.controller.GameMessageController;
 import com.project.footbrawl.instance.MessageToClient;
+import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
 import com.project.footbrawl.instance.jsonTile;
 
@@ -108,6 +109,20 @@ public class MessageSendingService {
 		List<Integer> rollList = new ArrayList<Integer>(Arrays.asList(new Integer[] {rolls[0], rolls[1]}));
 	    message.setRolled(rollList);
 		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
+	public void sendInjuryRoll(int gameId, int playerId, String playerName, int[] rolls, String playerStatus, int[] location, String outcome) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("INJURYROLL");
+		message.setRollOutcome(outcome);
+		List<Integer> rollList = new ArrayList<Integer>(Arrays.asList(new Integer[] {rolls[0], rolls[1]}));
+	    message.setRolled(rollList);
+	    message.setPlayer(playerId);
+        message.setPlayerName(playerName);
+        message.setPlayerStatus(playerStatus);
+        message.setLocation(location);;
+	    controller.sendMessageToBothUsers(gameId, message);
 	}
 	
 }

@@ -186,6 +186,9 @@ public class PlayerInGame{
 	}
 	
 	public int[] getLocation() {
+		if(tile == null) {
+			return null;
+		}
 		return tile.getLocation();
 	}
 

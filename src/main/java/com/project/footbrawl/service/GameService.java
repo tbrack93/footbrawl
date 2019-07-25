@@ -70,7 +70,7 @@ public class GameService {
 	private String rollResult;
 	private String[] awaitingReroll; // Y/N, Action relates to, player relates to
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 3, 6, 3, 3, 5, 3 }));
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 3, 3, 3, 3, 5, 3 }));
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -1124,6 +1124,7 @@ public class GameService {
 	public void injuryRoll(PlayerInGame p) {
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
+		String outcome = "stunned";
 		if (total <= 7) {
 			System.out.println(p.getName() + " is stunned");
 			p.setStatus("stunned");
@@ -1131,15 +1132,18 @@ public class GameService {
 			// possibility to use apothecary, etc. here
 			if (total <= 9) {
 				System.out.println(p.getName() + " is KO'd");
+				outcome = "KO'd and removed from the pitch";
 				p.setStatus("KO");
 				p.getTeamIG().addToDugout(p);
 			} else {
 				System.out.println(p.getName() + " is injured");
-				p.setStatus("injured");
+				outcome = "injured";
+				p.setStatus("injured and removed from the pitch");
 				p.getTeamIG().addToInjured(p);
 			}
 			p.getTile().removePlayer();
 		}
+		sender.sendInjuryRoll(game.getId(), p.getId(), p.getName(), rolls, p.getStatus(), p.getLocation(), outcome);
 	}
 
 	public boolean standUpAction(PlayerInGame player) {
