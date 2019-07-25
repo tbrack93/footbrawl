@@ -29,12 +29,14 @@ public class GameLobbyService {
 		p.setName("Billy");
 		p.setMA(10);
 		p.setAG(3);
+		p.setAV(6);
 		p.setTeam(1);
 		p.setST(9);
 		Player p2 = new Player();
 		p2.setName("Bobby");
 		p2.setAG(2);
 		p2.setMA(3);
+		p2.setAV(6);
 		p2.setTeam(2);
 		p2.setST(3);
 		Player p3 = new Player();
@@ -43,6 +45,7 @@ public class GameLobbyService {
 		p3.setTeam(2);
 		p3.setST(3);
 		p3.setAV(2);
+		p3.setAV(6);
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		List<Skill> skills = new ArrayList<>();
@@ -55,6 +58,7 @@ public class GameLobbyService {
 		p4.setAG(4);
 		p4.setTeam(1);
 		p4.setST(3);
+		p4.setAV(6);
 		p4.setSkills(skills);
 		Player p5 = new Player();
 		p5.setName("Bob");

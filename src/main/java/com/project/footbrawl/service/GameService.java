@@ -70,7 +70,7 @@ public class GameService {
 	private String rollResult;
 	private String[] awaitingReroll; // Y/N, Action relates to, player relates to
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 3, 6, 3, 3, 5, 3 }));
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 3, 3, 3, 3, 5, 3 }));
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -1108,11 +1108,12 @@ public class GameService {
 		int armour = p.getAV();
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
+		sender.sendArmourRoll(game.getId(), p.getId(), p.getName(), armour, rolls, total > armour ? "armour was broken": "armour held");
 		if (total > armour) {
-			System.out.println(p.getName() + "'s armour was broken");
+			System.out.println(p.getName() + "'s armour was broken.");
 			injuryRoll(p);
 		} else {
-			System.out.println(p.getName() + "'s armour held");
+			System.out.println(p.getName() + "'s armour held.");
 		}
 		if (p.hasBall()) {
 			p.setHasBall(false);
@@ -1123,6 +1124,7 @@ public class GameService {
 	public void injuryRoll(PlayerInGame p) {
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
+		String outcome = "stunned";
 		if (total <= 7) {
 			System.out.println(p.getName() + " is stunned");
 			p.setStatus("stunned");
@@ -1130,15 +1132,18 @@ public class GameService {
 			// possibility to use apothecary, etc. here
 			if (total <= 9) {
 				System.out.println(p.getName() + " is KO'd");
+				outcome = "KO'd and removed from the pitch";
 				p.setStatus("KO");
 				p.getTeamIG().addToDugout(p);
 			} else {
 				System.out.println(p.getName() + " is injured");
-				p.setStatus("injured");
+				outcome = "injured";
+				p.setStatus("injured and removed from the pitch");
 				p.getTeamIG().addToInjured(p);
 			}
 			p.getTile().removePlayer();
 		}
+		sender.sendInjuryRoll(game.getId(), p.getId(), p.getName(), rolls, p.getStatus(), p.getLocation(), outcome);
 	}
 
 	public boolean standUpAction(PlayerInGame player) {
@@ -1576,11 +1581,10 @@ public class GameService {
 		// manually setting for testing
 //		Random rand = new Random();
 		int[] result = new int[quantity];
-//		for (int i = 0; i < quantity; i++) {
-//			result[i] = rand.nextInt(number) + 1;
-//		}
-		result[0] = diceRolls.get(0);
-		diceRolls.remove(0);
+		for (int i = 0; i < quantity; i++) {
+			result[i] = diceRolls.get(0);
+			diceRolls.remove(0);
+		}
 		return result;
 	}
 

@@ -23,6 +23,7 @@ public class MessageToClient extends Message {
 	private List<PlayerInGame> team2;
 	private List<String> rerollOptions;
 	private String end; // if more messages to follow
+	private String playerStatus;
 	
 	public MessageToClient() {
         route = null;
@@ -175,6 +176,14 @@ public class MessageToClient extends Message {
 
 	public void setTeamName(String teamName) {
 		this.teamName = teamName;
+	}
+
+	public String getPlayerStatus() {
+		return playerStatus;
+	}
+
+	public void setPlayerStatus(String playerStatus) {
+		this.playerStatus = playerStatus;
 	}
 	
 }
