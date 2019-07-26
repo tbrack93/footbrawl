@@ -28,6 +28,7 @@ public class MessageToClient extends Message {
 	private List<String> rerollOptions;
 	private String end; // if more messages to follow
 	private String playerStatus;
+	private int[] ballLocation;
 	
 	public MessageToClient() {
         route = null;
@@ -221,5 +222,14 @@ public class MessageToClient extends Message {
 	public void setTeam2Score(Integer team2Score) {
 		this.team2Score = team2Score;
 	}
+
+	public int[] getBallLocation() {
+		return ballLocation;
+	}
+
+	public void setBallLocation(int[] ballLocation) {
+		this.ballLocation = ballLocation;
+	}
+	
 	
 }

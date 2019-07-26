@@ -61,6 +61,7 @@ public class GameService {
 	private LinkedList<Runnable> taskQueue;
 	private BlockingQueue<Boolean> runnableResults;
 	private int[][] runnableLocation;
+	private int[] ballLocation;
 	private Tile ballToScatter;
 	private boolean inPassOrHandOff; // need to track to ensure max one turnover, as throw can result in complex
 	// chain of events
@@ -361,7 +362,7 @@ public class GameService {
 				getTouchBack(activeTeam == team1 ? team2 : team1);
 			}
 			if (goal.containsPlayer()) {
-				if (goal.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
+				if (goal.getPlayer().isHasTackleZones()) { // will need to make this more specific to catching
 					catchBallAction(goal.getPlayer(), false);
 				} else {
 					scatterBall(goal, 1); // if player can't catch, will scatter again
@@ -455,7 +456,7 @@ public class GameService {
 
 	public void newTurn() {
 		activeTeam.newTurn();// reset players on pitch (able to move/ act)
-		sender.sendGameStatus(game.getId(),activeTeam.getId(), activeTeam.getName(), team1, team2, game.getTeam1Score(), game.getTeam2Score());
+		sender.sendGameStatus(game.getId(),activeTeam.getId(), activeTeam.getName(), team1, team2, game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation());
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
@@ -847,7 +848,7 @@ public class GameService {
 		Tile location = p.getTile();
 		location.removePlayer();
 		p.getTeamIG().addToDungeon(p);
-		if (p.hasBall()) {
+		if (p.isHasBall()) {
 			p.setHasBall(false);
 			scatterBall(location, 1);
 		}
@@ -1065,7 +1066,7 @@ public class GameService {
 			p.getTile().removePlayer();
 			p.getTeamIG().addToReserves(p);
 		}
-		if (p.hasBall()) {
+		if (p.isHasBall()) {
 			p.setHasBall(false);
 			scatterBall(p.getTile(), 1);
 			if (p.getTeamIG() == activeTeam) {
@@ -1118,7 +1119,7 @@ public class GameService {
 		} else {
 			System.out.println(p.getName() + "'s armour held.");
 		}
-		if (p.hasBall()) {
+		if (p.isHasBall()) {
 			p.setHasBall(false);
 			scatterBall(location, 1);
 		}
@@ -1189,7 +1190,7 @@ public class GameService {
 				return;
 			}
 			if (target.containsPlayer()) {
-				if (target.getPlayer().hasTackleZones()) { // will need to make this more specific to catching
+				if (target.getPlayer().isHasTackleZones()) { // will need to make this more specific to catching
 					catchBallAction(target.getPlayer(), false);
 				} else {
 					scatterBall(target, 1); // if player can't catch, will scatter again
@@ -1269,7 +1270,7 @@ public class GameService {
 
 	public void passBallAction(PlayerInGame thrower, Tile target) {
 		actionCheck(thrower);
-		if (!thrower.hasBall()) {
+		if (!thrower.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
 		if (thrower.getTeamIG().hasPassed()) {
@@ -1325,7 +1326,7 @@ public class GameService {
 
 	public void handOffBallAction(PlayerInGame player, Tile target) {
 		actionCheck(player);
-		if (!player.hasBall()) {
+		if (!player.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
 		if (!target.containsPlayer()) {
@@ -1389,7 +1390,7 @@ public class GameService {
 	public List<PlayerInGame> calculatePossibleInterceptors(List<Tile> path, PlayerInGame thrower) {
 		List<PlayerInGame> interceptors = new ArrayList<>();
 		for (Tile t : path) {
-			if (t.containsPlayer() && t.getPlayer().getTeam() != thrower.getTeam() && t.getPlayer().hasTackleZones()) {
+			if (t.containsPlayer() && t.getPlayer().getTeam() != thrower.getTeam() && t.getPlayer().isHasTackleZones()) {
 				interceptors.add(t.getPlayer());
 				System.out.println("Possible interception by " + t.getPlayer().getName() + " at " + t.getLocation()[0]
 						+ " " + t.getLocation()[1] + " with a roll of " + calculateInterception(t.getPlayer()) + "+");
@@ -1510,7 +1511,7 @@ public class GameService {
 		Tile target = pitch[destination[0]][destination[1]];
 		System.out.println("Ball thrown to square " + destination[0] + " " + destination[1]);
 		if (target.containsPlayer()) {
-			if (target.getPlayer().hasTackleZones()) {
+			if (target.getPlayer().isHasTackleZones()) {
 				catchBallAction(target.getPlayer(), false);
 			} else {
 				scatterBall(target, 1);
@@ -1525,7 +1526,7 @@ public class GameService {
 		List<PlayerInGame> opponents;
 		opponents = player.getTeamIG() == team1 ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
 		for (PlayerInGame p : opponents) {
-			if (p.hasTackleZones()) {
+			if (p.isHasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
 					// System.out.println(t);
 					t.addTackler(p);
@@ -1615,11 +1616,13 @@ public class GameService {
 	public Tile ballLocationCheck() {
 		for (Tile[] array : pitch) {
 			for (Tile t : array) {
-				if (t.containsBall() || t.containsPlayer() && t.getPlayer().hasBall()) {
+				if (t.containsBall() || t.containsPlayer() && t.getPlayer().isHasBall()) {
+					ballLocation = t.getLocation();
 					return t;
 				}
 			}
 		}
+		ballLocation = null;
 		return null; // should be impossible during main gameplay
 	}
 
@@ -1637,7 +1640,8 @@ public class GameService {
 	}
 
 	public void sendTeamsInfo(int teamId) {
-		sender.sendGameStatus(game.getId(),activeTeam.getId(), activeTeam.getName(), team1, team2, game.getTeam1Score(), game.getTeam2Score());
+		ballLocationCheck();
+		sender.sendGameStatus(game.getId(),activeTeam.getId(), activeTeam.getName(), team1, team2, game.getTeam1Score(), game.getTeam2Score(), ballLocation);
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
@@ -1796,7 +1800,7 @@ public class GameService {
 					return movedSoFar;
 				}
 			}
-			if (p.hasBall()) { // checking
+			if (p.isHasBall()) { // checking
 								// if
 								// touchdown
 				if ((t.getLocation()[0] == 0 && p.getTeamIG() == team2)

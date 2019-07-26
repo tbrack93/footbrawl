@@ -135,7 +135,7 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 	
-	public void sendGameStatus(int gameId, int teamId, String teamName, TeamInGame team1, TeamInGame team2, int team1Score, int team2Score) {
+	public void sendGameStatus(int gameId, int teamId, String teamName, TeamInGame team1, TeamInGame team2, int team1Score, int team2Score, int[] ballLocation) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("NEWTURN");
@@ -147,6 +147,7 @@ public class MessageSendingService {
 		message.setTeam2FullDetails(team2);
 		message.setTeam1Score(team1Score);
 		message.setTeam2Score(team2Score);
+		message.setBallLocation(ballLocation);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 	
