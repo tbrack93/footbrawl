@@ -173,7 +173,6 @@ function drawPlayer(player) {
 			img.src = player.imgUrl;
 		}
 	  img.onload = function() {
-		  console.log("main image stuff")
 		  context.save();
 		  context.globalAlpha = 1;
 			var column = player.location[0];
@@ -213,6 +212,9 @@ function drawSelectionBorder(player){
 	ctx.clearRect(column * squareH-5, row * squareH-5, squareH+10,squareH+10);
 	ctx.save();
 	ctx.strokeStyle = "white";
+	if(player.hasBall == true){
+		ctx.strokeStyle = "orange";
+		}
 		var line = 3;
 		if(player == activePlayer){
 			line = 8;
@@ -233,12 +235,12 @@ function drawBall(){
 			var column = ballLocation[0];
 			var row = 14 -ballLocation[1];
 			var squareH = canvas.height / 15;
-			var ctx = squares.getContext("2d");
+			var ctx = selection.getContext("2d");
 			ctx.save();
-			ctx.globalAlpha = 0.4;
-			ctx.fillStyle = "orange";
-			ctx.fillRect(column * squareH, row * squareH, squareH, squareH);
-			ctx.restore();
+			ctx.strokeStyle = "orange";
+			ctx.lineWidth = 8;
+			ctx.strokeRect(column * squareH, row * squareH, squareH,
+					squareH);
 			context.drawImage(img, column * squareH + squareH/3, row * squareH + squareH/3, squareH/1.5,
 					squareH/1.5);
 			}
