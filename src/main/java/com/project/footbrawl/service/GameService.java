@@ -73,7 +73,7 @@ public class GameService {
 	private int rollsNeeded;
 	private boolean routeSaved;
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 3, 5, 3 }));
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 3, 6, 6, 6, 3, 5, 3 }));
 
 //	public GameService(Game game) {
 //		this.game = game;

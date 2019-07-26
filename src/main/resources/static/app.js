@@ -680,7 +680,7 @@ function showPickUpResult(message){
 	 var p = getPlayerById(message.player);
 	 if(message.rollOutcome === "success"){
 		 p.hasBall = true;
-		 p.location = message.location;
+		 p.location = message.target;
 		 inPickUp = false;
 	 }
 	 if(message.end == "Y"){
@@ -796,8 +796,10 @@ function resetModal(message){
 	document.getElementById("modal").style.display = "none";
 	var p = getPlayerById(message.player);
     p.status = "standing";
+    if(inPickUp != true){
     p.location = message.location;
     drawPlayers();
+    }
 	inModal = false;
 	if(taskQueue.length != 0){
 	  timeOut((taskQueue.shift())(), 500);
