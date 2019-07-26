@@ -1698,13 +1698,15 @@ public class GameService {
 			jt.setTackleZones(null);
 			jsonMoved.add(jt);
 		}
-		if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
-			if (jsonMoved.size() > 1) {
-				sender.sendRouteAction(game.getId(), playerId, jsonMoved, "N");
-			}
-			continueAction(playerId, route, jsonMoved, teamId);
-		} else if (jsonMoved.size() > 1) {
-			sender.sendRouteAction(game.getId(), playerId, jsonMoved, "Y");
+		if (jsonMoved.size() > 1) {
+			String end = "Y";
+		   if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
+		   end = "N";
+		   }
+		sender.sendRouteAction(game.getId(), playerId, jsonMoved, end);
+		}
+		if(rollsNeeded > 0) {
+		  continueAction(playerId, route, jsonMoved, teamId);
 		}
 	}
 	
@@ -1738,13 +1740,16 @@ public class GameService {
 			}
 		}
 		String finalRoll = "N";
-		if (route.get(jsonMoved.size())[0] == route.get(route.size() - 1)[0]
-				&& route.get(jsonMoved.size())[1] == route.get(route.size() - 1)[1] && awaitingReroll == null) {
+		if (remaining.isEmpty() && awaitingReroll == null && rollsNeeded == 0) {
 			finalRoll = "Y";
 		}
 		PlayerInGame p = getPlayerById(playerId);
+		int [] target = null;
+		if(!remaining.isEmpty()) {
+			target = route.get(jsonMoved.size());
+		}
 		sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
-				route.get(jsonMoved.size() - 1), route.get(jsonMoved.size()), rerollOptions, teamId, finalRoll);
+				route.get(jsonMoved.size() - 1), target, rerollOptions, teamId, finalRoll);
 		if (rollResult.equals("success")) {
 			System.out.println("in roll result success");// no reroll needed so just continue route
 			if(rollsNeeded > 0) {

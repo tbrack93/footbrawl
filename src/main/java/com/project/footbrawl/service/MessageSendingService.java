@@ -18,12 +18,12 @@ import com.project.footbrawl.instance.jsonTile;
 
 @Service
 public class MessageSendingService {
-	
+
 	@Autowired
 	GameMessageController controller;
 
 	public MessageSendingService() {
-		
+
 	}
 
 	public void sendMovementInfoMessage(int gameId, int teamId, int playerId, List<jsonTile> squares) {
@@ -35,7 +35,7 @@ public class MessageSendingService {
 		message.setSquares(squares);
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
-	
+
 	public void sendTeamsInfo(int gameId, int teamId, TeamInGame team1, TeamInGame team2) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
@@ -46,29 +46,30 @@ public class MessageSendingService {
 		message.setTeam2(team2.getPlayersOnPitch());
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
-	
+
 	public void sendRoute(int gameId, int teamId, int playerId, List<jsonTile> route, int routeMACost) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("ROUTE");
 		message.setRouteMACost(routeMACost);
 		message.setPlayer(playerId);
-	    message.setRoute(route);
-	    controller.sendMessageToUser(gameId,  teamId, message);
+		message.setRoute(route);
+		controller.sendMessageToUser(gameId, teamId, message);
 	}
-	
+
 	public void sendRouteAction(int gameId, int playerId, List<jsonTile> route, String end) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("ROUTE");
 		message.setPlayer(playerId);
-	    message.setRoute(route);
-	    message.setEnd(end);
-	    controller.sendMessageToBothUsers(gameId, message);
+		message.setRoute(route);
+		message.setEnd(end);
+		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
-	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded, List<Integer> rolled, String rollResult, int[] origin, int[]target, List<String> rerollOptions,
-			                  int teamId, String end) {
+
+	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded,
+			List<Integer> rolled, String rollResult, int[] origin, int[] target, List<String> rerollOptions, int teamId,
+			String end) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("ROLL");
@@ -85,7 +86,26 @@ public class MessageSendingService {
 		message.setEnd(end);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
+
+	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded,
+			List<Integer> rolled, String rollResult, int[] location, List<String> rerollOptions, int teamId,
+			String end) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("ROLL");
+		message.setRollType(rollType);
+		message.setPlayer(playerId);
+		message.setRollNeeded(rollNeeded);
+		message.setRolled(rolled);
+		message.setRollOutcome(rollResult);
+		message.setPlayerName(playerName);
+		message.setLocation(location);
+		message.setUserToChoose(teamId);
+		message.setRerollOptions(rerollOptions);
+		message.setEnd(end);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
 	public void sendRerollChoice(int gameId, int playerId, int team, String teamName, String choice, int[][] tiles) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
@@ -107,26 +127,28 @@ public class MessageSendingService {
 		message.setPlayerName(playerName);
 		message.setRollNeeded(armour);
 		message.setRollOutcome(outcome);
-		List<Integer> rollList = new ArrayList<Integer>(Arrays.asList(new Integer[] {rolls[0], rolls[1]}));
-	    message.setRolled(rollList);
+		List<Integer> rollList = new ArrayList<Integer>(Arrays.asList(new Integer[] { rolls[0], rolls[1] }));
+		message.setRolled(rollList);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
-	public void sendInjuryRoll(int gameId, int playerId, String playerName, int[] rolls, String playerStatus, int[] location, String outcome) {
+
+	public void sendInjuryRoll(int gameId, int playerId, String playerName, int[] rolls, String playerStatus,
+			int[] location, String outcome) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("INJURYROLL");
 		message.setRollOutcome(outcome);
-		List<Integer> rollList = new ArrayList<Integer>(Arrays.asList(new Integer[] {rolls[0], rolls[1]}));
-	    message.setRolled(rollList);
-	    message.setPlayer(playerId);
-        message.setPlayerName(playerName);
-        message.setPlayerStatus(playerStatus);
-        message.setLocation(location);;
-	    controller.sendMessageToBothUsers(gameId, message);
+		List<Integer> rollList = new ArrayList<Integer>(Arrays.asList(new Integer[] { rolls[0], rolls[1] }));
+		message.setRolled(rollList);
+		message.setPlayer(playerId);
+		message.setPlayerName(playerName);
+		message.setPlayerStatus(playerStatus);
+		message.setLocation(location);
+		;
+		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
-	public void sendTurnover(int gameId,int teamId, String teamName) {
+
+	public void sendTurnover(int gameId, int teamId, String teamName) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("TURNOVER");
@@ -134,8 +156,9 @@ public class MessageSendingService {
 		message.setUserToChoose(teamId);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
-	public void sendGameStatus(int gameId, int teamId, String teamName, TeamInGame team1, TeamInGame team2, int team1Score, int team2Score, int[] ballLocation) {
+
+	public void sendGameStatus(int gameId, int teamId, String teamName, TeamInGame team1, TeamInGame team2,
+			int team1Score, int team2Score, int[] ballLocation) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("NEWTURN");
@@ -150,5 +173,5 @@ public class MessageSendingService {
 		message.setBallLocation(ballLocation);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
+
 }
