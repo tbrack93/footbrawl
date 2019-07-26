@@ -1,5 +1,6 @@
 
 var canvas;
+var context;
 var background;
 var squares;
 var animation;
@@ -30,6 +31,7 @@ var animating;
 var taskQueue;
 var inModal;
 var rerollRoute;
+var ballLocation;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
@@ -134,6 +136,7 @@ function drawPlayers(){
 		  drawPlayer(player);
 		}
 	});
+	drawBall();
 }
 
 function drawPlayerBorders(){
@@ -145,8 +148,32 @@ function drawPlayerBorders(){
 
 function drawPlayer(player) {
 	  var img = new Image();
-	  img.src = player.imgUrl;
+	  if(player.hasBall == true){
+		  console.log("has ball");
+		    var playerImg = new Image();
+		    playerImg.src = player.imgUrl;
+		    playerImg.onload = function() { 
+		    	console.log("player image loaded");
+			  var ballImg = new Image();
+		      ballImg.src = "/images/ball.png";
+		      ballImg.onload = function(){
+		    	  console.log("ball image loaded");
+			    var offScreenCanvas = document.createElement('canvas');
+			    var squareH = canvas.height / 15;
+		        offScreenCanvas.width = squareH;
+		        offScreenCanvas.height = squareH;
+		        var offscreenCtx = offScreenCanvas.getContext("2d");
+		        offscreenCtx.drawImage(playerImg, 0, 0, squareH, squareH);
+		        offscreenCtx.drawImage(ballImg, squareH/3, squareH/3, squareH/1.5,
+					squareH/1.5);
+		        img.src = offScreenCanvas.toDataURL();
+		      }
+		    }
+		} else{
+			img.src = player.imgUrl;
+		}
 	  img.onload = function() {
+		  console.log("main image stuff")
 		  context.save();
 		  context.globalAlpha = 1;
 			var column = player.location[0];
@@ -194,6 +221,29 @@ function drawSelectionBorder(player){
 		ctx.strokeRect(column * squareH, row * squareH, squareH,
 				squareH);
 		ctx.restore();
+}
+
+function drawBall(){
+	if(ballLocation != null){
+	  var img = new Image();
+	  img.src = "/images/ball.png";
+	  img.onload = function() {
+		  context.save();
+		  context.globalAlpha = 1;
+			var column = ballLocation[0];
+			var row = 14 -ballLocation[1];
+			var squareH = canvas.height / 15;
+			var ctx = squares.getContext("2d");
+			ctx.save();
+			ctx.globalAlpha = 0.4;
+			ctx.fillStyle = "orange";
+			ctx.fillRect(column * squareH, row * squareH, squareH, squareH);
+			ctx.restore();
+			context.drawImage(img, column * squareH + squareH/3, row * squareH + squareH/3, squareH/1.5,
+					squareH/1.5);
+			}
+  }
+	
 }
 
 
@@ -429,32 +479,56 @@ function showMoved(message, type){
 		console.log(end);
 	    var player = getPlayerById(message.player);
 	    activePlayer = player;
-	    var playerImg = new Image();
-		playerImg.src = player.imgUrl;
+	    var img = new Image();
 	    var squareH = canvas.height / 15;
-	    squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	    var startingX = route[0].position[0] * squareH;
-		var startingY = (14 - route[0].position[1]) * squareH;
-		var targetX = route[1].position[0] * squareH;
-		var targetY = (14 - route[1].position[1]) * squareH;
-		var speed = 10;
-		xIncrement = (targetX - startingX) / speed;
-	    yIncrement = (targetY - startingY) / speed;
-	    if(type === "tripped"){
+		if(player.hasBall == true){
+			  console.log("has ball");
+			    var playerImg = new Image();
+			    playerImg.src = player.imgUrl;
+			    playerImg.onload = function() { 
+			    	console.log("player image loaded");
+				  var ballImg = new Image();
+			      ballImg.src = "/images/ball.png";
+			      ballImg.onload = function(){
+			    	  console.log("ball image loaded");
+				    var offScreenCanvas = document.createElement('canvas');
+			        offScreenCanvas.width = squareH;
+			        offScreenCanvas.height = squareH;
+			        var offscreenCtx = offScreenCanvas.getContext("2d");
+			        offscreenCtx.drawImage(playerImg, 0, 0, squareH, squareH);
+			        offscreenCtx.drawImage(ballImg, squareH/3, squareH/3, squareH/1.5,
+						squareH/1.5);
+			        img.src = offScreenCanvas.toDataURL();
+			      }
+			    }
+		} else{
+			img.src = player.imgUrl;
+		}
+		img.onload = function() { 
+	      squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	      var startingX = route[0].position[0] * squareH;
+		  var startingY = (14 - route[0].position[1]) * squareH;
+		  var targetX = route[1].position[0] * squareH;
+		  var targetY = (14 - route[1].position[1]) * squareH;
+		  var speed = 10;
+		  xIncrement = (targetX - startingX) / speed;
+	      yIncrement = (targetY - startingY) / speed;
+	      if(type === "tripped"){
 	    	player.status = "prone";
 			console.log("tripping time");
 			speed = 5; // lower is faster
-		}
-		if(type === "dodge"){
+		  }
+		  if(type === "dodge"){
 			speed = 5;
+		  }
+		  context.clearRect(startingX, startingY, squareH, squareH);
+		  drawPlayerBorders();
+		  animateMovement(message.route, 0, img, startingX, startingY, targetX, targetY, squareH, end); 
+		  player.location = route[route.length-1].position;
+	      waypoints.length = 0;
+	      inRoute = false;
 		}
-		context.clearRect(startingX, startingY, squareH, squareH);
-		drawPlayerBorders();
-		animateMovement(message.route, 0, playerImg, startingX, startingY, targetX, targetY, squareH, end); 
-		player.location = route[route.length-1].position;
-	    waypoints.length = 0;
-	    inRoute = false;
-	    //context.restore();
+	    // context.restore();
 	}
 }
 
@@ -576,7 +650,8 @@ function showGFIResult(message){
 	  showMoved(message, type);
 }
 
-// adapted from https://stackoverflow.com/questions/899102/how-do-i-store-javascript-functions-in-a-queue-for-them-to-be-executed-eventuall
+// adapted from
+// https://stackoverflow.com/questions/899102/how-do-i-store-javascript-functions-in-a-queue-for-them-to-be-executed-eventuall
 var animateWrapFunction = function(func, context, params) {
     return function() {
         func.apply(context, params);
@@ -711,6 +786,7 @@ function showTurnover(message){
 }
 
 function showNewTurn(message){
+	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
 	document.getElementById("modal").style.display = "none";

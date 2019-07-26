@@ -14,9 +14,9 @@ public class PlayerInGame{
 	private int remainingMA;
 	private boolean actedThisTurn;
 	private boolean actionOver;
-	private String status;
 	private boolean hasTackleZones;
 	private boolean hasBall;
+	private String status;
 	private List<String> skillsUsedThisTurn;
 	@JsonIgnore
 	private Tile tile;
@@ -95,7 +95,7 @@ public class PlayerInGame{
 		actionOver = true;
 	}
 
-	public boolean hasTackleZones() {
+	public boolean isHasTackleZones() {
 		return hasTackleZones;
 	}
 
@@ -115,7 +115,7 @@ public class PlayerInGame{
 		this.hasBall = ball;
 	}
 	
-	public boolean hasBall() {
+	public boolean isHasBall() {
 		return hasBall;
 	}
 	
