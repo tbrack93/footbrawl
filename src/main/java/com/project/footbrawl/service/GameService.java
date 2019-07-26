@@ -1190,6 +1190,7 @@ public class GameService {
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
 			System.out.println("Ball scattered to: " + position[0] + " " + position[1]);
+			sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
 			if (times > 1) {
 				scatterBall(target, times - 1);
 				return;
@@ -1271,7 +1272,7 @@ public class GameService {
 			return true;
 		} else {
 			System.out.println(player.getName() + " failed to pick up the ball!");
-			rollResult = "success";
+			rollResult = "failed";
 //			if (rerollCheck() == true) {
 //				return pickUpBallAction(player);
 //			}
@@ -1850,7 +1851,28 @@ public class GameService {
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
-						runnableResults.add(pickUpBallAction(p));
+						boolean result = pickUpBallAction(p);
+						if (result == false) {
+							rerollOptions = determineRerollOptions("PICKUPBALL", p.getId(), tempLocation);
+							if (!rerollOptions.isEmpty()) { // only save task if opportunity for
+															// reroll
+								awaitingReroll = new String[] { "Y", "PICKUPBALL", "" + p.getId() };
+								runnableLocation = tempLocation;
+
+								Runnable task = new Runnable() {
+
+									@Override
+									public void run() {
+										runnableResults.add(pickUpBallAction(p));
+									}
+
+								};
+								taskQueue.addFirst(task);
+							} 
+						} else {
+								rerollOptions = null;
+						}
+						runnableResults.add(result);
 					}
 				};
 				taskQueue.add(task);
@@ -1923,10 +1945,14 @@ public class GameService {
 		if (!activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
 			results.add("Team Reroll");
 		}
+		PlayerInGame p = getPlayerById(playerId);
 		if (action == "DODGE") {
-			PlayerInGame p = getPlayerById(playerId);
 			if (p.hasSkill("Dodge") && !p.hasUsedSkill("Dodge")) {
 				results.add("Dodge Skill");
+			}
+		} else if (action == "PICKUPBALL") {
+			if (p.hasSkill("Sure Hands")) {
+				results.add("Sure Hands Skill");
 			}
 		}
 		return results;
@@ -1974,6 +2000,9 @@ public class GameService {
 		}
 		if (rollType == "DODGE" || rollType == "GFI") {
 			knockDown(p);
+		} else if(rollType == "PICKUPBALL") {
+			Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
+			scatterBall(location, 1);
 		}
 	}
 }

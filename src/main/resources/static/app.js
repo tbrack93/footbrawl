@@ -31,6 +31,7 @@ var animating;
 var taskQueue;
 var inModal;
 var rerollRoute;
+var inPickUp;
 var ballLocation;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
@@ -245,7 +246,6 @@ function drawBall(){
 					squareH/1.5);
 			}
   }
-	
 }
 
 
@@ -365,6 +365,16 @@ function decodeMessage(message){
 	    	  taskQueue.push(t);
 	      } else{ 	
 	    	  showRoll(message); 
+	      }
+	  } else if(message.action == "BALLSCATTER"){
+		  if(animating == true){
+			  var task = function(m){
+	    		  showBallScatter(m);
+	    	  };
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
+	      } else{ 	
+	    	  showBallScatter(message); 
 	      }
 	  }	    
    }
@@ -525,7 +535,7 @@ function showMoved(message, type){
 		  }
 		  context.clearRect(startingX, startingY, squareH, squareH);
 		  drawPlayerBorders();
-		  animateMovement(message.route, 0, img, startingX, startingY, targetX, targetY, squareH, end); 
+		  animateMovement(message.route, 0, img, startingX, startingY, targetX, targetY, squareH, end, "N"); 
 		  player.location = route[route.length-1].position;
 	      waypoints.length = 0;
 	      inRoute = false;
@@ -534,16 +544,22 @@ function showMoved(message, type){
 	}
 }
 
-function animateMovement(route, counter, playerImg, startingX, startingY, targetX, targetY, squareH, end){
+function animateMovement(route, counter, img, startingX, startingY, targetX, targetY, squareH, end, ball){
 	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	drawPlayerBorders();
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
-	animationContext.drawImage(playerImg, newX, newY, squareH, squareH);
+	if(ball == "Y"){
+		animationContext.drawImage(img, newX, newY, squareH/1.5, squareH/1.5);	
+	} else{
+	animationContext.drawImage(img, newX, newY, squareH, squareH);
+	}
 	if(Math.round(newX) == Math.round(targetX) && Math.round(newY) == Math.round(targetY)){
 		if(counter == route.length-1){
 			route.length = 0;
-			if(end == "Y" || activePlayer.status == "prone"){	
+			if(ball == "Y"){
+				drawBall();
+			} else if(end == "Y" || activePlayer.status == "prone"){	
 			  animationContext.clearRect(0, 0, animation.height, animation.width);
 		      drawPlayer(activePlayer);
 		      if(activePlayer.team == team && end == "Y"){
@@ -551,7 +567,7 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
 				                         "location": activePlayer.location, "routeMACost": 0}));
 			  }
-		    }
+		    } 
 			animating = false;
 		    if(taskQueue.length != 0){
 		    	(taskQueue.shift())();
@@ -564,7 +580,7 @@ function animateMovement(route, counter, playerImg, startingX, startingY, target
 		xIncrement = (targetX - newX) / 10;
 	    yIncrement = (targetY - newY) / 10;
 	}
-	requestAnimationFrame(function() { animateMovement(route, counter, playerImg, newX, newY, targetX, targetY, squareH, end); });	
+	requestAnimationFrame(function() { animateMovement(route, counter, img, newX, newY, targetX, targetY, squareH, end, ball); });	
 }
 
 function escCheck (e) {
@@ -620,6 +636,9 @@ function showRoll(message){
 	if(message.rollType == "GFI"){
 		showGFIResult(message);
 	}
+	if(message.rollType == "PICKUPBALL"){
+		showPickUpResult(message);
+	}
 	if(message.rollOutcome == "failed"){
 		var task = function(m){
 		  showFailedAction(m);
@@ -652,6 +671,57 @@ function showGFIResult(message){
 	  showMoved(message, type);
 }
 
+function showPickUpResult(message){
+	if(inPickUp != true){ 
+	  inPickUp = true;
+	  message.route = [{position: message.location}, {position: message.target}];
+	  showMoved(message, "normal");
+	}
+	 var p = getPlayerById(message.player);
+	 if(message.rollOutcome === "success"){
+		 p.hasBall = true;
+		 p.location = message.location;
+		 inPickUp = false;
+	 }
+	 if(message.end == "Y"){
+		 drawPlayer(p);
+	 }
+}
+
+function showBallScatter(message){
+	animating = true;
+	modal.style.display = "none";
+	document.getElementById("modal").style.display = "none";
+	newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
+	document.getElementById("modalOptions").innerHTML = "<p> Ball scattered to " + message.target + "</p>"
+	var ballImg = new Image();
+	ballImg.src = "/images/ball.png";
+    ballImg.onload = function() { 
+    squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    var squareH = canvas.height / 15;
+    var startingX = message.location[0] * squareH + squareH/3;
+    var startingY = (14 - message.location[1]) * squareH + squareH/3;
+    var targetX = message.target[0] * squareH + squareH/3;
+    var targetY = (14 - message.target[1]) * squareH + squareH/3;
+    var speed = 10;
+    xIncrement = (targetX - startingX) / speed;
+    yIncrement = (targetY - startingY) / speed;
+    context.clearRect(startingX, startingY, squareH, squareH);
+    drawPlayer(activePlayer);
+    animateMovement(message.route, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "Y"); 
+    ballLocation = message.target;
+    setTimeout(function(){
+    	document.getElementById("modal").style.display = "block"; 
+    	modal.style.display = "block";
+    	if(taskQueue.length != 0){
+	    	(taskQueue.shift())();
+        }
+    }, 1000);
+     
+  }
+}
+
+
 // adapted from
 // https://stackoverflow.com/questions/899102/how-do-i-store-javascript-functions-in-a-queue-for-them-to-be-executed-eventuall
 var animateWrapFunction = function(func, context, params) {
@@ -678,7 +748,11 @@ function showFailedAction(message){
 	squareH = modal.clientHeight/15;
 	display.style.left = ""+ (column +2) * squareH-5 + "px";
 	display.style.top = "" + (row -5) * squareH-5 + "px";
-	document.getElementById("modalTitle").innerHTML = message.playerName + " fell down";
+	var effect = " fell down.";
+	if(message.rollType == "PICKUPBALL"){
+		effect = " dropped the ball.";
+	}
+	document.getElementById("modalTitle").innerHTML = message.playerName + effect;
 	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
 	                                                 "Needed: " + message.rollNeeded + "  Rolled: " + message.rolled;
 	if(message.rerollOptions == null || message.rerollOptions.length == 0){
