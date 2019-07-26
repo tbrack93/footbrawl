@@ -105,6 +105,15 @@ public class MessageSendingService {
 		message.setEnd(end);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+	
+    public void sendBallScatterResult(int gameId, int[] origin, int[] target) {
+    	MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("BALLSCATTER");
+		message.setLocation(origin);
+		message.setTarget(target);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 
 	public void sendRerollChoice(int gameId, int playerId, int team, String teamName, String choice, int[][] tiles) {
 		MessageToClient message = new MessageToClient();
@@ -173,5 +182,6 @@ public class MessageSendingService {
 		message.setBallLocation(ballLocation);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+	
 
 }

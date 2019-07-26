@@ -55,7 +55,7 @@ public class GameLobbyService {
 		Player p4 = new Player();
 		p4.setName("Sarah");
 		p4.setMA(10);
-		p4.setAG(4);
+		p4.setAG(2);
 		p4.setTeam(1);
 		p4.setST(3);
 		p4.setAV(6);
