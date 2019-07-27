@@ -235,4 +235,9 @@ public class TeamInGame {
 		}
 		return null;
 	}
+	
+	public void newKickOff() {
+		reserves.addAll(playersOnPitch);
+		playersOnPitch.clear();
+	}
 }

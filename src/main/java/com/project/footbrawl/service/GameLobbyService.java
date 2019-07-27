@@ -62,7 +62,7 @@ public class GameLobbyService {
 		p4.setSkills(skills);
 		Player p5 = new Player();
 		p5.setName("Bob");
-		p5.setMA(10);
+		p5.setMA(4);
 		p5.setAG(2);
 		p5.setTeam(1);
 		p5.setST(3);
@@ -93,7 +93,7 @@ public class GameLobbyService {
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
 		gs.pitch[5][3].addPlayer(team1Players.get(1));
 		gs.pitch[20][12].addPlayer(team1Players.get(2));
-		team1Players.get(0).setHasBall(true);
+		team1Players.get(2).setHasBall(true);
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
 		gs.team2.setTurn(3);

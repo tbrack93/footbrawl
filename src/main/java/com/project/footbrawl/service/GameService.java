@@ -70,12 +70,13 @@ public class GameService {
 	private List<Integer> rolled;
 	private String rollResult;
 	private String[] awaitingReroll; // Y/N, Action relates to, player relates to
-	private int rollsNeeded;
+	private int actionsNeeded;
 	private boolean routeSaved;
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 8, 4, 3, 6, 4, 2, 4, 1 }));
-    private boolean inTurnover;
-	
+	private static List<Integer> diceRolls = new ArrayList<>(
+			Arrays.asList(new Integer[] { 1, 1, 6, 6, 6, 1, 4, 3, 6, 4, 2, 4, 1 }));
+	private boolean inTurnover;
+
 //	public GameService(Game game) {
 //		this.game = game;
 //		team1 = new TeamInGame(game.getTeam1());
@@ -103,7 +104,7 @@ public class GameService {
 		taskQueue = new LinkedList<>();
 		rolled = new ArrayList<>();
 		runnableResults = new LinkedBlockingQueue<>();
-		rollsNeeded = 0;
+		actionsNeeded = 0;
 		activePlayer = null;
 		ballToScatter = null;
 		inTurnover = false;
@@ -174,6 +175,8 @@ public class GameService {
 		if (!(half == 1 && game.getTeam1Score() == 0 && game.getTeam2Score() == 0)) { // no KO's if first kickoff
 			checkKOs();
 		}
+		team1.newKickOff();
+		team2.newKickOff();
 		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
 			TeamInGame emptyTeam;
 			TeamInGame otherTeam;
@@ -440,12 +443,12 @@ public class GameService {
 	}
 
 	public void turnover() {
-		if(inTurnover == false) {
+		if (inTurnover == false) {
 			System.out.println("Turnover");
 			inTurnover = true;
-		    System.out.println(activeTeam.getName() + " suffered a turnover");
-		    sender.sendTurnover(game.getId(), activeTeam.getId(), activeTeam.getName());
-		    endTurn();
+			System.out.println(activeTeam.getName() + " suffered a turnover");
+			sender.sendTurnover(game.getId(), activeTeam.getId(), activeTeam.getName());
+			endTurn();
 		}
 	}
 
@@ -463,10 +466,10 @@ public class GameService {
 			newTurn();
 		}
 	}
-	
+
 	// for client requests to end turn
-	public void endTurn(int team) { 
-		if(team != activeTeam.getId()) {
+	public void endTurn(int team) {
+		if (team != activeTeam.getId()) {
 			throw new IllegalArgumentException("Not their turn to end");
 		} else {
 			endTurn();
@@ -1115,17 +1118,17 @@ public class GameService {
 		if (team == team1) {
 			game.setTeam1Score(game.getTeam1Score() + 1);
 			tg = team1;
-			tg.incrementTurn();
 		} else {
 			game.setTeam2Score(game.getTeam2Score() + 1);
 			tg = team2;
-			tg.incrementTurn();
 		}
-		if (team1.getTurn() > 8 || team2.getTurn() > 8) {
-			endOfHalf();
-		} else {
-			kickOff(tg);
-		}
+		sender.sendTouchdown(game.getId(), p.getId(), p.getName(), p.getTeamIG().getId(), p.getTeamIG().getName(),
+				game.getTeam1Score(), game.getTeam2Score());
+		// if (team1.getTurn() > 8 || team2.getTurn() > 8) {
+		// endOfHalf();
+		// } else {
+		kickOff(tg);
+		// }
 	}
 
 	public void knockDown(PlayerInGame p) {
@@ -1676,9 +1679,9 @@ public class GameService {
 	public void sendTeamsInfo(int teamId) {
 		ballLocationCheck();
 		int[] ball = ballLocation;
-		if(pitch[ballLocation[0]][ballLocation[1]].containsPlayer()) {
+		if (pitch[ballLocation[0]][ballLocation[1]].containsPlayer()) {
 			ball = null;
-		} 
+		}
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
 				game.getTeam1Score(), game.getTeam2Score(), ball);
 	}
@@ -1707,7 +1710,7 @@ public class GameService {
 
 	public void carryOutRouteAction(int playerId, List<int[]> route, int teamId) {
 		routeSaved = false;
-		rollsNeeded = 0;
+		actionsNeeded = 0;
 		if (route.isEmpty()) {
 			return;
 		}
@@ -1725,25 +1728,32 @@ public class GameService {
 		}
 		if (jsonMoved.size() > 1) {
 			String end = "Y";
-		   if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
-		   end = "N";
-		   }
-		sender.sendRouteAction(game.getId(), playerId, jsonMoved, end);
+			if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
+				end = "N";
+			}
+			sender.sendRouteAction(game.getId(), playerId, jsonMoved, end);
 		}
-		if(rollsNeeded > 0) {
-		  continueAction(playerId, route, jsonMoved, teamId);
+		if (p.isHasBall()) { 
+			System.out.println("checking for touchdown");
+			if ((route.get(jsonMoved.size()-1)[0] == 0 && p.getTeamIG() == team2)
+					|| route.get(jsonMoved.size()-1)[0] == 25 && p.getTeamIG() == team1) {
+						touchdown(p);
+			}
+		}
+		if (actionsNeeded > 0) {
+			continueAction(playerId, route, jsonMoved, teamId);
 		}
 	}
-	
+
 	public void continueAction(int playerId, List<int[]> route, List<jsonTile> jsonMoved, int teamId) {
 		boolean result;
 		System.out.println("in continue Action");
 		List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final
-		if (rollsNeeded > 0) {
+		if (actionsNeeded > 0) {
 			System.out.println("popping roll");
-			System.out.println(rollsNeeded);
+			System.out.println(actionsNeeded);
 			taskQueue.pop().run();
-			rollsNeeded--;
+			actionsNeeded--;
 			try {
 				result = runnableResults.take(); // to wait for runnable
 			} catch (Exception e) {
@@ -1765,26 +1775,32 @@ public class GameService {
 			}
 		}
 		String finalRoll = "N";
-		if (remaining.isEmpty() && awaitingReroll == null && rollsNeeded == 0) {
+		if (remaining.isEmpty() && awaitingReroll == null && actionsNeeded == 0) {
 			finalRoll = "Y";
 		}
 		PlayerInGame p = getPlayerById(playerId);
-		int [] target = null;
-		if(!remaining.isEmpty()) {
+		int[] target = null;
+		if (!remaining.isEmpty()) {
 			target = route.get(jsonMoved.size());
 		}
 		sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
 				route.get(jsonMoved.size() - 1), target, rerollOptions, teamId, finalRoll);
 		if (rollResult.equals("success")) {
 			System.out.println("in roll result success");// no reroll needed so just continue route
-			if(rollsNeeded > 0) {
+			if (actionsNeeded > 0) {
 				continueAction(playerId, route, jsonMoved, teamId);
 			} else {
-			carryOutRouteAction(playerId, remaining, teamId);
+				carryOutRouteAction(playerId, remaining, teamId);
 			}
 		} else if (awaitingReroll != null && rerollOptions.isEmpty()) {
 			if (rollType == "DODGE" || rollType == "GFI") {
 				knockDown(p);
+			} 
+		} if (p.isHasBall()) { 
+			System.out.println("checking for touchdown");
+			if ((route.get(jsonMoved.size()-1)[0] == 0 && p.getTeamIG() == team2)
+					|| route.get(jsonMoved.size()-1)[0] == 25 && p.getTeamIG() == team1) {
+						touchdown(p);
 			}
 		}
 	}
@@ -1809,7 +1825,7 @@ public class GameService {
 			p.decrementRemainingMA();
 			int[][] tempLocation = new int[][] { tempT.getLocation(), t.getLocation() };
 			if (p.getRemainingMA() < 0) {
-				rollsNeeded++;
+				actionsNeeded++;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
@@ -1840,7 +1856,7 @@ public class GameService {
 				taskQueue.add(task);
 			}
 			if (tempT.getTackleZones() != 0) {
-				rollsNeeded++;
+				actionsNeeded++;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
@@ -1861,9 +1877,9 @@ public class GameService {
 
 								};
 								taskQueue.addFirst(task);
-							} 
+							}
 						} else {
-								rerollOptions = null;
+							rerollOptions = null;
 						}
 						runnableResults.add(result);
 					}
@@ -1871,7 +1887,7 @@ public class GameService {
 				taskQueue.add(task);
 			}
 			if (t.containsBall()) {
-				rollsNeeded++;
+				actionsNeeded++;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
@@ -1892,9 +1908,9 @@ public class GameService {
 
 								};
 								taskQueue.addFirst(task);
-							} 
+							}
 						} else {
-								rerollOptions = null;
+							rerollOptions = null;
 						}
 						runnableResults.add(result);
 					}
@@ -1902,55 +1918,11 @@ public class GameService {
 				taskQueue.add(task);
 			}
 
-//			if (tempT.getTackleZones() != 0) {
-//				rollsNeeded++;
-//				if (!dodgeAction(p, tempT, t)) {
-//					rerollOptions = determineRerollOptions("DODGE", p.getId(), tempLocation);
-//					if (!rerollOptions.isEmpty()) { // only save task if opportunity for
-//													// reroll
-//						awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
-//						runnableLocation = tempLocation;
-//
-//						Runnable task = new Runnable() {
-//
-//							@Override
-//							public void run() {
-//								runnableResults.add(dodgeAction(p, tempT, t));
-//							}
-//
-//						};
-//						taskQueue.add(task);
-//					}
-////					if (rerollCheck() == true) {
-////						if (!dodgeAction(p, tempT, t)) {
-////							turnover();
-//
-////						}
-////					}
-//				} else {
-//					rerollOptions = null;
-//				}
-//			}
-			if (rollsNeeded > 0) {
+			if (actionsNeeded > 0) {
 				return movedSoFar;
 			}
 			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
 			movedSoFar.add(t);
-//			if (t.containsBall()) {
-//				needToRoll = true;
-//				if (!pickUpBallAction(p)) {
-//					turnover();
-//					return movedSoFar;
-//				}
-//			}
-			if (p.isHasBall()) { // checking
-									// if
-									// touchdown
-				if ((t.getLocation()[0] == 0 && p.getTeamIG() == team2)
-						|| t.getLocation()[0] == 25 && p.getTeamIG() == team1) {
-					touchdown(p);
-				}
-			}
 		}
 		return movedSoFar;
 	}
@@ -2024,7 +1996,7 @@ public class GameService {
 		}
 		if (rollType == "DODGE" || rollType == "GFI") {
 			knockDown(p);
-		} else if(rollType == "PICKUPBALL") {
+		} else if (rollType == "PICKUPBALL") {
 			Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 			scatterBall(location, 1);
 		}
