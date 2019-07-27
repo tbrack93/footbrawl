@@ -74,7 +74,7 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 1, 6, 6, 6, 1, 4, 3, 6, 4, 2, 4, 1 }));
+			Arrays.asList(new Integer[] { 1, 6, 1, 6, 1, 1, 4, 3, 6, 4, 2, 4, 1 }));
 	private boolean inTurnover;
 
 //	public GameService(Game game) {
@@ -1733,11 +1733,11 @@ public class GameService {
 			}
 			sender.sendRouteAction(game.getId(), playerId, jsonMoved, end);
 		}
-		if (p.isHasBall()) { 
+		if (p.isHasBall()) {
 			System.out.println("checking for touchdown");
-			if ((route.get(jsonMoved.size()-1)[0] == 0 && p.getTeamIG() == team2)
-					|| route.get(jsonMoved.size()-1)[0] == 25 && p.getTeamIG() == team1) {
-						touchdown(p);
+			if ((route.get(jsonMoved.size() - 1)[0] == 0 && p.getTeamIG() == team2)
+					|| route.get(jsonMoved.size() - 1)[0] == 25 && p.getTeamIG() == team1) {
+				touchdown(p);
 			}
 		}
 		if (actionsNeeded > 0) {
@@ -1793,14 +1793,17 @@ public class GameService {
 				carryOutRouteAction(playerId, remaining, teamId);
 			}
 		} else if (awaitingReroll != null && rerollOptions.isEmpty()) {
+			System.out.println("end of the line");
 			if (rollType == "DODGE" || rollType == "GFI") {
+				System.out.println("please knockdown");
 				knockDown(p);
-			} 
-		} if (p.isHasBall()) { 
+			}
+		}
+		if (p.isHasBall()) {
 			System.out.println("checking for touchdown");
-			if ((route.get(jsonMoved.size()-1)[0] == 0 && p.getTeamIG() == team2)
-					|| route.get(jsonMoved.size()-1)[0] == 25 && p.getTeamIG() == team1) {
-						touchdown(p);
+			if ((route.get(jsonMoved.size() - 1)[0] == 0 && p.getTeamIG() == team2)
+					|| route.get(jsonMoved.size() - 1)[0] == 25 && p.getTeamIG() == team1) {
+				touchdown(p);
 			}
 		}
 	}
@@ -1846,6 +1849,8 @@ public class GameService {
 									}
 								};
 								taskQueue.addFirst(task);
+							} else {
+								awaitingReroll = new String[] { "N", "GFI", "" + p.getId() };
 							}
 						} else {
 							rerollOptions = null;
@@ -1877,6 +1882,8 @@ public class GameService {
 
 								};
 								taskQueue.addFirst(task);
+							} else {
+								awaitingReroll = new String[] { "N", "DODGE", "" + p.getId() };
 							}
 						} else {
 							rerollOptions = null;

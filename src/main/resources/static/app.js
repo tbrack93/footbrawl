@@ -840,7 +840,7 @@ function resetModal(message){
     }
 	inModal = false;
 	if(taskQueue.length != 0){
-	  timeOut((taskQueue.shift())(), 500);
+	  setTimeOut((taskQueue.shift())(), 1000);
 	}
 }
 
