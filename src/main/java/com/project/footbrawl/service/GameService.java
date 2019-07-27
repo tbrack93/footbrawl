@@ -73,8 +73,9 @@ public class GameService {
 	private int rollsNeeded;
 	private boolean routeSaved;
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 3, 6, 6, 6, 3, 5, 3 }));
-
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 8, 4, 3 }));
+    private boolean inTurnover;
+	
 //	public GameService(Game game) {
 //		this.game = game;
 //		team1 = new TeamInGame(game.getTeam1());
@@ -105,6 +106,7 @@ public class GameService {
 		rollsNeeded = 0;
 		activePlayer = null;
 		ballToScatter = null;
+		inTurnover = false;
 		pitch = new Tile[26][15];
 		for (int row = 0; row < 26; row++) {
 			for (int column = 0; column < 15; column++) {
@@ -438,9 +440,13 @@ public class GameService {
 	}
 
 	public void turnover() {
-		System.out.println(activeTeam.getName() + " suffered a turnover");
-		sender.sendTurnover(game.getId(), activeTeam.getId(), activeTeam.getName());
-		endTurn();
+		if(inTurnover == false) {
+			System.out.println("Turnover");
+			inTurnover = true;
+		    System.out.println(activeTeam.getName() + " suffered a turnover");
+		    sender.sendTurnover(game.getId(), activeTeam.getId(), activeTeam.getName());
+		    endTurn();
+		}
 	}
 
 	public void endTurn() { // may be additional steps or user actions at end of turn
@@ -464,6 +470,7 @@ public class GameService {
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
+		inTurnover = false;
 		if (awaitingReroll != null) {
 			throw new IllegalArgumentException("Can't do anything whilst waiting for reroll decision");
 		}
@@ -1185,7 +1192,9 @@ public class GameService {
 	public void scatterBall(Tile origin, int times) {
 		origin.setContainsBall(false);
 		int value = diceRoller(1, 8)[0];
+		System.out.println("Scatter value: " + value);
 		int[] direction = ADJACENT[value - 1];
+		System.out.println("Scatter direction: " + direction[0] + direction[1]);
 		int[] position = new int[] { origin.getLocation()[0] + direction[0], origin.getLocation()[1] + direction[1] };
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
@@ -1655,8 +1664,12 @@ public class GameService {
 
 	public void sendTeamsInfo(int teamId) {
 		ballLocationCheck();
+		int[] ball = ballLocation;
+		if(pitch[ballLocation[0]][ballLocation[1]].containsPlayer()) {
+			ball = null;
+		} 
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
-				game.getTeam1Score(), game.getTeam2Score(), ballLocation);
+				game.getTeam1Score(), game.getTeam2Score(), ball);
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
