@@ -366,8 +366,8 @@ function decodeMessage(message){
 		      }
 		}
 	} else if(message.type == "ACTION"){
-		activePlayer = getPlayerById(message.player);
 	    if(message.action == "ROUTE"){
+	      activePlayer = getPlayerById(message.player);
 	      if(animating == true){
 	    	  var task = function(m){
 	    		  showMoved(m, "normal");
@@ -378,6 +378,7 @@ function decodeMessage(message){
 		    showMoved(message, "normal");
 	      }
 	  } else if(message.action == "ROLL"){
+		  activePlayer = getPlayerById(message.player);
 		  if(animating == true || inModal == true){
 			  var task = function(m){
 	    		  showRoll(m);
