@@ -183,5 +183,18 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 	
+	public void sendTouchdown(int gameId, int playerId, String playerName, int teamId,String teamName, int team1Score, int team2Score) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("TOUCHDOWN");
+		message.setPlayer(playerId);
+		message.setPlayerName(playerName);
+		message.setUserToChoose(teamId);
+		message.setTeamName(teamName);
+		message.setTeam1Score(team1Score);
+		message.setTeam2Score(team2Score);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
 
 }

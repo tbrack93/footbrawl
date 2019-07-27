@@ -29,6 +29,7 @@ public class MessageToClient extends Message {
 	private String end; // if more messages to follow
 	private String playerStatus;
 	private int[] ballLocation;
+	private int[] score;
 	
 	public MessageToClient() {
         route = null;
@@ -230,6 +231,5 @@ public class MessageToClient extends Message {
 	public void setBallLocation(int[] ballLocation) {
 		this.ballLocation = ballLocation;
 	}
-	
 	
 }
