@@ -137,7 +137,7 @@ function drawPlayers(){
 		  drawPlayer(player);
 		}
 	});
-	drawBall();
+	
 }
 
 function drawPlayerBorders(){
@@ -335,9 +335,17 @@ function decodeMessage(message){
 		} else if(message.action == "INJURYROLL"){
 			showInjuryRoll(message);
 		} else if(message.action == "TURNOVER"){
-			showTurnover(message);
+			if(animating == true){
+				  var task = function(m){
+					  showTurnover(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showTurnover(message); 
+		      }
 		} else if(message.action == "NEWTURN"){
-			var delay = 2000;
+			var delay = 5000;
 			if(team1 == null){
 				delay = 0;
 			}
@@ -545,6 +553,7 @@ function showMoved(message, type){
 }
 
 function animateMovement(route, counter, img, startingX, startingY, targetX, targetY, squareH, end, ball){
+	console.log("Is route real? " + route.length);
 	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	drawPlayerBorders();
 	var newX = startingX + xIncrement;
@@ -569,7 +578,8 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			  }
 		    } 
 			animating = false;
-		    if(taskQueue.length != 0){
+			console.log("tasks in queue: " + taskQueue.length);
+			if(taskQueue.length != 0){
 		    	(taskQueue.shift())();
 		    }
 			return;
@@ -689,11 +699,12 @@ function showPickUpResult(message){
 }
 
 function showBallScatter(message){
+	console.log("scattering");
 	animating = true;
 	modal.style.display = "none";
 	document.getElementById("modal").style.display = "none";
 	newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
-	document.getElementById("modalOptions").innerHTML = "<p> Ball scattered to " + message.target + "</p>"
+	document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>"
 	var ballImg = new Image();
 	ballImg.src = "/images/ball.png";
     ballImg.onload = function() { 
@@ -707,17 +718,18 @@ function showBallScatter(message){
     xIncrement = (targetX - startingX) / speed;
     yIncrement = (targetY - startingY) / speed;
     context.clearRect(startingX, startingY, squareH, squareH);
-    drawPlayer(activePlayer);
-    animateMovement(message.route, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "Y"); 
+    drawPlayers();
+    var scatterRoute = [message.target];
+    console.log("route created: " + scatterRoute);
     ballLocation = message.target;
+    animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "Y"); 
     setTimeout(function(){
-    	document.getElementById("modal").style.display = "block"; 
-    	modal.style.display = "block";
-    	if(taskQueue.length != 0){
-	    	(taskQueue.shift())();
-        }
-    }, 1000);
-     
+    //document.getElementById("modal").style.display = "block";
+    //modal.style.display = "block";
+   if(taskQueue.length != 0){
+   (taskQueue.shift())();
+   }
+   }, 1000);  
   }
 }
 
@@ -855,11 +867,14 @@ function showInjuryRoll(message){
 }
 
 function showTurnover(message){
+    document.getElementById("modal").style.display = "block"; 
+    modal.style.display = "block";
 	var existing = document.getElementById("modalOptions").innerHTML;
 	var name = message.teamName;
 	if(message.userToChoose == team){
 		name = "You";
 	}
+	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
 }
 
@@ -893,4 +908,5 @@ function showNewTurn(message){
 	document.getElementById('team1Rerolls').innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
 	document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 	drawPlayers();
+    drawBall();
 }
