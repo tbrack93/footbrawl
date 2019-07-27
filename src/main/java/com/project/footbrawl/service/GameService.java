@@ -73,7 +73,7 @@ public class GameService {
 	private int rollsNeeded;
 	private boolean routeSaved;
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 8, 4, 3 }));
+	private static List<Integer> diceRolls = new ArrayList<>(Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 8, 4, 3, 6, 4, 2, 4, 1 }));
     private boolean inTurnover;
 	
 //	public GameService(Game game) {
@@ -449,6 +449,7 @@ public class GameService {
 		}
 	}
 
+	// for internal endTurn actions (from within this object)
 	public void endTurn() { // may be additional steps or user actions at end of turn
 		awaitingReroll = null;
 		inPassOrHandOff = false;
@@ -462,9 +463,19 @@ public class GameService {
 			newTurn();
 		}
 	}
+	
+	// for client requests to end turn
+	public void endTurn(int team) { 
+		if(team != activeTeam.getId()) {
+			throw new IllegalArgumentException("Not their turn to end");
+		} else {
+			endTurn();
+		}
+	}
 
 	public void newTurn() {
 		activeTeam.newTurn();// reset players on pitch (able to move/ act)
+		taskQueue.clear();
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
 				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation());
 	}
@@ -1270,7 +1281,7 @@ public class GameService {
 		System.out.println(player.getName() + " tries to pick up the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		rollType = "PICKUPBALL";
-		rollNeeded = roll;
+		rollNeeded = needed;
 		rolled.clear();
 		rolled.add(roll);
 		if (roll >= needed) {
