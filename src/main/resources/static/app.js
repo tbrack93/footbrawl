@@ -33,6 +33,7 @@ var inModal;
 var rerollRoute;
 var inPickUp;
 var ballLocation;
+var turnover;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
@@ -335,6 +336,7 @@ function decodeMessage(message){
 		} else if(message.action == "INJURYROLL"){
 			showInjuryRoll(message);
 		} else if(message.action == "TURNOVER"){
+			turnover = true;
 			if(animating == true){
 				  var task = function(m){
 					  showTurnover(message);
@@ -345,9 +347,9 @@ function decodeMessage(message){
 		    	  showTurnover(message); 
 		      }
 		} else if(message.action == "NEWTURN"){
-			var delay = 5000;
-			if(team1 == null){
-				delay = 0;
+			var delay = 0;
+			if(turnover == true){
+				delay = 3000;
 			}
 			setTimeout(function() {
 				showNewTurn(message);
@@ -898,10 +900,14 @@ function showNewTurn(message){
 	if(message.userToChoose == team){
 		teamName = "Your turn";
 		yourTurn = true;
+		document.getElementById("endTurn").classList.remove("disabled");
+	} else {
+		document.getElementById("endTurn").classList.add("disabled");
 	}
 	document.getElementById("team1Name").innerHTML = message.team1Name;
 	document.getElementById("team2Name").innerHTML = message.team2Name;
 	document.getElementById("activeTeam").innerHTML = teamName;
+	turnover = false;
 	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
 	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
@@ -909,4 +915,18 @@ function showNewTurn(message){
 	document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 	drawPlayers();
     drawBall();
+}
+
+function endTurn(){
+	if(yourTurn == true){
+	  var result = confirm("Are you sure you want to end your turn?");
+		if (result == true) {
+		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+					    JSON.stringify({"type": "ACTION", action: "ENDTURN"}));
+		} else {
+		  return;
+		}
+	} else{
+		alert("Not your turn");
+	}
 }
