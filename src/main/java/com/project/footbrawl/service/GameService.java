@@ -1775,7 +1775,7 @@ public class GameService {
 			}
 		}
 		String finalRoll = "N";
-		if (remaining.isEmpty() && awaitingReroll == null && actionsNeeded == 0) {
+		if (Arrays.equals(runnableLocation[1], route.get(route.size() -1)) && (awaitingReroll == null || awaitingReroll[0] == "N") && actionsNeeded == 0) {
 			finalRoll = "Y";
 		}
 		PlayerInGame p = getPlayerById(playerId);
@@ -1834,18 +1834,20 @@ public class GameService {
 					public void run() {
 						System.out.println("in runnable");
 						boolean result = goingForItAction(p, tempT, t);
+						runnableLocation = tempLocation;
 						if (result == false) {
 							rerollOptions = determineRerollOptions("GFI", p.getId(), tempLocation);
 							if (!rerollOptions.isEmpty()) { // only save task if opportunity for
 															// reroll
 								awaitingReroll = new String[] { "Y", "GFI", "" + p.getId() };
-								runnableLocation = tempLocation;
+				
 
 								Runnable task = new Runnable() {
 									@Override
 									public void run() {
 										System.out.println("in runnable");
 										runnableResults.add(goingForItAction(p, tempT, t));
+										runnableLocation = tempLocation;
 									}
 								};
 								taskQueue.addFirst(task);
@@ -1866,18 +1868,19 @@ public class GameService {
 					@Override
 					public void run() {
 						boolean result = dodgeAction(p, tempT, t);
+						runnableLocation = tempLocation;
 						if (result == false) {
 							rerollOptions = determineRerollOptions("DODGE", p.getId(), tempLocation);
 							if (!rerollOptions.isEmpty()) { // only save task if opportunity for
 															// reroll
 								awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
-								runnableLocation = tempLocation;
-
+								
 								Runnable task = new Runnable() {
 
 									@Override
 									public void run() {
 										runnableResults.add(dodgeAction(p, tempT, t));
+										runnableLocation = tempLocation;
 									}
 
 								};
@@ -1899,18 +1902,19 @@ public class GameService {
 					@Override
 					public void run() {
 						boolean result = pickUpBallAction(p);
+						runnableLocation = tempLocation;
 						if (result == false) {
 							rerollOptions = determineRerollOptions("PICKUPBALL", p.getId(), tempLocation);
 							if (!rerollOptions.isEmpty()) { // only save task if opportunity for
 															// reroll
 								awaitingReroll = new String[] { "Y", "PICKUPBALL", "" + p.getId() };
-								runnableLocation = tempLocation;
 
 								Runnable task = new Runnable() {
 
 									@Override
 									public void run() {
 										runnableResults.add(pickUpBallAction(p));
+										runnableLocation = tempLocation;
 									}
 
 								};
