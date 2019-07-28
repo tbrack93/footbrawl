@@ -34,6 +34,7 @@ var rerollRoute;
 var inPickUp;
 var ballLocation;
 var turnover;
+var lastRollLocation;
 
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
@@ -714,6 +715,9 @@ function resizeActions(){
 }
 
 function showDodgeResult(message){
+	console.log("Last Roll Location: " + lastRollLocation);
+	console.log("Message: " + message.location + " " + message.target);
+	console.log("Showing dodge result");
 	var type = "dodge";
 	if(message.rollOutcome === "failed"){
 		type = "tripped";
@@ -721,11 +725,33 @@ function showDodgeResult(message){
 	} else{
 		activePlayer.status = "standing";
 	}
-	message.route = [{position: message.location}, {position: message.target}];
-	showMoved(message, type);	
+	if(message.reroll == false && lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
+			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1])){
+		console.log("same as last location");
+		if(message.end == "Y"){
+			if(taskQueue.length == 0){
+				drawPlayer(getPlayerById(message.player));
+			}
+			if(message.rollOutcome == "success"){
+			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	          JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
+	          "location": message.target, "routeMACost": 0}));
+			}
+		}
+		if(taskQueue.length > 0){
+		  (taskQueue.shift())();
+		}	
+	} else {
+	  lastRollLocation = [message.location, message.target];
+	  message.route = [{position: message.location}, {position: message.target}];
+	  showMoved(message, type);	
+	}
 }
 
 function showGFIResult(message){
+	console.log("Last Roll Location: " + lastRollLocation);
+	console.log("Message: " + message.location + " " + message.target);
+	console.log("Showing GFI result");
 	var type = "normal";
 	if(message.rollOutcome === "failed"){
 	  type = "tripped";
@@ -733,13 +759,31 @@ function showGFIResult(message){
 	} else{
 		activePlayer.status = "standing";
 	}
+	if(message.reroll == false && lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
+			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1])){
+		console.log("same as last location");
+		if(message.end == "Y"){
+			if(taskQueue.length == 0){
+				drawPlayer(getPlayerById(message.player));
+			}
+			if(message.rollOutcome == "success"){
+			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	          JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
+	          "location": message.target, "routeMACost": 0}));
+			}
+		}
+		if(taskQueue.length > 0){
+		  (taskQueue.shift())();
+		}	
+	} else {
+	  lastRollLocation = [message.location, message.target];
 	  message.route = [{position: message.location}, {position: message.target}];
 	  showMoved(message, type);
+	}
 }
 
 function showPickUpResult(message){
-	if(inPickUp != true){ 
-	  inPickUp = true;
+	if(message.reroll == false){ 
 	  message.route = [{position: message.location}, {position: message.target}];
 	  showMoved(message, "normal");
 	}
@@ -747,11 +791,22 @@ function showPickUpResult(message){
 	 if(message.rollOutcome === "success"){
 		 p.hasBall = true;
 		 p.location = message.target;
-		 inPickUp = false;
+		 ballLocation = null;
 	 }
 	 if(message.end == "Y"){
-		 drawPlayer(p);
-	 }
+			if(taskQueue.length == 0){
+				 setTimeout(function(){
+                 drawPlayer(getPlayerById(message.player));
+                 drawBall();
+				 }, 500);
+			}
+			if(message.rollOutcome == "success"){
+			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	          JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
+	          "location": message.target, "routeMACost": 0}));
+			}
+		}
+	 lastRollRoute = [message.location, message.target];
 }
 
 function showBallScatter(message){

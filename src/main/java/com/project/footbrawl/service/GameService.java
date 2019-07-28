@@ -74,7 +74,7 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 1, 6, 6, 1, 1, 4, 3, 6, 4, 2, 4, 1 }));
+			Arrays.asList(new Integer[] { 1, 6, 1, 6, 6, 1, 4, 3, 6, 4, 2, 4, 1 }));
 	private boolean inTurnover;
 
 //	public GameService(Game game) {
@@ -704,7 +704,7 @@ public class GameService {
 				}
 			}
 			if (t.containsBall()) {
-				// System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
+				 System.out.print(" Pick Up Ball: " + calculatePickUpBall(p, t) + "+");
 				jt.setPickUpBallRoll(calculatePickUpBall(p, t));
 			}
 			jsonRoute.add(jt);
