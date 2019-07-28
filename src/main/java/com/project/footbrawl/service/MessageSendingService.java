@@ -69,7 +69,7 @@ public class MessageSendingService {
 
 	public void sendRollResult(int gameId, int playerId, String playerName, String rollType, int rollNeeded,
 			List<Integer> rolled, String rollResult, int[] origin, int[] target, List<String> rerollOptions, int teamId,
-			String end) {
+			String end, boolean isReroll) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("ROLL");
@@ -84,6 +84,7 @@ public class MessageSendingService {
 		message.setUserToChoose(teamId);
 		message.setRerollOptions(rerollOptions);
 		message.setEnd(end);
+		message.setReroll(isReroll);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 

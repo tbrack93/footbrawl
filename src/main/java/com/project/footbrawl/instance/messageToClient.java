@@ -29,7 +29,7 @@ public class MessageToClient extends Message {
 	private String end; // if more messages to follow
 	private String playerStatus;
 	private int[] ballLocation;
-	private int[] score;
+	private boolean isReroll;
 	
 	public MessageToClient() {
         route = null;
@@ -231,5 +231,14 @@ public class MessageToClient extends Message {
 	public void setBallLocation(int[] ballLocation) {
 		this.ballLocation = ballLocation;
 	}
+
+	public boolean isReroll() {
+		return isReroll;
+	}
+
+	public void setReroll(boolean isReroll) {
+		this.isReroll = isReroll;
+	}
+	
 	
 }

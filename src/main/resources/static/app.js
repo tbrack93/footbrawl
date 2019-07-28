@@ -939,6 +939,7 @@ function showInjuryRoll(message){
     player.status = message.playerStatus;
     player.location = message.location;
     player.hasBall = false;
+    drawPlayer(player);
     document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, animating.width, animating.height);
 	// drawPlayers();
 	if(taskQueue.length != 0){

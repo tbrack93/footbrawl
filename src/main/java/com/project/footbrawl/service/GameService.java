@@ -74,7 +74,7 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 6, 1, 6, 1, 1, 4, 3, 6, 4, 2, 4, 1 }));
+			Arrays.asList(new Integer[] { 6, 1, 6, 6, 1, 1, 4, 3, 6, 4, 2, 4, 1 }));
 	private boolean inTurnover;
 
 //	public GameService(Game game) {
@@ -1619,11 +1619,12 @@ public class GameService {
 		player.setActionOver(true);
 	}
 
-	public static int[] diceRoller(int quantity, int number) {
-		// manually setting for testing
-//		Random rand = new Random();
+	public static int[] diceRoller(int quantity, int number) {	
+		Random rand = new Random();
 		int[] result = new int[quantity];
 		for (int i = 0; i < quantity; i++) {
+			//result[i] = rand.nextInt(number) + 1;
+			// manually setting for testing
 			result[i] = diceRolls.get(0);
 			diceRolls.remove(0);
 		}
@@ -1761,12 +1762,13 @@ public class GameService {
 			}
 		}
 		if (awaitingReroll != null && awaitingReroll[0] == "Y") {
-			if (rerollOptions.size() > 0 && routeSaved == false) {
+			if (rerollOptions.size() > 0 && routeSaved == false && remaining.size()>1) {
 				routeSaved = true;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
 						System.out.println("in carryout route runnable");
+						System.out.println("movement left: " + remaining.size());
 						awaitingReroll = null;
 						carryOutRouteAction(playerId, remaining, teamId);
 					}
@@ -1784,7 +1786,7 @@ public class GameService {
 			target = route.get(jsonMoved.size());
 		}
 		sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
-				route.get(jsonMoved.size() - 1), target, rerollOptions, teamId, finalRoll);
+				route.get(jsonMoved.size() - 1), target, rerollOptions, teamId, finalRoll, false);
 		if (rollResult.equals("success")) {
 			System.out.println("in roll result success");// no reroll needed so just continue route
 			if (actionsNeeded > 0) {
@@ -1991,12 +1993,13 @@ public class GameService {
 				e.printStackTrace();
 			}
 			String end = "N";
+			System.out.println("Tasks left: " + taskQueue.size());
 			if (result == true && taskQueue.isEmpty()) {
 				end = "Y";
 			}
-			sender.sendRollResult(game.getId(), playerId, activePlayer.getName(), rollType, rollNeeded, rolled,
+			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled,
 					rollResult, runnableLocation[0], runnableLocation[1], new ArrayList<String>(), activeTeam.getId(),
-					end);
+					end, true);
 			if (result == true) {
 				if (!taskQueue.isEmpty()) {
 					System.out.println("continuing route");
