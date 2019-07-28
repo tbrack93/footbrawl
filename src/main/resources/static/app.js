@@ -146,7 +146,7 @@ function drawPlayerBorders(){
 	players.forEach(player => {
 		drawSelectionBorder(player);
 	});
-	drawBall();
+	drawBallBorder();
 }
 
 function drawPlayer(player) {
@@ -248,6 +248,20 @@ function drawBall(){
 					squareH/1.5);
 			}
   }
+}
+
+function drawBallBorder(){
+	if(ballLocation != null){
+	  var column = ballLocation[0];
+	  var row = 14 -ballLocation[1];
+	  var squareH = canvas.height / 15;
+	  var ctx = selection.getContext("2d");
+      ctx.save();
+	  ctx.strokeStyle = "orange";
+	  ctx.lineWidth = 8;
+	  ctx.strokeRect(column * squareH, row * squareH, squareH,
+			squareH);
+	}
 }
 
 
@@ -743,7 +757,7 @@ function showPickUpResult(message){
 function showBallScatter(message){
 	console.log("scattering");
 	animating = true;
-	shadow.style.display = "none";
+	modal.style.display = "none";
 	//document.getElementById("modal").style.display = "none";
 	newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>"
@@ -770,7 +784,7 @@ function showBallScatter(message){
     setTimeout(function(){
     // document.getElementById("modal").style.display = "block";
     // modal.style.display = "block";
-   shadow.style.display = "block";
+    	modal.style.display = "none";
    if(taskQueue.length != 0){
    (taskQueue.shift())();
    }
