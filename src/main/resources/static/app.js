@@ -146,6 +146,7 @@ function drawPlayerBorders(){
 	players.forEach(player => {
 		drawSelectionBorder(player);
 	});
+	drawBall();
 }
 
 function drawPlayer(player) {
@@ -365,11 +366,12 @@ function decodeMessage(message){
 		} else if(message.action == "NEWTURN"){
 			var delay = 0;
 			if(turnover == true){
-				delay = 3000;
+				delay = 2500;
 			}
 			setTimeout(function() {
 				showNewTurn(message);
 			}, delay);
+
 		} else if(message.action == "TOUCHDOWN"){
 			if(animating == true){
 				  var task = function(m){
@@ -669,6 +671,13 @@ function getPlayerById(id){
 }
 
 function showRoll(message){
+	if(message.rollOutcome == "failed"){
+		var task = function(m){
+		  showFailedAction(m);
+  	  };
+  	  var t = animateWrapFunction(task, this, [message]);
+  	  taskQueue.unshift(t);
+	}
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 	var newRolls = document.getElementById("newRolls");
 	console.log(newRolls);
@@ -682,13 +691,6 @@ function showRoll(message){
 	}
 	if(message.rollType == "PICKUPBALL"){
 		showPickUpResult(message);
-	}
-	if(message.rollOutcome == "failed"){
-		var task = function(m){
-		  showFailedAction(m);
-  	  };
-  	  var t = animateWrapFunction(task, this, [message]);
-  	  taskQueue.push(t);
 	}
 }
 
@@ -741,8 +743,8 @@ function showPickUpResult(message){
 function showBallScatter(message){
 	console.log("scattering");
 	animating = true;
-	modal.style.display = "none";
-	document.getElementById("modal").style.display = "none";
+	shadow.style.display = "none";
+	//document.getElementById("modal").style.display = "none";
 	newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>"
 	var ballImg = new Image();
@@ -766,8 +768,9 @@ function showBallScatter(message){
     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
     animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "Y"); 
     setTimeout(function(){
-    //document.getElementById("modal").style.display = "block";
-    //modal.style.display = "block";
+    // document.getElementById("modal").style.display = "block";
+    // modal.style.display = "block";
+   shadow.style.display = "block";
    if(taskQueue.length != 0){
    (taskQueue.shift())();
    }
@@ -819,7 +822,15 @@ function showFailedAction(message){
 		rerollRoute = [{position: message.location}, {position: message.target}]; 
 		requestReroll(message.rerollOptions);
 	}
+	drawPlayer(activePlayer);
 
+	 setTimeout(function(){
+		    // document.getElementById("modal").style.display = "block";
+		    // modal.style.display = "block";
+		   if(taskQueue.length != 0){
+		   (taskQueue.shift())();
+		   }
+		   }, 200);  
 }
 
 function requestReroll(options){
@@ -856,9 +867,9 @@ function resetModal(message){
     drawPlayers();
     }
 	inModal = false;
-	if(taskQueue.length != 0){
-	  setTimeOut((taskQueue.shift())(), 1000);
-	}
+// if(taskQueue.length != 0){
+// setTimeOut((taskQueue.shift())(), 1000);
+// }
 }
 
 function showRerollUsed(message){
@@ -892,6 +903,8 @@ function showRerollUsed(message){
     }
 
 function showArmourRoll(message){
+	console.log("showing armour");
+	document.getElementById("modal").style.display = "block"; 
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
 	                      message.rolled + "</br>" + newRolls.innerHTML;
@@ -903,6 +916,7 @@ function showArmourRoll(message){
 }
 
 function showInjuryRoll(message){
+	console.log("showing Injury");
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " was "+ message.rollOutcome + ". " + "Rolled: " + message.rolled + "</br>" + newRolls.innerHTML;
 	var existing = document.getElementById("modalOptions").innerHTML;
@@ -912,7 +926,7 @@ function showInjuryRoll(message){
     player.location = message.location;
     player.hasBall = false;
     document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, animating.width, animating.height);
-	//drawPlayers();
+	// drawPlayers();
 	if(taskQueue.length != 0){
     	(taskQueue.shift())();
     }
@@ -928,9 +942,9 @@ function showTurnover(message){
 	}
 	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
-	if(taskQueue.length != 0){
-    	(taskQueue.shift())();
-    }
+	  if(taskQueue.length != 0){  
+	   (taskQueue.shift())();
+	   }
 }
 
 function showNewTurn(message){
@@ -939,6 +953,7 @@ function showNewTurn(message){
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
 	document.getElementById("modal").style.display = "none";
+	newRolls.innerHTML =  message.teamName + "'s turn." + "</br>" + newRolls.innerHTML;
 	team1 = message.team1FullDetails;
 	team2 = message.team2FullDetails;
 	players.length = 0;
