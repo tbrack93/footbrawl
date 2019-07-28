@@ -331,10 +331,26 @@ function decodeMessage(message){
 			showRoute(message);
 		} else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
-		} else if(message.action == "ARMOURROLL"){
-			showArmourRoll(message);
+		} else{ if(message.action == "ARMOURROLL"){
+			if(animating == true){
+				  var task = function(m){
+						showArmourRoll(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    		showArmourRoll(message);
+		      }
 		} else if(message.action == "INJURYROLL"){
-			showInjuryRoll(message);
+			if(animating == true){
+				  var task = function(m){
+						showInjuryRoll(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+					showInjuryRoll(message);
+		      }
 		} else if(message.action == "TURNOVER"){
 			turnover = true;
 			if(animating == true){
@@ -364,6 +380,7 @@ function decodeMessage(message){
 		      } else{ 	
 		    	  showTouchdown(message); 
 		      }
+		}
 		}
 	} else if(message.type == "ACTION"){
 	    if(message.action == "ROUTE"){
@@ -570,7 +587,6 @@ function showMoved(message, type){
 
 function animateMovement(route, counter, img, startingX, startingY, targetX, targetY, squareH, end, ball){
 	animationContext = animation.getContext("2d");
-	console.log("Is route real? " + route.length);
 	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	drawPlayerBorders();
 	var newX = startingX + xIncrement;
@@ -583,11 +599,12 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 	if(Math.round(newX) == Math.round(targetX) && Math.round(newY) == Math.round(targetY)){
 		if(counter == route.length-1){
 			route.length = 0;
+			animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			if(ball == "Y"){
 				drawBall();
 			} else if(end == "Y" || activePlayer.status == "prone"){
-				animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 		        drawPlayer(activePlayer);
+		        animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 		      if(activePlayer.team == team && end == "Y"){
 			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
@@ -879,6 +896,10 @@ function showArmourRoll(message){
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
 	                      message.rolled + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + "'s " + message.rollOutcome + "." + "</p>";
+	document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, animating.width, animating.height);
+	if(taskQueue.length != 0){
+    	(taskQueue.shift())();
+    }
 }
 
 function showInjuryRoll(message){
@@ -890,7 +911,11 @@ function showInjuryRoll(message){
     player.status = message.playerStatus;
     player.location = message.location;
     player.hasBall = false;
-	drawPlayers();
+    document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, animating.width, animating.height);
+	//drawPlayers();
+	if(taskQueue.length != 0){
+    	(taskQueue.shift())();
+    }
 }
 
 function showTurnover(message){
@@ -903,9 +928,13 @@ function showTurnover(message){
 	}
 	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
+	if(taskQueue.length != 0){
+    	(taskQueue.shift())();
+    }
 }
 
 function showNewTurn(message){
+	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
