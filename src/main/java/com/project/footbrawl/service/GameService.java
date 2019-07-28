@@ -74,7 +74,7 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 6, 6, 6, 6, 1, 4, 3, 6, 4, 2, 4, 1 }));
+			Arrays.asList(new Integer[] { 1, 6, 6, 1, 6, 1, 4, 3, 6, 4, 2, 4, 1, 6, 6, 6, 6 }));
 	private boolean inTurnover;
 
 //	public GameService(Game game) {
@@ -1626,10 +1626,10 @@ public class GameService {
 		Random rand = new Random();
 		int[] result = new int[quantity];
 		for (int i = 0; i < quantity; i++) {
-			// result[i] = rand.nextInt(number) + 1;
+			result[i] = rand.nextInt(number) + 1;
 			// manually setting for testing
-			result[i] = diceRolls.get(0);
-			diceRolls.remove(0);
+			//result[i] = diceRolls.get(0);
+			//diceRolls.remove(0);
 		}
 		return result;
 	}
