@@ -948,6 +948,7 @@ function showTurnover(message){
 }
 
 function showNewTurn(message){
+	inModal = false;
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
