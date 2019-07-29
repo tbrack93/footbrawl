@@ -1163,11 +1163,30 @@ function sendCarryOutBlock(message, follow){
 function showBlockResult(message){
 	showBlockAssists(message);
 	document.getElementById("modalTitle").innerHTML = message.playerName + " blocks " + message.opponentName;
-	 var modalMain = document.getElementById("modalImages");
-	 modalMain.innerHTML = "Results: <br><br>"; 
-	 for(i = 0; i<message.rolled.length; i++){
-		 var dice = new Image();
-		 dice.src = diceImages[message.rolled[i] -1];
-		 modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
-	 }
+	document.getElementById("modalText").innerHTML = "";
+	document.getElementById("modalOptions").innerHTML = "";
+	var modalMain = document.getElementById("modalImages");
+	modalMain.innerHTML = "Results: <br><br>"; 
+	var rollText = "";
+	for(i = 0; i<message.rolled.length; i++){
+      var dice = new Image();
+	  dice.src = diceImages[message.rolled[i] -1];
+	  modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
+	  rollText += " " + blockResults[i]
+	}
+	newRolls.innerHTML =  message.playerName + " blocked " + message.opponentName + ". Rolled: " + rollText + ".</br>" + newRolls.innerHTML;
+	if(message.rerollOptions == null || message.rerollOptions.length == 0){
+		  document.getElementById("modalOptions").innerHTML = "<p> No possible rerolls </p>";
+	} else if(message.userToChoose != team){
+		   document.getElementById("modalOptions").innerHTML = "<p> Awaiting opponent reroll decision </p>" +
+		                          "Possible rerolls: " + message.rerollOptions;
+	} else{
+			rerollRoute = [{position: message.location}, {position: message.target}]; 
+			requestReroll(message.rerollOptions);
+	}
+	var display = document.getElementById("modal");
+	squareH = modal.clientHeight/15;
+ 	display.style.display = "block";
+ 	display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
+ 	display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
 }
