@@ -35,7 +35,11 @@ var inPickUp;
 var ballLocation;
 var turnover;
 var lastRollLocation;
-
+var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
+"Defender Down"];
+var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
+	                        "/images/push_back.png", "/images/push_back.png",
+	                        "/images/defender_stumbles.png", "/images/defender_down.png"];
 var requestAnimationFrame = window.requestAnimationFrame || 
 window.mozRequestAnimationFrame || 
 window.webkitRequestAnimationFrame || 
@@ -434,6 +438,8 @@ function decodeMessage(message){
 	      } else{ 	
 	    	  showBallScatter(message); 
 	      }
+	  } else if(message.action == "BLOCK"){
+		  showBlockResult(message);
 	  }	    
    }
 }
@@ -1090,23 +1096,7 @@ function showTouchdown(message){
 }
 
 function showBlock(message){
-	 var sContext = squares.getContext("2d");
-	 sContext.clearRect(0, 0, squares.width, squares.height);
-	 sContext.save();
-	 var squareH = canvas.height / 15;
-	 sContext.globalAlpha = 0.3;
-	 sContext.fillStyle = "white";
-     sContext.fillRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
-     sContext.fillStyle = "red";
-     sContext.fillRect(message.target[0] * squareH, (14 - message.target[1]) * squareH, squareH, squareH);
-     sContext.fillStyle = "blue";
-     message.attAssists.forEach(function(location){
-    	 sContext.fillRect(location[0] * squareH, (14 - location[1]) * squareH, squareH, squareH);
-     });
-     sContext.fillStyle = "orange";
-     message.defAssists.forEach(function(location){
-    	 sContext.fillRect(location[0] * squareH, (14 - location[1]) * squareH, squareH, squareH);
-     });
+	 showBlockAssists(message);
      document.getElementById("modalTitle").innerHTML = "Block Details";
  	 var modalMain = document.getElementById("modalImages");
  	 modalMain.innerHTML = ""; 
@@ -1140,12 +1130,63 @@ function showBlock(message){
  	 squareH = modal.clientHeight/15;
      var display = document.getElementById("modal");
  	 display.style.display = "block";
- 	 display.style.left = ""+ (message.location[0] +2) * squareH-5 + "px";
+ 	 display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
  	 display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+}
+
+function showBlockAssists(message){
+	var sContext = squares.getContext("2d");
+	 sContext.clearRect(0, 0, squares.width, squares.height);
+	 sContext.save();
+	 var squareH = canvas.height / 15;
+	 sContext.globalAlpha = 0.3;
+	 sContext.fillStyle = "white";
+    sContext.fillRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+    sContext.fillStyle = "red";
+    sContext.fillRect(message.target[0] * squareH, (14 - message.target[1]) * squareH, squareH, squareH);
+    sContext.fillStyle = "blue";
+    message.attAssists.forEach(function(location){
+   	 sContext.fillRect(location[0] * squareH, (14 - location[1]) * squareH, squareH, squareH);
+    });
+    sContext.fillStyle = "orange";
+    message.defAssists.forEach(function(location){
+   	 sContext.fillRect(location[0] * squareH, (14 - location[1]) * squareH, squareH, squareH);
+    });
 }
 
 function sendCarryOutBlock(message, follow){
 	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
             JSON.stringify({"type": "ACTION", "action": "BLOCK", "player": message.player,
                 "location": message.location, "opponent": message.opponent, "followUp": follow}));
+}
+
+function showBlockResult(message){
+	showBlockAssists(message);
+	document.getElementById("modalTitle").innerHTML = message.playerName + " blocks " + message.opponentName;
+	document.getElementById("modalText").innerHTML = "";
+	document.getElementById("modalOptions").innerHTML = "";
+	var modalMain = document.getElementById("modalImages");
+	modalMain.innerHTML = "Results: <br><br>"; 
+	var rollText = "";
+	for(i = 0; i<message.rolled.length; i++){
+      var dice = new Image();
+	  dice.src = diceImages[message.rolled[i] -1];
+	  modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
+	  rollText += " " + blockResults[i]
+	}
+	newRolls.innerHTML =  message.playerName + " blocked " + message.opponentName + ". Rolled: " + rollText + ".</br>" + newRolls.innerHTML;
+	if(message.rerollOptions == null || message.rerollOptions.length == 0){
+		  document.getElementById("modalOptions").innerHTML = "<p> No possible rerolls </p>";
+	} else if(message.userToChoose != team){
+		   document.getElementById("modalOptions").innerHTML = "<p> Awaiting opponent reroll decision </p>" +
+		                          "Possible rerolls: " + message.rerollOptions;
+	} else{
+			rerollRoute = [{position: message.location}, {position: message.target}]; 
+			requestReroll(message.rerollOptions);
+	}
+	var display = document.getElementById("modal");
+	squareH = modal.clientHeight/15;
+ 	display.style.display = "block";
+ 	display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
+ 	display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
 }

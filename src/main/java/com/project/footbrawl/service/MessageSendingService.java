@@ -212,6 +212,28 @@ public class MessageSendingService {
 		message.setTarget(target);
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
+
+	public void sendBlockDiceResult(int gameId, int player, String playerName, int opponent, String opponentName, int[] location, int[] target,
+		List<Integer> rolled, int[][] attAssists, int[][] defAssists, List<String> rerollOptions, boolean reroll, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("BLOCK");
+		message.setRolled(rolled);
+		message.setPlayer(player);
+		message.setPlayerName(playerName);
+		message.setOpponent(opponent);
+		message.setOpponentName(opponentName);
+		message.setAttAssists(attAssists);
+		message.setDefAssists(defAssists);
+		message.setLocation(location);
+		message.setTarget(target);
+		message.setRerollOptions(rerollOptions);
+		message.setUserToChoose(teamId);
+		message.setReroll(reroll);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
+	
 	
 
 }
