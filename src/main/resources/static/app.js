@@ -345,7 +345,9 @@ function decodeMessage(message){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
-		} else if(message.action == "REROLLCHOICE"){
+		} else if(message.action == "BLOCK"){
+			showBlock(message);
+	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
 		} else{ if(message.action == "ARMOURROLL"){
 			if(animating == true){
@@ -1085,4 +1087,43 @@ function showTouchdown(message){
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " scored a touchdown for Team " + message.teamName + "!</br>" + newRolls.innerHTML;
 	alert(message.playerName + " scored a touchdown for Team " + message.teamName + "!");
+}
+
+function showBlock(message){
+	 var sContext = squares.getContext("2d");
+	 sContext.clearRect(0, 0, squares.width, squares.height);
+	 sContext.save();
+	 var squareH = canvas.height / 15;
+	 sContext.globalAlpha = 0.3;
+	 sContext.fillStyle = "white";
+     sContext.fillRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+     sContext.fillStyle = "red";
+     sContext.fillRect(message.target[0] * squareH, (14 - message.target[1]) * squareH, squareH, squareH);
+     sContext.fillStyle = "blue";
+     message.attAssists.forEach(function(location){
+    	 sContext.fillRect(location[0] * squareH, (14 - location[1]) * squareH, squareH, squareH);
+     });
+     sContext.fillStyle = "orange";
+     message.defAssists.forEach(function(location){
+    	 sContext.fillRect(location[0] * squareH, (14 - location[1]) * squareH, squareH, squareH);
+     });
+     document.getElementById("modalTitle").innerHTML = "Block Details";
+ 	 var modalMain = document.getElementById("modalImages");
+ 	 var blankDice = new Image();
+ 	 blankDice.src = "/images/blank_dice.png";
+ 	 for(i = 0; i<message.numberOfDice; i++){
+ 		 modalMain.innerHTML += "<img height='50px' class ='dice' src=" + blankDice.src + "/>"; 
+ 	 }
+ 	 var toChoose;
+ 	 if(message.userToChoose == team){
+ 		 toChoose = "You choose 1 outcome dice.";
+ 	 } else{
+ 		 toChoose = "Your opponent chooses 1 outcome dice.";
+ 	 }
+ 	 document.getElementById("modalOptions").innerHTML = "<p>"+ toChoose +"</p>" 
+     squareH = modal.clientHeight/15;
+     var display = document.getElementById("modal");
+ 	 display.style.display = "block";
+ 	 display.style.left = ""+ (message.location[0] +2) * squareH-5 + "px";
+ 	 display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
 }

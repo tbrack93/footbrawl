@@ -197,7 +197,7 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
-	public void sendBlockInfo(int gameId, int player, int opponent, int[] location, int[] block,
+	public void sendBlockInfo(int gameId, int player, int opponent, int[] location,int[] target, int[] block,
 			int[][] attAssists, int[][] defAssists, int teamId) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
@@ -208,6 +208,8 @@ public class MessageSendingService {
 		message.setOpponent(opponent);
 		message.setAttAssists(attAssists);
 		message.setDefAssists(defAssists);
+		message.setLocation(location);
+		message.setTarget(target);
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
 	
