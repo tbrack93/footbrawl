@@ -24,6 +24,10 @@ public class PlayerInGame{
 	private TeamInGame teamIG;
 	
 	
+	public PlayerInGame() {
+		
+	}
+	
 	public PlayerInGame(Player player) {
 		this.player = player;
 		hasTackleZones = true;

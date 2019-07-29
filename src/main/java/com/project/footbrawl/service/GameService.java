@@ -1592,16 +1592,14 @@ public class GameService {
 	}
 
 	public int[] calculateAssists(PlayerInGame attacker, PlayerInGame defender) {
-		attacker.setHasTackleZones(false);
-		defender.setHasTackleZones(false);
 		List<PlayerInGame> attSupport = getAssists(attacker, defender);
 		List<PlayerInGame> defSupport = getAssists(defender, attacker);
-		attacker.setHasTackleZones(true);
-		defender.setHasTackleZones(true);
 		return new int[] { attSupport.size(), defSupport.size() };
 	}
 
 	public List<PlayerInGame> getAssists(PlayerInGame p1, PlayerInGame p2) {
+		p1.setHasTackleZones(false);
+		p2.setHasTackleZones(false);
 		addTackleZones(p2);
 		List<PlayerInGame> support = new ArrayList<>(p2.getTile().getTacklers());
 		for (PlayerInGame p : support) {
@@ -1609,11 +1607,13 @@ public class GameService {
 			Set<PlayerInGame> tacklers = p.getTile().getTacklers();
 			for (PlayerInGame q : tacklers) {
 				addTackleZones(q);
-				if (q.getTile().getTacklers().isEmpty()) {
+				if (!q.getTile().getTacklers().isEmpty()) {
 					support.remove(p);
 				}
 			}
 		}
+		p1.setHasTackleZones(true);
+		p2.setHasTackleZones(true);
 		return support;
 	}
 
@@ -2035,5 +2035,23 @@ public class GameService {
 			Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 			scatterBall(location, 1);
 		}
+	}
+
+	public void sendBlockDetails(int player, int opponent, int[] location, int team) {
+		PlayerInGame attacker = getPlayerById(player);
+	    PlayerInGame defender = getPlayerById(opponent);
+		int[] block = calculateBlock(getPlayerById(player), pitch[location[0]][location[1]], getPlayerById(opponent));
+		List<PlayerInGame> attSupport = getAssists(attacker, defender);
+		// just send assist locations to save amount of data sent
+		int[][] attLocations = new int[attSupport.size()][2];
+		for(int i = 0; i<attSupport.size(); i++) {
+			attLocations[i] = attSupport.get(i).getLocation();
+		}
+		List<PlayerInGame> defSupport = getAssists(defender, attacker);
+		int[][] defLocations = new int[defSupport.size()][2];
+		for(int i = 0; i<defSupport.size(); i++) {
+			defLocations[i] = defSupport.get(i).getLocation();
+		}
+		sender.sendBlockInfo(game.getId(), player, opponent, location, block, attLocations, defLocations, team);
 	}
 }

@@ -8,6 +8,7 @@ public class Message {
 	private String type;
 	private String action;
 	private int player;
+	private int opponent;
 	private int [] location;
 	private int[] target;
 	private String description;
@@ -81,6 +82,16 @@ public class Message {
 	public void setRerollChoice(String rerollChoice) {
 		this.rerollChoice = rerollChoice;
 	}
+
+	public int getOpponent() {
+		return opponent;
+	}
+
+	public void setOpponent(int opponent) {
+		this.opponent = opponent;
+	}
+	
+	
 	
 
 }

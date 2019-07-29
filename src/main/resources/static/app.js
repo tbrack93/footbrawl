@@ -466,24 +466,33 @@ function actOnClick(click){
 				 resetMovement();
 				 done = true; // needed as return just escapes forEach block
 				 return;
-			 } else{	
-			   var pTemp = activePlayer;
-			   activePlayer = player;
-			   if(pTemp != null){
-			     drawPlayer(pTemp);
-			   }
-			   drawPlayer(activePlayer);
-			   inRoute = false;
-			   waypoints.length = 0;
-			   route.length = 0;
+			 } else {
+				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
+					if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
+				      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+				                 JSON.stringify({"type": "INFO", "action": "BLOCK", "player": activePlayer.id,
+					                 "location": activePlayer.location, "opponent": player.id}));
+						
+					}
+				}else{
+			     var pTemp = activePlayer;
+			     activePlayer = player;
+			     if(pTemp != null){
+			       drawPlayer(pTemp);
+			     }
+			     drawPlayer(activePlayer);
+			     inRoute = false;
+			     waypoints.length = 0;
+			     route.length = 0;
 			   
-			   // console.log(player);
-			   stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+			     // console.log(player);
+			     stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
 			                 "location": player.location, "routeMACost": 0}));
-			   done = true;
-			   return;
 			 }
+			done = true;
+		    return;
+		  }
 		 } // will be more options for blitz/ block/ throw actions
 	 });
 	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
