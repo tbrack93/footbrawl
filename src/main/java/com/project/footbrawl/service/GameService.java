@@ -2052,6 +2052,6 @@ public class GameService {
 		for(int i = 0; i<defSupport.size(); i++) {
 			defLocations[i] = defSupport.get(i).getLocation();
 		}
-		sender.sendBlockInfo(game.getId(), player, opponent, location, block, attLocations, defLocations, team);
+		sender.sendBlockInfo(game.getId(), player, opponent, location, defender.getLocation(), block, attLocations, defLocations, team);
 	}
 }

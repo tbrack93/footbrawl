@@ -86,3 +86,12 @@ hr {
   margin: 0px;
 }
 
+#modalImages{
+	display:flex;
+}
+
+.dice{
+	margin-left: auto;
+	margin-right: auto;
+}
+
