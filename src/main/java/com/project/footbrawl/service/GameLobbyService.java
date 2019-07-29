@@ -31,7 +31,7 @@ public class GameLobbyService {
 		p.setAG(3);
 		p.setAV(6);
 		p.setTeam(1);
-		p.setST(4);
+		p.setST(8);
 		Player p2 = new Player();
 		p2.setName("Bobby");
 		p2.setAG(2);
