@@ -2050,6 +2050,10 @@ public class GameService {
 		} else if (rollType == "PICKUPBALL") {
 			Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 			scatterBall(location, 1);
+		} else if(rollType == "BLOCK") {
+			// don't reroll, but continue by asking for dice choice
+			taskQueue.pop();
+			taskQueue.pop().run();
 		}
 	}
 
@@ -2089,12 +2093,20 @@ public class GameService {
 				}
 			};
 			taskQueue.add(task);
+			// for if they choose not to reroll
+			Runnable task2 = new Runnable() {
+				@Override
+				public void run() {
+					System.out.println("in block not rerolling");
+					awaitingReroll = null;
+					sender.requestBlockDiceChoice(game.getId(), team);
+				}
+			};
+			taskQueue.add(task2);
 	   }
 	   sender.sendBlockDiceResult(game.getId(), player, attacker.getName(), opponent, defender.getName(), location, defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, reroll, team);
 	   if(rerollOptions == null || rerollOptions.size() == 0) {
-		  // sender.requestBlockDiceChoice(game.getId(), player, attacker.getName(), opponent, defender.getName(), location, defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, reroll, team);
+		 sender.requestBlockDiceChoice(game.getId(), team);
 	   }
-	
 	}
-	
 }

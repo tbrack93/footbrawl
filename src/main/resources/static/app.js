@@ -34,6 +34,7 @@ var rerollRoute;
 var inPickUp;
 var ballLocation;
 var turnover;
+var inBlock;
 var lastRollLocation;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
@@ -440,7 +441,9 @@ function decodeMessage(message){
 	      }
 	  } else if(message.action == "BLOCK"){
 		  showBlockResult(message);
-	  }	    
+	  }	else if(message.action == "BLOCKDICECHOICE"){
+		  requestBlockDiceChoice();
+	  }    
    }
 }
 
@@ -460,7 +463,7 @@ function showMovement(message){
 }
 
 function actOnClick(click){
-	if(inModal == true){
+	if(inModal == true || inBlock == true){
 		return;
 	}
 	var square = determineSquare(click);
@@ -1075,7 +1078,7 @@ function showNewTurn(message){
 }
 
 function endTurn(){
-	if(yourTurn == true){
+	if(yourTurn == true && inBlock == false && inModal == false){
 	  var result = confirm("Are you sure you want to end your turn?");
 		if (result == true) {
 		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
@@ -1084,7 +1087,11 @@ function endTurn(){
 		  return;
 		}
 	} else{
+		if(inBlock == true || inModal == true){
+			alert("In an action");
+		} else{
 		alert("Not your turn");
+		}
 	}
 }
 
@@ -1096,6 +1103,7 @@ function showTouchdown(message){
 }
 
 function showBlock(message){
+	inBlock = true;
 	 showBlockAssists(message);
      document.getElementById("modalTitle").innerHTML = "Block Details";
  	 var modalMain = document.getElementById("modalImages");
@@ -1161,6 +1169,7 @@ function sendCarryOutBlock(message, follow){
 }
 
 function showBlockResult(message){
+	inBlock = true;
 	showBlockAssists(message);
 	document.getElementById("modalTitle").innerHTML = message.playerName + " blocks " + message.opponentName;
 	document.getElementById("modalText").innerHTML = "";
@@ -1189,4 +1198,16 @@ function showBlockResult(message){
  	display.style.display = "block";
  	display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
  	display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+}
+
+function requestBlockDiceChoice(){
+	var dice = document.getElementsByClassName("dice");
+	for(i = 0 ; i < dice.length; i++){
+		dice[i].style.cursor = "pointer";
+		dice[i].addEventListener('click', (e) => {
+			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+					    JSON.stringify({"type": "ACTION", action: "BLOCKDICECHOICE", "diceChoice":i}));
+	    	});
+	}
+    document.getElementById("modalOptions").innerHTML = "<p> Please select a dice.</p>";    
 }

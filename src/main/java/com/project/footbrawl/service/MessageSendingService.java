@@ -232,8 +232,12 @@ public class MessageSendingService {
 		message.setReroll(reroll);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-	
-	
-	
+    
+	public void requestBlockDiceChoice(int gameId, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("BLOCKDICECHOICE");
+		controller.sendMessageToUser(gameId, teamId, message);	
+	}
 
 }
