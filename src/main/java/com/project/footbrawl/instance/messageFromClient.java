@@ -9,6 +9,7 @@ public class MessageFromClient extends Message {
 	private int diceChoice;
 	private boolean useSkill;
 	private String skillName;
+	private boolean followUp;
 	
 	public MessageFromClient() {
 		
@@ -55,5 +56,15 @@ public class MessageFromClient extends Message {
 	public void setWaypoints(List<int[]> waypoints) {
 		this.waypoints = waypoints;
 	}
+
+	public boolean isFollowUp() {
+		return followUp;
+	}
+
+	public void setFollowUp(boolean followUp) {
+		this.followUp = followUp;
+	}
+	
+	
 	
 }

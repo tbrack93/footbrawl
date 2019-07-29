@@ -1140,7 +1140,7 @@ function showBlock(message){
  	 squareH = modal.clientHeight/15;
      var display = document.getElementById("modal");
  	 display.style.display = "block";
- 	 display.style.left = ""+ (message.location[0] +2) * squareH-5 + "px";
+ 	 display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
  	 display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
 }
 

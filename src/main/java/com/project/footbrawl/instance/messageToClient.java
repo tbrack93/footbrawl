@@ -21,6 +21,7 @@ public class MessageToClient extends Message {
 	private String team2Name;
 	private String teamName;
 	private String playerName;
+	private String opponentName;
 	private TeamInGame team1FullDetails;
 	private TeamInGame team2FullDetails;
 	private List<PlayerInGame> team1;
@@ -257,6 +258,15 @@ public class MessageToClient extends Message {
 	public void setDefAssists(int[][] defAssists) {
 		this.defAssists = defAssists;
 	}
+
+	public String getOpponentName() {
+		return opponentName;
+	}
+
+	public void setOpponentName(String opponentName) {
+		this.opponentName = opponentName;
+	}
+	
 	
 	
 }

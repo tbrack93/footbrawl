@@ -965,12 +965,24 @@ public class GameService {
 		actionCheck(attacker);
 		int[] dice = calculateBlock(attacker, attacker.getTile(), defender);
 		System.out.println(attacker.getName() + " blocks " + defender.getName());
-		int[] rolled = diceRoller(dice[0], 6);
-		for (int i : rolled) {
+		int[] rolls = diceRoller(dice[0], 6);
+		rolled.clear();
+		for (int i : rolls) {
 			System.out.println("Rolled " + BLOCK[i - 1]);
+		    rolled.add(i);
 		}
-		rerollCheck();
-		int result = rolled[getBlockChoice(rolled, dice[1])] - 1; // get choice of dice from stronger player's user
+		rerollOptions = determineRerollOptions("BLOCK", attacker.getId(), new int[][] {attacker.getTile().getLocation()});
+		if(!rerollOptions.isEmpty()) {
+			awaitingReroll = new String[] {"Y", "BLOCK", ""+ attacker.getId(), ""+defender.getId()};
+		} else {
+			awaitingReroll = new String[] {"Y", "BLOCK", ""+ attacker.getId(), ""+defender.getId()};
+		}
+		return;
+	}
+	
+	// get choice of dice from stronger player's user
+	public void blockChoiceAction(int blockChoice, PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
+		int result = rolled.get(blockChoice - 1); 
 		System.out.println("Result: " + BLOCK[result]);
 		if (result == 0) { // attacker down
 			knockDown(attacker);
@@ -1964,7 +1976,7 @@ public class GameService {
 
 	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
 		List<String> results = new ArrayList<>();
-		if (awaitingReroll != null && location[0].equals(runnableLocation[0]) && location[1].equals(runnableLocation[1])
+		if (action != "BLOCK" && awaitingReroll != null && location[0].equals(runnableLocation[0]) && location[1].equals(runnableLocation[1])
 				&& playerId == Integer.parseInt(awaitingReroll[2]) && action == awaitingReroll[1]) { // means in a
 																										// reroll -
 																										// can't reroll
@@ -2041,17 +2053,28 @@ public class GameService {
 		PlayerInGame attacker = getPlayerById(player);
 	    PlayerInGame defender = getPlayerById(opponent);
 		int[] block = calculateBlock(getPlayerById(player), pitch[location[0]][location[1]], getPlayerById(opponent));
-		List<PlayerInGame> attSupport = getAssists(attacker, defender);
-		// just send assist locations to save amount of data sent
-		int[][] attLocations = new int[attSupport.size()][2];
-		for(int i = 0; i<attSupport.size(); i++) {
-			attLocations[i] = attSupport.get(i).getLocation();
-		}
-		List<PlayerInGame> defSupport = getAssists(defender, attacker);
-		int[][] defLocations = new int[defSupport.size()][2];
-		for(int i = 0; i<defSupport.size(); i++) {
-			defLocations[i] = defSupport.get(i).getLocation();
-		}
+		int[][] attLocations =getJsonFriendlyAssists(attacker, defender);
+		int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
 		sender.sendBlockInfo(game.getId(), player, opponent, location, defender.getLocation(), block, attLocations, defLocations, team);
+	}
+	
+	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, PlayerInGame defender){
+		List<PlayerInGame> support = getAssists(attacker, defender);
+		// just send assist locations to save amount of data sent
+		int[][] assistLocations = new int[support.size()][2];
+		for(int i = 0; i<support.size(); i++) {
+			assistLocations[i] = support.get(i).getLocation();
+		}
+		return assistLocations;
+	}
+
+	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, int team) {
+	   PlayerInGame attacker = getPlayerById(player);
+	   PlayerInGame defender = getPlayerById(opponent);
+	   blockAction(attacker, defender, followUp);
+	   int[][] attLocations =getJsonFriendlyAssists(attacker, defender);
+	   int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
+	   sender.sendBlockDiceResult(game.getId(), player, attacker.getName(), opponent, defender.getName(), location, defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, team);
+	   
 	}
 }

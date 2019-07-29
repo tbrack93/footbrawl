@@ -46,6 +46,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).carryOutReroll(message.getPlayer(), team, message.getRerollChoice());
 			} else if(action.equals("ENDTURN")){
 				lobby.getGameService(gameId).endTurn(team);
+			} else if(action.equals("BLOCK")){
+				lobby.getGameService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(), message.getLocation(), message.isFollowUp(), team);
 			}
 		}
 		
