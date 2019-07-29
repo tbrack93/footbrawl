@@ -9,6 +9,8 @@ public class MessageToClient extends Message {
 
 	private Integer numberOfDice; // Integers so default to null
 	private Integer userToChoose;
+	private int[][] attAssists;
+	private int[][] defAssists;
 	private List<jsonTile> route; // for moving to a specific point
 	private List<jsonTile> squares; // for seeing all squares player can move to
 	private Integer rollNeeded;
@@ -238,6 +240,22 @@ public class MessageToClient extends Message {
 
 	public void setReroll(boolean isReroll) {
 		this.isReroll = isReroll;
+	}
+
+	public int[][] getAttAssists() {
+		return attAssists;
+	}
+
+	public void setAttAssists(int[][] attAssists) {
+		this.attAssists = attAssists;
+	}
+
+	public int[][] getDefAssists() {
+		return defAssists;
+	}
+
+	public void setDefAssists(int[][] defAssists) {
+		this.defAssists = defAssists;
 	}
 	
 	

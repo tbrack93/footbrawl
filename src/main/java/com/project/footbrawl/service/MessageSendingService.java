@@ -196,6 +196,20 @@ public class MessageSendingService {
 		message.setTeam2Score(team2Score);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	public void sendBlockInfo(int gameId, int player, int opponent, int[] location, int[] block,
+			int[][] attAssists, int[][] defAssists, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("BLOCK");
+		message.setNumberOfDice(block[0]);
+		message.setUserToChoose(block[1]);
+		message.setPlayer(player);
+		message.setOpponent(opponent);
+		message.setAttAssists(attAssists);
+		message.setDefAssists(defAssists);
+		controller.sendMessageToUser(gameId, teamId, message);
+	}
 	
 
 }

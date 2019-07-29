@@ -32,6 +32,11 @@ public class MessageDecoderService {
 				} else {
 				lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getLocation(), message.getTarget(), team);
 				}
+				return;
+			}
+			if(action.equals("BLOCK")) {
+				lobby.getGameService(gameId).sendBlockDetails(message.getPlayer(), message.getOpponent(), message.getLocation(), team);
+				return;
 			}
 		}else if(type.equals("ACTION")) {
 			if(action.equals("ROUTE")){

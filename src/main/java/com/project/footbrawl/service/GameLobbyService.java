@@ -31,7 +31,7 @@ public class GameLobbyService {
 		p.setAG(3);
 		p.setAV(6);
 		p.setTeam(1);
-		p.setST(9);
+		p.setST(4);
 		Player p2 = new Player();
 		p2.setName("Bobby");
 		p2.setAG(2);
@@ -91,7 +91,7 @@ public class GameLobbyService {
 		gs.pitch[6][5].addPlayer(team1Players.get(0));
 		gs.pitch[7][5].addPlayer(team2Players.get(0));
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
-		gs.pitch[5][3].addPlayer(team1Players.get(1));
+		gs.pitch[8][5].addPlayer(team1Players.get(1));
 		gs.pitch[20][12].addPlayer(team1Players.get(2));
 		gs.pitch[21][12].addBall();
 		gs.setActiveTeam(gs.team1);
