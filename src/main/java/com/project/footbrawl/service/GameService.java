@@ -107,6 +107,7 @@ public class GameService {
 		actionsNeeded = 0;
 		activePlayer = null;
 		ballToScatter = null;
+		rerollOptions = new ArrayList<>();
 		inTurnover = false;
 		pitch = new Tile[26][15];
 		for (int row = 0; row < 26; row++) {
@@ -485,7 +486,7 @@ public class GameService {
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
 		inTurnover = false;
-		if (awaitingReroll != null) {
+		if (awaitingReroll != null && awaitingReroll[0] == "Y") {
 			throw new IllegalArgumentException("Can't do anything whilst waiting for reroll decision");
 		}
 		List<jsonTile> squares = new ArrayList<>();
@@ -2019,6 +2020,7 @@ public class GameService {
 				p.useSkill(rerollChoice.replace(" Skill", ""));
 				System.out.println("In skill reroll");
 			}
+			awaitingReroll = null;
 			taskQueue.pop().run();
 			if(rollType == "BLOCK") {
 				return;
@@ -2099,14 +2101,19 @@ public class GameService {
 				public void run() {
 					System.out.println("in block not rerolling");
 					awaitingReroll = null;
-					sender.requestBlockDiceChoice(game.getId(), team);
+					sender.requestBlockDiceChoice(game.getId(), player, opponent, team);
 				}
 			};
 			taskQueue.add(task2);
 	   }
 	   sender.sendBlockDiceResult(game.getId(), player, attacker.getName(), opponent, defender.getName(), location, defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, reroll, team);
 	   if(rerollOptions == null || rerollOptions.size() == 0) {
-		 sender.requestBlockDiceChoice(game.getId(), team);
+		 sender.requestBlockDiceChoice(game.getId(), player, opponent, team);
 	   }
+	}
+
+	public void carryOutBlockChoice(int diceChoice, int player, int opponent, int team) {
+	//	sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice), team == team1.getId() ? team1.getName() : team2.getName(), team);
+		//blockChoiceAction(diceChoice, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
 	}
 }

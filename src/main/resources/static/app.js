@@ -352,6 +352,8 @@ function decodeMessage(message){
 			showRoute(message);
 		} else if(message.action == "BLOCK"){
 			showBlock(message);
+	    } else if(message.action == "BLOCKDICECHOICE"){
+		    showBlockDiceChoice(message);
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
 		} else{ if(message.action == "ARMOURROLL"){
@@ -442,7 +444,7 @@ function decodeMessage(message){
 	  } else if(message.action == "BLOCK"){
 		  showBlockResult(message);
 	  }	else if(message.action == "BLOCKDICECHOICE"){
-		  requestBlockDiceChoice();
+		  requestBlockDiceChoice(message);
 	  }    
    }
 }
@@ -715,7 +717,6 @@ function showRoll(message){
 	}
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 	var newRolls = document.getElementById("newRolls");
-	console.log(newRolls);
 	newRolls.innerHTML =  message.playerName + ": " +message.rollType + " Needed: " + message.rollNeeded + " Rolled: " +
 	                  +  message.rolled + " Result: " + message.rollOutcome + "</br>" + newRolls.innerHTML;
 	if(message.rollType == "DODGE"){
@@ -952,8 +953,9 @@ function resetModal(message){
 	var p = getPlayerById(message.player);
     p.status = "standing";
     if(inPickUp != true){
-    p.location = message.location;
-    drawPlayers();
+      p.location = message.location;
+      drawPlayers();
+      drawBall();
     }
 	inModal = false;
 // if(taskQueue.length != 0){
@@ -1129,7 +1131,7 @@ function showBlock(message){
  	 document.getElementById("modalOptions").innerHTML += "<br><hr>";
  	 var button = document.createElement("BUTTON")
      button.innerHTML = "Cancel";
-     button.onclick = function() {resetModal()};
+     button.onclick = function() {cancelBlock(message.player)};
      modalOptions.appendChild(button);
      var button2 = document.createElement("BUTTON")
      button2.innerHTML = "Block";
@@ -1181,7 +1183,7 @@ function showBlockResult(message){
       var dice = new Image();
 	  dice.src = diceImages[message.rolled[i] -1];
 	  modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
-	  rollText += " " + blockResults[i]
+	  rollText += " " + blockResults[message.rolled[i] -1];
 	}
 	newRolls.innerHTML =  message.playerName + " blocked " + message.opponentName + ". Rolled: " + rollText + ".</br>" + newRolls.innerHTML;
 	if(message.rerollOptions == null || message.rerollOptions.length == 0){
@@ -1200,14 +1202,38 @@ function showBlockResult(message){
  	display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
 }
 
-function requestBlockDiceChoice(){
+function requestBlockDiceChoice(message){
 	var dice = document.getElementsByClassName("dice");
 	for(i = 0 ; i < dice.length; i++){
 		dice[i].style.cursor = "pointer";
+		dice[i].id = "" + i;
 		dice[i].addEventListener('click', (e) => {
 			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-					    JSON.stringify({"type": "ACTION", action: "BLOCKDICECHOICE", "diceChoice":i}));
+					    JSON.stringify({"type": "ACTION", action: "BLOCKDICECHOICE", "diceChoice": event.srcElement.id, 
+					    	"player": message.player, "opponent": message.opponent}));
 	    	});
 	}
     document.getElementById("modalOptions").innerHTML = "<p> Please select a dice.</p>";    
+}
+
+function showBlockDiceChoice(message){
+	var modalMain = document.getElementById("modalImages");
+	var chooser = "You chose:";
+	if(message.userToChoose != team){
+		chooser = message.teamName + " chose:"
+	}
+	modalMain.innerHTML = chooser + "<br><br>"; 
+	var dice = new Image();
+	dice.src = diceImages[message.diceChoice -1];
+	modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
+	var newRolls = document.getElementById("newRolls");
+	newRolls.innerHTML =  message.teamName + " chose " + blockResults[message.diceChoice -1]+ "</br>" + newRolls.innerHTML;
+	document.getElementById("modalOptions").innerHTML;
+}
+
+function cancelBlock(player){
+	document.getElementById("modal").style.display = "none";
+	inModal = false;
+	inBlock = false;
+	resetMovement();
 }

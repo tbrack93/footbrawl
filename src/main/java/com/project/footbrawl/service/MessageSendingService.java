@@ -233,11 +233,26 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
     
-	public void requestBlockDiceChoice(int gameId, int teamId) {
+	public void requestBlockDiceChoice(int gameId, int player, int opponent, int teamId) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("BLOCKDICECHOICE");
+		message.setPlayer(player);
+		message.setOpponent(opponent);
 		controller.sendMessageToUser(gameId, teamId, message);	
+	}
+
+	public void sendBlockDiceChoice(int gameId, int player, int opponent, int diceChoice, String teamName, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("BLOCKDICECHOICE");
+		message.setPlayer(player);
+		message.setOpponent(opponent);
+		message.setDiceChoice(diceChoice);
+		message.setUserToChoose(teamId);
+		message.setTeamName(teamName);
+		controller.sendMessageToBothUsers(gameId, message);	
+		
 	}
 
 }
