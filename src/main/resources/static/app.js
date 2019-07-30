@@ -812,6 +812,7 @@ function showPickUpResult(message){
 			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1]))){ 
 	    message.route = [{position: message.location}, {position: message.target}];
 	    showMoved(message, "normal");
+		lastRollLocation = [message.location, message.target];
 	}
 	 var p = getPlayerById(message.player);
 	 p.location = message.target;
@@ -832,7 +833,9 @@ function showPickUpResult(message){
 			   inPickup = false;
 			}
 		}
-	 lastRollLocation = [message.location, message.target];
+	 if(taskQueue.length > 0){
+		  (taskQueue.shift())();
+	}	
 }
 
 function showBallScatter(message){
