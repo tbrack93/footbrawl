@@ -808,9 +808,10 @@ function showGFIResult(message){
 
 function showPickUpResult(message){
 	inPickup = true;
-	if(message.reroll == false){ 
-	  message.route = [{position: message.location}, {position: message.target}];
-	  showMoved(message, "normal");
+	if(!(message.reroll == false && lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
+			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1]))){ 
+	    message.route = [{position: message.location}, {position: message.target}];
+	    showMoved(message, "normal");
 	}
 	 var p = getPlayerById(message.player);
 	 p.location = message.target;
