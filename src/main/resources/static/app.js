@@ -388,14 +388,15 @@ function decodeMessage(message){
 		    	  showTurnover(message); 
 		      }
 		} else if(message.action == "NEWTURN"){
-			var delay = 0;
-			if(turnover == true){
-				delay = 2500;
-			}
-			setTimeout(function() {
-				showNewTurn(message);
-			}, delay);
-
+			if(animating == true || turnover == true){
+				  var task = function(m){
+					  showNewTurn(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showNewTurn(message); 
+		      }
 		} else if(message.action == "TOUCHDOWN"){
 			if(animating == true){
 				  var task = function(m){
@@ -804,14 +805,15 @@ function showGFIResult(message){
 }
 
 function showPickUpResult(message){
+	inPickup = true;
 	if(message.reroll == false){ 
 	  message.route = [{position: message.location}, {position: message.target}];
 	  showMoved(message, "normal");
 	}
 	 var p = getPlayerById(message.player);
-	 if(message.rollOutcome === "success"){
+	 p.location = message.target;
+	 if(message.rollOutcome == "success"){
 		 p.hasBall = true;
-		 p.location = message.target;
 		 ballLocation = null;
 	 }
 	 if(message.end == "Y"){
@@ -825,6 +827,7 @@ function showPickUpResult(message){
 			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	          JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
 	          "location": message.target, "routeMACost": 0}));
+			   pickup = false;
 			}
 		}
 	 lastRollRoute = [message.location, message.target];
@@ -848,7 +851,7 @@ function showBallScatter(message){
     var startingY = (14 - message.location[1]) * squareH + squareH/3;
     var targetX = message.target[0] * squareH + squareH/3;
     var targetY = (14 - message.target[1]) * squareH + squareH/3;
-    var speed = 10;
+    var speed = 25;
     xIncrement = (targetX - startingX) / speed;
     yIncrement = (targetY - startingY) / speed;
     drawPlayers();
@@ -864,7 +867,7 @@ function showBallScatter(message){
    if(taskQueue.length != 0){
    (taskQueue.shift())();
    }
-   }, 1000);  
+   }, 2000);  
   }
 }
 
@@ -898,7 +901,7 @@ function showFailedAction(message){
 	display.style.top = "" + (row -5) * squareH-5 + "px";
 	var effect = " fell down.";
 	if(message.rollType == "PICKUPBALL"){
-		effect = " dropped the ball.";
+		effect = " dropped the ball";
 	}
 	document.getElementById("modalTitle").innerHTML = message.playerName + effect;
 	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
@@ -1035,14 +1038,17 @@ function showTurnover(message){
 	}
 	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
-	  if(taskQueue.length != 0){  
-	   (taskQueue.shift())();
-	   }
+	setTimeout(function(){
+	  if(taskQueue.length != 0){
+	    (taskQueue.shift())();
+	  }
+	}, 2000);  
 }
 
 function showNewTurn(message){
 	inModal = false;
 	inBlock = false;
+	inPickup = false;
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);

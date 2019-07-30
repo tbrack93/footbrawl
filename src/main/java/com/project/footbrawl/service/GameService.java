@@ -36,6 +36,10 @@ public class GameService {
 	@Autowired
 	MessageSendingService sender;
 
+	private static List<Integer> diceRolls = new ArrayList<>(
+			Arrays.asList(new Integer[] { 1, 6, 1, 1, 6, 1, 4, 3, 6, 4, 2, 4, 1, 6, 6, 6, 6 }));
+	private static boolean testing = true;
+
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
 			{ 1, 0 }, { 1, 1 } };
@@ -73,8 +77,6 @@ public class GameService {
 	private int actionsNeeded;
 	private boolean routeSaved;
 	private List<String> rerollOptions;
-	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 6, 6, 1, 6, 1, 4, 3, 6, 4, 2, 4, 1, 6, 6, 6, 6 }));
 	private boolean inTurnover;
 
 //	public GameService(Game game) {
@@ -888,9 +890,9 @@ public class GameService {
 		List<Tile> tempR = new ArrayList<>(route);
 		int startingMA = p.getRemainingMA();
 		if (p.getTile() != tempR.get(0)) {
-			System.out.println("Player: " + p.getTile().getLocation()[0] + ", " +p.getTile().getLocation()[1]);
+			System.out.println("Player: " + p.getTile().getLocation()[0] + ", " + p.getTile().getLocation()[1]);
 			System.out.println("Route Start: " + tempR.get(0).getLocation()[0] + ", " + tempR.get(0).getLocation()[1]);
-			
+
 			throw new IllegalArgumentException("Route does not start from player's current position");
 		}
 		tempR.remove(0);
@@ -971,20 +973,21 @@ public class GameService {
 		rolled.clear();
 		for (int i : rolls) {
 			System.out.println("Rolled " + BLOCK[i - 1]);
-		    rolled.add(i);
+			rolled.add(i);
 		}
-		rerollOptions = determineRerollOptions("BLOCK", attacker.getId(), new int[][] {attacker.getTile().getLocation()});
-		if(!rerollOptions.isEmpty()) {
-			awaitingReroll = new String[] {"Y", "BLOCK", ""+ attacker.getId(), ""+defender.getId()};
+		rerollOptions = determineRerollOptions("BLOCK", attacker.getId(),
+				new int[][] { attacker.getTile().getLocation() });
+		if (!rerollOptions.isEmpty()) {
+			awaitingReroll = new String[] { "Y", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
 		} else {
-			awaitingReroll = new String[] {"Y", "BLOCK", ""+ attacker.getId(), ""+defender.getId()};
+			awaitingReroll = new String[] { "Y", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
 		}
 		return;
 	}
-	
+
 	// get choice of dice from stronger player's user
 	public void blockChoiceAction(int blockChoice, PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
-		int result = blockChoice; 
+		int result = blockChoice;
 		System.out.println("Result: " + BLOCK[result]);
 		if (result == 0) { // attacker down
 			knockDown(attacker);
@@ -1166,7 +1169,9 @@ public class GameService {
 			p.setHasBall(false);
 			scatterBall(location, 1);
 		}
-		turnover();
+		if(p.getTeam() == activeTeam.getId()) {
+		  turnover();
+		}
 	}
 
 	public void injuryRoll(PlayerInGame p) {
@@ -1313,10 +1318,6 @@ public class GameService {
 		} else {
 			System.out.println(player.getName() + " failed to pick up the ball!");
 			rollResult = "failed";
-//			if (rerollCheck() == true) {
-//				return pickUpBallAction(player);
-//			}
-//			scatterBall(player.getTile(), 1);
 			return false;
 		}
 	}
@@ -1637,13 +1638,16 @@ public class GameService {
 	}
 
 	public static int[] diceRoller(int quantity, int number) {
-		Random rand = new Random();
 		int[] result = new int[quantity];
+		Random rand = new Random();
 		for (int i = 0; i < quantity; i++) {
-			result[i] = rand.nextInt(number) + 1;
-			// manually setting for testing
-			//result[i] = diceRolls.get(0);
-			//diceRolls.remove(0);
+			if (testing == true) {
+				// manually setting for testing
+				result[i] = diceRolls.get(0);
+				diceRolls.remove(0);
+			} else {
+				result[i] = rand.nextInt(number) + 1;
+			}
 		}
 		return result;
 	}
@@ -1773,7 +1777,7 @@ public class GameService {
 			System.out.println("popping roll");
 			System.out.println(actionsNeeded);
 			taskQueue.pop().run();
-			
+
 			try {
 				System.out.println("waiting for result");
 				result = runnableResults.take(); // to wait for runnable
@@ -1781,21 +1785,22 @@ public class GameService {
 				System.out.println("Thread error, everything breaks");
 			}
 		}
-		if (awaitingReroll != null && awaitingReroll[0] == "Y" && rerollOptions.size() > 0 && routeSaved == false && actionsNeeded == 0) {
-					if (remaining.size() > 1) {
-						routeSaved = true;
-						Runnable task = new Runnable() {
-							@Override
-							public void run() {
-								System.out.println("in carryout route runnable");
-								System.out.println("movement left: " + remaining.size());
-								awaitingReroll = null;
-								
-								carryOutRouteAction(playerId, remaining, teamId);
-							}
-						};
-						taskQueue.add(task);
+		if (awaitingReroll != null && awaitingReroll[0] == "Y" && rerollOptions.size() > 0 && routeSaved == false
+				&& actionsNeeded == 0) {
+			if (remaining.size() > 1) {
+				routeSaved = true;
+				Runnable task = new Runnable() {
+					@Override
+					public void run() {
+						System.out.println("in carryout route runnable");
+						System.out.println("movement left: " + remaining.size());
+						awaitingReroll = null;
+
+						carryOutRouteAction(playerId, remaining, teamId);
 					}
+				};
+				taskQueue.add(task);
+			}
 		}
 		String finalRoll = "N";
 		if (Arrays.equals(runnableLocation[1], route.get(route.size() - 1))
@@ -1817,13 +1822,18 @@ public class GameService {
 				awaitingReroll = null;
 				carryOutRouteAction(playerId, remaining, teamId);
 			}
-		} else if (awaitingReroll != null && rerollOptions.isEmpty()) {
+		} else if (rerollOptions.isEmpty()) {
 			System.out.println("end of the line");
 			if (rollType == "DODGE" || rollType == "GFI") {
 				System.out.println("please knockdown");
 				knockDown(p);
+			} else if (rollType == "PICKUPBALL") {
+				System.out.println("pick up fail time");
+				Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
+				scatterBall(location, 1);
+				turnover();
 			}
-		} else if (rollResult.equals("failed") && rerollOptions.size() > 0 && actionsNeeded >0) {
+		} else if (rollResult.equals("failed") && rerollOptions.size() > 0 && actionsNeeded > 0) {
 			Runnable task2 = new Runnable() {
 				@Override
 				public void run() {
@@ -1935,9 +1945,9 @@ public class GameService {
 			if (t.containsBall()) {
 				actionsNeeded++;
 				Runnable task = new Runnable() {
-					@Override
+					@Override 
 					public void run() {
-						System.out.println("In runnable GFI 1");
+						System.out.println("In runnable PICKUPBALL 1");
 						boolean result = pickUpBallAction(p);
 						runnableLocation = tempLocation;
 						if (result == false) {
@@ -1950,7 +1960,7 @@ public class GameService {
 
 									@Override
 									public void run() {
-										System.out.println("In runnable GFI 2");
+										System.out.println("In runnable PICKUPBALL 2");
 										runnableResults.add(pickUpBallAction(p));
 										runnableLocation = tempLocation;
 									}
@@ -1978,13 +1988,14 @@ public class GameService {
 
 	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
 		List<String> results = new ArrayList<>();
-		if (action != "BLOCK" && awaitingReroll != null && location[0].equals(runnableLocation[0]) && location[1].equals(runnableLocation[1])
-				&& playerId == Integer.parseInt(awaitingReroll[2]) && action == awaitingReroll[1]) { // means in a
-																										// reroll -
-																										// can't reroll
-																										// something
-																										// more than
-																										// once
+		if (action != "BLOCK" && awaitingReroll != null && location[0].equals(runnableLocation[0])
+				&& location[1].equals(runnableLocation[1]) && playerId == Integer.parseInt(awaitingReroll[2])
+				&& action == awaitingReroll[1]) { // means in a
+													// reroll -
+													// can't reroll
+													// something
+													// more than
+													// once
 			return results;
 		}
 		if (!activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
@@ -2022,7 +2033,7 @@ public class GameService {
 			}
 			awaitingReroll = null;
 			taskQueue.pop().run();
-			if(rollType == "BLOCK") {
+			if (rollType == "BLOCK") {
 				return;
 			}
 			boolean result = false;
@@ -2052,7 +2063,8 @@ public class GameService {
 		} else if (rollType == "PICKUPBALL") {
 			Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 			scatterBall(location, 1);
-		} else if(rollType == "BLOCK") {
+			turnover();
+		} else if (rollType == "BLOCK") {
 			// don't reroll, but continue by asking for dice choice
 			taskQueue.pop();
 			taskQueue.pop().run();
@@ -2061,32 +2073,33 @@ public class GameService {
 
 	public void sendBlockDetails(int player, int opponent, int[] location, int team) {
 		PlayerInGame attacker = getPlayerById(player);
-	    PlayerInGame defender = getPlayerById(opponent);
+		PlayerInGame defender = getPlayerById(opponent);
 		int[] block = calculateBlock(getPlayerById(player), pitch[location[0]][location[1]], getPlayerById(opponent));
-		int[][] attLocations =getJsonFriendlyAssists(attacker, defender);
+		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
 		int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
-		sender.sendBlockInfo(game.getId(), player, opponent, location, defender.getLocation(), block, attLocations, defLocations, team);
+		sender.sendBlockInfo(game.getId(), player, opponent, location, defender.getLocation(), block, attLocations,
+				defLocations, team);
 	}
-	
-	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, PlayerInGame defender){
+
+	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, PlayerInGame defender) {
 		List<PlayerInGame> support = getAssists(attacker, defender);
 		// just send assist locations to save amount of data sent
 		int[][] assistLocations = new int[support.size()][2];
-		for(int i = 0; i<support.size(); i++) {
+		for (int i = 0; i < support.size(); i++) {
 			assistLocations[i] = support.get(i).getLocation();
 		}
 		return assistLocations;
 	}
 
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
-	   PlayerInGame attacker = getPlayerById(player);
-	   PlayerInGame defender = getPlayerById(opponent);
-	   blockAction(attacker, defender, followUp);
-	   int[][] attLocations =getJsonFriendlyAssists(attacker, defender);
-	   int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
-	   runnableLocation = new int[][] {location, defender.getLocation()};
-	   if(rerollOptions.size()>0) {
-		   Runnable task = new Runnable() {
+		PlayerInGame attacker = getPlayerById(player);
+		PlayerInGame defender = getPlayerById(opponent);
+		blockAction(attacker, defender, followUp);
+		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
+		int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
+		runnableLocation = new int[][] { location, defender.getLocation() };
+		if (rerollOptions.size() > 0) {
+			Runnable task = new Runnable() {
 				@Override
 				public void run() {
 					System.out.println("in block reroll");
@@ -2105,17 +2118,20 @@ public class GameService {
 				}
 			};
 			taskQueue.add(task2);
-	   }
-	   sender.sendBlockDiceResult(game.getId(), player, attacker.getName(), opponent, defender.getName(), location, defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, reroll, team);
-	   if(rerollOptions == null || rerollOptions.size() == 0) {
-		 sender.requestBlockDiceChoice(game.getId(), player, opponent, team);
-	   }
+		}
+		sender.sendBlockDiceResult(game.getId(), player, attacker.getName(), opponent, defender.getName(), location,
+				defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, reroll, team);
+		if (rerollOptions == null || rerollOptions.size() == 0) {
+			sender.requestBlockDiceChoice(game.getId(), player, opponent, team);
+		}
 	}
 
 	public void carryOutBlockChoice(int diceChoice, int player, int opponent, int team) {
-		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice), team == team1.getId() ? team1.getName() : team2.getName(), team);
+		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
+				team == team1.getId() ? team1.getName() : team2.getName(), team);
 		blockChoiceAction(0, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
-		//blockChoiceAction(rolled.get(diceChoice), getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
-		
+		// blockChoiceAction(rolled.get(diceChoice), getPlayerById(player),
+		// getPlayerById(opponent), true); // need to sort out follow up
+
 	}
 }
