@@ -808,7 +808,7 @@ function showGFIResult(message){
 
 function showPickUpResult(message){
 	inPickup = true;
-	if(!(message.reroll == false && lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
+	if(!(lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
 			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1]))){ 
 	    message.route = [{position: message.location}, {position: message.target}];
 	    showMoved(message, "normal");
@@ -829,10 +829,10 @@ function showPickUpResult(message){
 			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	          JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
 	          "location": message.target, "routeMACost": 0}));
-			   pickup = false;
+			   inPickup = false;
 			}
 		}
-	 lastRollRoute = [message.location, message.target];
+	 lastRollLocation = [message.location, message.target];
 }
 
 function showBallScatter(message){

@@ -27,7 +27,7 @@ public class GameLobbyService {
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
-		p.setMA(10);
+		p.setMA(0);
 		p.setAG(3);
 		p.setAV(6);
 		p.setTeam(1);
