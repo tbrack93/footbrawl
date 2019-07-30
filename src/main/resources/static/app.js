@@ -150,7 +150,9 @@ function drawPlayers(){
 function drawPlayerBorders(){
 	selection.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	players.forEach(player => {
-		drawSelectionBorder(player);
+		if(player.location != null){
+		  drawSelectionBorder(player);
+		}
 	});
 	drawBallBorder();
 }
@@ -1001,8 +1003,11 @@ function showArmourRoll(message){
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
 	                      message.rolled + "</br>" + newRolls.innerHTML;
-	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + "'s " + message.rollOutcome + "." + "</p>";
-	document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, animating.width, animating.height);
+	if(inBlock == false){
+		document.getElementById("modalOptions").innerHTML = "";
+	}
+	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + "'s " + message.rollOutcome + "." + "</p>";
+	document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	if(taskQueue.length != 0){
     	(taskQueue.shift())();
     }
@@ -1012,14 +1017,14 @@ function showInjuryRoll(message){
 	console.log("showing Injury");
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " was "+ message.rollOutcome + ". " + "Rolled: " + message.rolled + "</br>" + newRolls.innerHTML;
-	var existing = document.getElementById("modalOptions").innerHTML;
-	document.getElementById("modalOptions").innerHTML = existing + "<p>" + message.playerName + " is " + message.rollOutcome + "." + "</p>";
+	//var existing = document.getElementById("modalOptions").innerHTML;
+	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + " is " + message.rollOutcome + "." + "</p>";
 	var player = getPlayerById(message.player);
     player.status = message.playerStatus;
     player.location = message.location;
     player.hasBall = false;
     drawPlayer(player);
-    document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, animating.width, animating.height);
+    document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	// drawPlayers();
 	if(taskQueue.length != 0){
     	(taskQueue.shift())();
