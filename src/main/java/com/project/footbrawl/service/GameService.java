@@ -1165,7 +1165,7 @@ public class GameService {
 		} else {
 			System.out.println(p.getName() + "'s armour held.");
 		}
-		if (p.isHasBall()) {
+		if (p.isHasBall() || location.containsBall()) {
 			p.setHasBall(false);
 			ballToScatter = location;
 		}
@@ -2074,9 +2074,9 @@ public class GameService {
 			return;
 		} if(ballToScatter != null) {
 			scatterBall(ballToScatter, 1);
-			ballToScatter = null;
 		}
-		if(p.getStatus() != "standing") {
+		if(p.getStatus() != "standing" || ballToScatter != null) {
+			ballToScatter = null;
 			turnover();
 		}
 	}
