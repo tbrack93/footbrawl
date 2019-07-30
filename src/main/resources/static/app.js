@@ -812,16 +812,15 @@ function showPickUpResult(message){
 	}
 	 var p = getPlayerById(message.player);
 	 p.location = message.target;
+	 drawBall();
 	 if(message.rollOutcome == "success"){
 		 p.hasBall = true;
 		 ballLocation = null;
 	 }
 	 if(message.end == "Y"){
 			if(taskQueue.length == 0){
-				 setTimeout(function(){
                  drawPlayer(getPlayerById(message.player));
                  drawBall();
-				 }, 500);
 			}
 			if(message.rollOutcome == "success"){
 			  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
@@ -846,7 +845,6 @@ function showBallScatter(message){
     squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     var squareH = canvas.height / 15;
     context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
-
     var startingX = message.location[0] * squareH + squareH/3;
     var startingY = (14 - message.location[1]) * squareH + squareH/3;
     var targetX = message.target[0] * squareH + squareH/3;
@@ -861,13 +859,13 @@ function showBallScatter(message){
     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
     animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "Y"); 
     setTimeout(function(){
-    // document.getElementById("modal").style.display = "block";
+     document.getElementById("modal").style.display = "block";
     // modal.style.display = "block";
-    	modal.style.display = "none";
-   if(taskQueue.length != 0){
-   (taskQueue.shift())();
-   }
-   }, 2000);  
+   // modal.style.display = "none";
+    if(taskQueue.length != 0){
+    (taskQueue.shift())();
+    }
+    }, 2000);  
   }
 }
 
@@ -890,15 +888,15 @@ function showFailedAction(message){
     shadow.fillStyle = "black";
     shadow.fillRect(0,0, modal.width, modal.height);
     var player = getPlayerById(message.player); 
-    var column = player.location[0];
-	var row = 14 -player.location[1];
-	var squareH = modal.height / 15;
+    var column = message.target[0];
+	var row = 14 - message.target[1];
+	var squareH = canvas.height / 15;
 	shadow.clearRect(column * squareH-5, row * squareH-5, squareH+10,squareH+10);
 	var display = document.getElementById("modal");
 	display.style.display = "block";
-	squareH = modal.clientHeight/15;
-	display.style.left = ""+ (column +2) * squareH-5 + "px";
-	display.style.top = "" + (row -5) * squareH-5 + "px";
+	squareH = canvas.clientHeight/15;
+	display.style.left = ""+ (column +3) * squareH-5 + "px";
+	display.style.top = "" + (row) * squareH-5 + "px";
 	var effect = " fell down.";
 	if(message.rollType == "PICKUPBALL"){
 		effect = " dropped the ball";
@@ -915,10 +913,10 @@ function showFailedAction(message){
 		rerollRoute = [{position: message.location}, {position: message.target}]; 
 		requestReroll(message.rerollOptions);
 	}
-	drawPlayer(activePlayer);
+	drawPlayer(player);
 
 	 setTimeout(function(){
-		    // document.getElementById("modal").style.display = "block";
+		     document.getElementById("modal").style.display = "block";
 		    // modal.style.display = "block";
 		   if(taskQueue.length != 0){
 		   (taskQueue.shift())();
@@ -955,7 +953,7 @@ function resetModal(message){
 	document.getElementById("modal").style.display = "none";
 	var p = getPlayerById(message.player);
     p.status = "standing";
-    if(inPickUp != true){
+    if(inPickUp == false){
       p.location = message.location;
       drawPlayers();
       drawBall();
@@ -999,7 +997,7 @@ function showRerollUsed(message){
 function showArmourRoll(message){
 	console.log("showing armour");
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
-	document.getElementById("modal").style.display = "block"; 
+	document.getElementById("modal").style.display = "block";
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
 	                      message.rolled + "</br>" + newRolls.innerHTML;
@@ -1093,6 +1091,7 @@ function endTurn(){
 		if (result == true) {
 		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 					    JSON.stringify({"type": "ACTION", action: "ENDTURN"}));
+		  squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 		} else {
 		  return;
 		}
@@ -1241,6 +1240,7 @@ function showBlockDiceChoice(message){
 
 function cancelBlock(player){
 	document.getElementById("modal").style.display = "none";
+	document.getElementById("modalImages").innerHTML = "";
 	inModal = false;
 	inBlock = false;
 	resetMovement();
