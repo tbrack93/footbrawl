@@ -37,7 +37,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 1, 1, 1, 6, 1, 4, 3, 6, 4, 2, 4, 1, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 6, 6, 1, 6, 6, 1, 4, 3, 6, 4, 2, 4, 1, 6, 6, 6, 6 }));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -1012,10 +1012,10 @@ public class GameService {
 					result == 5) { // defender down
 				knockDown(defender);
 			}
-			if (ballToScatter != null) { // ball has to scatter after all other actions
+		}
+		if (ballToScatter != null) { // ball has to scatter after all other actions
 				scatterBall(ballToScatter, 1);
 				ballToScatter = null;
-			}
 		}
 		endOfAction(attacker);
 		if (attacker.getStatus() != "standing") {
@@ -1165,13 +1165,13 @@ public class GameService {
 		} else {
 			System.out.println(p.getName() + "'s armour held.");
 		}
-		if (p.isHasBall()) {
+		if (p.isHasBall() || location.containsBall()) {
 			p.setHasBall(false);
-			scatterBall(location, 1);
+			ballToScatter = location;
 		}
-		if(p.getTeam() == activeTeam.getId()) {
-		  turnover();
-		}
+//		if(p.getTeam() == activeTeam.getId()) {
+//		  turnover();
+//		}
 	}
 
 	public void injuryRoll(PlayerInGame p) {
@@ -1829,8 +1829,13 @@ public class GameService {
 				knockDown(p);
 			} else if (rollType == "PICKUPBALL") {
 				System.out.println("pick up fail time");
-				Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
-				scatterBall(location, 1);
+				ballToScatter = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
+			} 
+			if(ballToScatter != null) {
+				scatterBall(ballToScatter, 1);
+			}
+			if(p.getStatus() != "standing" || ballToScatter != null) {
+				ballToScatter = null;
 				turnover();
 			}
 		} else if (rollResult.equals("failed") && rerollOptions.size() > 0 && actionsNeeded > 0) {
@@ -2061,13 +2066,18 @@ public class GameService {
 		if (rollType == "DODGE" || rollType == "GFI") {
 			knockDown(p);
 		} else if (rollType == "PICKUPBALL") {
-			Tile location = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
-			scatterBall(location, 1);
-			turnover();
+			ballToScatter = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 		} else if (rollType == "BLOCK") {
 			// don't reroll, but continue by asking for dice choice
 			taskQueue.pop();
 			taskQueue.pop().run();
+			return;
+		} if(ballToScatter != null) {
+			scatterBall(ballToScatter, 1);
+		}
+		if(p.getStatus() != "standing" || ballToScatter != null) {
+			ballToScatter = null;
+			turnover();
 		}
 	}
 
@@ -2129,7 +2139,7 @@ public class GameService {
 	public void carryOutBlockChoice(int diceChoice, int player, int opponent, int team) {
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		blockChoiceAction(0, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
+		blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
 		// blockChoiceAction(rolled.get(diceChoice), getPlayerById(player),
 		// getPlayerById(opponent), true); // need to sort out follow up
 

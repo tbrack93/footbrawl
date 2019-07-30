@@ -27,7 +27,7 @@ public class GameLobbyService {
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
-		p.setMA(10);
+		p.setMA(0);
 		p.setAG(3);
 		p.setAV(6);
 		p.setTeam(1);
@@ -46,10 +46,10 @@ public class GameLobbyService {
 		p3.setST(3);
 		p3.setAV(2);
 		p3.setAV(6);
-		Skill block = new Skill("Block", "blocking is fun", "block");
+		//Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		List<Skill> skills = new ArrayList<>();
-		skills.add(block);
+	//	skills.add(block);
 		skills.add(dodge);
 		p.setSkills(skills);
 		Player p4 = new Player();
@@ -93,7 +93,8 @@ public class GameLobbyService {
 		gs.pitch[7][7].addPlayer(team2Players.get(1));
 		gs.pitch[8][5].addPlayer(team1Players.get(1));
 		gs.pitch[20][12].addPlayer(team1Players.get(2));
-		gs.pitch[21][12].addBall();
+		gs.pitch[7][8].addBall();
+		//team2Players.get(0).setHasBall(true);
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
 		gs.team2.setTurn(3);
