@@ -995,6 +995,7 @@ function showRerollUsed(message){
 
 function showArmourRoll(message){
 	console.log("showing armour");
+	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 	document.getElementById("modal").style.display = "block"; 
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
@@ -1041,6 +1042,7 @@ function showTurnover(message){
 
 function showNewTurn(message){
 	inModal = false;
+	inBlock = false;
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -1182,7 +1184,7 @@ function showBlockResult(message){
 	for(i = 0; i<message.rolled.length; i++){
       var dice = new Image();
 	  dice.src = diceImages[message.rolled[i] -1];
-	  modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
+	  modalMain.innerHTML += "<img height='50px' class ='dice' src='" + dice.src + "' title = '" + blockResults[message.rolled[i] -1] + "'/>"; 
 	  rollText += " " + blockResults[message.rolled[i] -1];
 	}
 	newRolls.innerHTML =  message.playerName + " blocked " + message.opponentName + ". Rolled: " + rollText + ".</br>" + newRolls.innerHTML;
@@ -1225,10 +1227,10 @@ function showBlockDiceChoice(message){
 	modalMain.innerHTML = chooser + "<br><br>"; 
 	var dice = new Image();
 	dice.src = diceImages[message.diceChoice -1];
-	modalMain.innerHTML += "<img height='50px' class ='dice' src=" + dice.src + "/>"; 
+	modalMain.innerHTML += "<img height='50px' class ='dice' src='" + dice.src + "' title = '" + blockResults[message.diceChoice -1] + "'/>"; 
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.teamName + " chose " + blockResults[message.diceChoice -1]+ "</br>" + newRolls.innerHTML;
-	document.getElementById("modalOptions").innerHTML;
+	document.getElementById("modalOptions").innerHTML = "";
 }
 
 function cancelBlock(player){

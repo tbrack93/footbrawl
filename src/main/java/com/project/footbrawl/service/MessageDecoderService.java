@@ -49,7 +49,7 @@ public class MessageDecoderService {
 			} else if(action.equals("BLOCK")){
 				lobby.getGameService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(), message.getLocation(), message.isFollowUp(), false, team);
 			} else if(action.contentEquals("BLOCKDICECHOICE")) {
-				lobby.getGameService(gameId).carryOutBlockChoice(message.getPlayer(), message.getOpponent(), message.getDiceChoice(), team);
+				lobby.getGameService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(), message.getOpponent(), team);
 			}
 		}
 		
