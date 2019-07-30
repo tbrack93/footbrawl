@@ -6,7 +6,6 @@ public class MessageFromClient extends Message {
 
 	private List<int[]> route;
 	private List<int[]> waypoints;
-	private int diceChoice;
 	private boolean useSkill;
 	private String skillName;
 	private boolean followUp;
@@ -21,16 +20,6 @@ public class MessageFromClient extends Message {
 
 	public void setRoute(List<int[]> route) {
 		this.route = route;
-	}
-
-
-	public int getDiceChoice() {
-		return diceChoice;
-	}
-
-
-	public void setDiceChoice(int diceChoice) {
-		this.diceChoice = diceChoice;
 	}
 
 	public boolean isUseSkill() {

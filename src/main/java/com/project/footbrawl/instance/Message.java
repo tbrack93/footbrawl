@@ -7,13 +7,14 @@ public class Message {
 
 	private String type;
 	private String action;
-	private int player;
-	private int opponent;
+	private Integer player;
+	private Integer opponent;
 	private int [] location;
 	private int[] target;
 	private String description;
 	private Integer routeMACost;
 	private String rerollChoice;
+	private Integer diceChoice;
 	
 	public Message() {
 		
@@ -35,7 +36,7 @@ public class Message {
 		this.action = action;
 	}
 
-	public int getPlayer() {
+	public Integer getPlayer() {
 		return player;
 	}
 
@@ -83,15 +84,25 @@ public class Message {
 		this.rerollChoice = rerollChoice;
 	}
 
-	public int getOpponent() {
+	public Integer getOpponent() {
 		return opponent;
 	}
 
 	public void setOpponent(int opponent) {
 		this.opponent = opponent;
 	}
-	
-	
+
+	public Integer getDiceChoice() {
+		return diceChoice;
+	}
+
+	public void setDiceChoice(Integer diceChoice) {
+		this.diceChoice = diceChoice;
+	}
+
+	public void setOpponent(Integer opponent) {
+		this.opponent = opponent;
+	}
 	
 
 }
