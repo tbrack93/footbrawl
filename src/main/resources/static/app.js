@@ -1377,9 +1377,22 @@ function showPushResult(message){
 	message.end = "N";
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	getPlayerById(message.player).location = message.target;
-	message.route = [{position: message.location}, {position: message.target}];
 	var newRolls = document.getElementById("newRolls");
-	var modalText = document.getElementById("modalOptions")
+	var modalText = document.getElementById("modalOptions");
+	message.route = [{position: message.location}, {position: message.target}];
+	if(message.description == "OFFPITCH"){
+	  modalText.innerHTML = message.playerName + " was pushed off pitch and beaten by the crowd! </br>";
+	  newRolls.innerHTML =  message.playerName + " was pushed off pitch and beaten by the crowd! </br>" + newRolls.innerHTML;
+	  removePlayer(getPlayerById(message.player));
+	  drawPlayers();
+	  setTimeout()
+	  setTimeout(function(){
+	    if(taskQueue.length != 0){
+		  (taskQueue.shift())();
+		}
+	  }, 2000);  
+	  return;
+	}
 	if(message.description == "PUSH"){
 	  modalText.innerHTML = message.playerName + " was pushed to " + message.target + "</br>";
 	  newRolls.innerHTML =  message.playerName + " was pushed to " + message.target + "</br>" + newRolls.innerHTML;
