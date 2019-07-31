@@ -37,6 +37,7 @@ var turnover;
 var inBlock;
 var lastRollLocation;
 var pushOptions;
+var followUp;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
 var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
@@ -1205,7 +1206,9 @@ function showBlock(message){
      modalOptions.appendChild(button);
      var button2 = document.createElement("BUTTON")
      button2.innerHTML = "Block";
-     button2.onclick = function() {sendCarryOutBlock(message,  document.getElementById("follow").checked)};
+     button2.onclick = function() {
+    	 followUp = document.getElementById("follow").checked;
+    	 sendCarryOutBlock(message, followUp)};
      modalOptions.appendChild(button2);
  	 squareH = modal.clientHeight/15;
      var display = document.getElementById("modal");
@@ -1280,7 +1283,7 @@ function requestBlockDiceChoice(message){
 		dice[i].addEventListener('click', (e) => {
 			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 					    JSON.stringify({"type": "ACTION", action: "BLOCKDICECHOICE", "diceChoice": event.srcElement.id, 
-					    	"player": message.player, "opponent": message.opponent}));
+					    	"player": message.player, "followUp": followUp, "opponent": message.opponent}));
 	    	});
 	}
     document.getElementById("modalOptions").innerHTML = "<p> Please select a dice.</p>";    
@@ -1324,6 +1327,7 @@ function showBlockEnd(message){
 	inModal = false;
 	inBlock = false;
 	inPush = false;
+	followUp = false;
 	drawPlayers();
 	drawBall();
 	taskQueue.length = 0;
