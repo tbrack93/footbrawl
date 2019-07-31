@@ -52,6 +52,7 @@ public class GameLobbyService {
 		skills.add(block);
 		skills.add(dodge);
 		p.setSkills(skills);
+		p2.setSkills(skills);
 		Player p4 = new Player();
 		p4.setName("Sarah");
 		p4.setMA(10);
