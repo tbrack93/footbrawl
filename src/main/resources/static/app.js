@@ -500,12 +500,15 @@ function showMovement(message){
 
 function actOnClick(click){
 	if(inPush == true){
+		console.log("in push");
 		validatePush(click);
 	}
 	if(inModal == true || inBlock == true){
+		console.log("In modal/ block");
 		return;
 	}
 	var square = determineSquare(click);
+	console.log(square);
 	var done = false;
 	players.forEach(player => {
 		 // console.log("checking");
@@ -901,7 +904,6 @@ function showBallScatter(message){
     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
     animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
     setTimeout(function(){
-     document.getElementById("modal").style.display = "block";
     // modal.style.display = "block";
    // modal.style.display = "none";
     if(taskQueue.length != 0){
@@ -1315,13 +1317,16 @@ function showSkillUsed(message){
 
 function showBlockEnd(message){
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	document.getElementById("modal").style.display = "none";
 	document.getElementById("modalImages").innerHTML = "";
 	document.getElementById("modalOptions").innerHTML = "";
+	document.getElementById("modal").style.display = "none";
+	document.getElementById("modalCanvas").style.display = "block";
 	inModal = false;
 	inBlock = false;
+	inPush = false;
 	drawPlayers();
 	drawBall();
+	taskQueue.length = 0;
 }
 
 function removePlayer(player){
@@ -1367,7 +1372,7 @@ function validatePush(click){
 function showPushResult(message){
 	message.end = "N";
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	getPlayerById(message.player).location = message.location;
+	getPlayerById(message.player).location = message.target;
 	message.route = [{position: message.location}, {position: message.target}];
 	var newRolls = document.getElementById("newRolls");
 	var modalText = document.getElementById("modalOptions")

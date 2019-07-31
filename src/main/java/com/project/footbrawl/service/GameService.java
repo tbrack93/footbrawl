@@ -1092,12 +1092,14 @@ public class GameService {
 			Runnable follow = new Runnable() {
 				@Override
 				  public void run() {
-					PlayerInGame p2 = getPlayerById(pusher);
+					p2.getTile().removePlayer();
 					origin.addPlayer(p2);
 					System.out.println(p2.getName() + " follows up to " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
 					sender.sendPushResult(game.getId(), pusher, p2.getName(), pusherLocation, pushedLocation, "FOLLOW");
 					if(!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
+					} else {
+						sender.sendBlockSuccess(game.getId(), pusher, pushed);
 					}
 				}
 			  };
@@ -1107,8 +1109,10 @@ public class GameService {
 			Runnable scatter = new Runnable() {
 				@Override
 				  public void run() {
-					scatterBall(pushChoice, 1); 
-					// method includes continuing tasks if needed
+					scatterBall(pushChoice, 1); // method includes continuing tasks if needed
+					if(taskQueue.isEmpty()) {
+						sender.sendBlockSuccess(game.getId(), pusher, pushed);
+					}
 				  }
 			  };
 			taskQueue.add(scatter); // scatter needs to happen after follow up and knockdown
@@ -1117,8 +1121,8 @@ public class GameService {
 			Runnable task = new Runnable() {
 				@Override
 				  public void run() {
-					pushChoice.addPlayer(p);
 					origin.removePlayer();
+					pushChoice.addPlayer(p);
 					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0], "PUSH");
 					if(!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
@@ -1135,8 +1139,8 @@ public class GameService {
 		  taskQueue.addFirst(task2); // must carry out final push action logic first
 		} else {
 			System.out.println("push result about to send");
-			pushChoice.addPlayer(p);
 			origin.removePlayer();
+			pushChoice.addPlayer(p);
 			sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0], "PUSH");
 			//System.out.println(defender.getName() + " is pushed back to " + pushChoice.getLocation()[0] + " "
 			//		+ pushChoice.getLocation()[1]);	
