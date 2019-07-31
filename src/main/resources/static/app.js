@@ -1321,6 +1321,8 @@ function showSkillUsed(message){
 		showBlockSkill(message);
 	} else if(message.description == "Side Step"){
 		showSideStepSkill(message);
+	} else if(message.description == "Dodge In Block"){
+		showDodgeInBlock(message);
 	}
 }
 
@@ -1420,4 +1422,11 @@ function showSideStepSkill(message){
 	}
 	modalText.innerHTML = "<br>" +message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>";
     newRolls.innerHTML =  message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>" + newRolls.innerHTML;
+}
+
+function showDodgeInBlock(message){
+	var newRolls = document.getElementById("newRolls");
+	var modalText = document.getElementById("modalText");
+	modalText.innerHTML = "<br>" +message.playerName + " used the Dodge Skill, so is just pushed back<br>";
+    newRolls.innerHTML =  message.playerName + " used the Dodge Skill, so is just pushed back<br>" + newRolls.innerHTML;
 }
