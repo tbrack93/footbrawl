@@ -278,12 +278,23 @@ public class MessageSendingService {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("PUSHCHOICE");
-		message.setPlayer(pushedId);
+		message.setPlayer(pusherId);
 		message.setOpponent(pushedId);
 		message.setLocation(pusherLocation);
 		message.setTarget(pushedLocation);
 		message.setSquares(pushOptions);
 		message.setUserToChoose(teamId);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendPushResult(int gameId, int pushedId, String pushedName, int[] pushedFrom, int[] pushedTo) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("PUSHRESULT");
+		message.setPlayer(pushedId);
+		message.setPlayerName(pushedName);
+		message.setLocation(pushedFrom);
+		message.setTarget(pushedTo);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
