@@ -1026,7 +1026,7 @@ public class GameService {
 				};
 				taskQueue.add(knock);
 			} else if(result == 4 && defender.hasSkill("Dodge")) {
-				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(), "DodgeInBlock");
+				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(), "Dodge In Block");
 			}
 			pushAction(attacker, defender, followUp);
 		}
@@ -2171,6 +2171,7 @@ public class GameService {
 			awaitingReroll = null;
 			taskQueue.pop().run();
 			if (rollType == "BLOCK") {
+				taskQueue.pop(); // kill saved task for not rerolling
 				return;
 			}
 			boolean result = false;
