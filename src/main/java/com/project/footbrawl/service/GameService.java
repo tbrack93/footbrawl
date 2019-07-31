@@ -1087,6 +1087,7 @@ public class GameService {
 		Tile pushChoice = pitch[runnableLocation[0][0]][runnableLocation[0][1]];
 		Tile origin = pitch[pushedLocation[0]][pushedLocation[1]];
 		PlayerInGame p = getPlayerById(pushed);
+		PlayerInGame p2 = getPlayerById(pusher);
 		if (followUp == true) {
 			Runnable follow = new Runnable() {
 				@Override
@@ -1094,7 +1095,7 @@ public class GameService {
 					PlayerInGame p2 = getPlayerById(pusher);
 					origin.addPlayer(p2);
 					System.out.println(p2.getName() + " follows up to " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
-					//sender.sendFollowUp(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0]);
+					sender.sendPushResult(game.getId(), pusher, p2.getName(), pusherLocation, pushedLocation, "FOLLOW");
 					if(!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
 					}
@@ -1118,7 +1119,7 @@ public class GameService {
 				  public void run() {
 					pushChoice.addPlayer(p);
 					origin.removePlayer();
-					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0]);
+					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0], "PUSH");
 					if(!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
 					}
@@ -1136,7 +1137,7 @@ public class GameService {
 			System.out.println("push result about to send");
 			pushChoice.addPlayer(p);
 			origin.removePlayer();
-			sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0]);
+			sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0], "PUSH");
 			//System.out.println(defender.getName() + " is pushed back to " + pushChoice.getLocation()[0] + " "
 			//		+ pushChoice.getLocation()[1]);	
 		}	

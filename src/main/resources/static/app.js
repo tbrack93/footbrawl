@@ -1369,10 +1369,16 @@ function showPushResult(message){
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	getPlayerById(message.player).location = message.location;
 	message.route = [{position: message.location}, {position: message.target}];
-	document.getElementById("modalOptions").innerHTML = message.playerName + " was pushed to " + message.target;
 	var newRolls = document.getElementById("newRolls");
-	newRolls.innerHTML =  message.playerName + " was pushed to " + message.target + "</br>" + newRolls.innerHTML;
-	showMoved(message, "PUSH");
+	var modalText = document.getElementById("modalOptions")
+	if(message.description == "PUSH"){
+	  modalText.innerHTML = message.playerName + " was pushed to " + message.target + "</br>";
+	  newRolls.innerHTML =  message.playerName + " was pushed to " + message.target + "</br>" + newRolls.innerHTML;
+	} else if (message.description == "FOLLOW"){
+	  modalText.innerHTML += message.playerName + " followed up to " + message.target;
+	  newRolls.innerHTML =  message.playerName + " followed up to " + message.target + "</br>" + newRolls.innerHTML;	
+	}
+	  showMoved(message, "PUSH");
 	if(taskQueue.length != 0){
     	(taskQueue.shift())();
     }

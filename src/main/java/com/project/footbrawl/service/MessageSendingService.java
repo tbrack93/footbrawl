@@ -287,7 +287,7 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
-	public void sendPushResult(int gameId, int pushedId, String pushedName, int[] pushedFrom, int[] pushedTo) {
+	public void sendPushResult(int gameId, int pushedId, String pushedName, int[] pushedFrom, int[] pushedTo, String type) {
 		MessageToClient message = new MessageToClient();
 		message.setType("ACTION");
 		message.setAction("PUSHRESULT");
@@ -295,6 +295,7 @@ public class MessageSendingService {
 		message.setPlayerName(pushedName);
 		message.setLocation(pushedFrom);
 		message.setTarget(pushedTo);
+		message.setDescription(type);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
