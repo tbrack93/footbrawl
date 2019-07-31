@@ -50,6 +50,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(), message.getLocation(), message.isFollowUp(), false, team);
 			} else if(action.contentEquals("BLOCKDICECHOICE")) {
 				lobby.getGameService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(), message.getOpponent(), team);
+			} else if(action.contentEquals("PUSHCHOICE")) {
+				lobby.getGameService(gameId).carryOutPushChoice(message.getTarget());
 			}
 		}
 		

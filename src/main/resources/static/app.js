@@ -36,6 +36,7 @@ var ballLocation;
 var turnover;
 var inBlock;
 var lastRollLocation;
+var pushOptions;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
 var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
@@ -51,7 +52,7 @@ document.addEventListener("keydown", escCheck);
 
 function init() {
 	setDraggable();
-	yourTurn = true; // just for testing
+	inPush = false;
 	players = new Array();
 	waypoints = new Array();
 	route = new Array();
@@ -466,7 +467,19 @@ function decodeMessage(message){
 		  showBlockResult(message);
 	  }	else if(message.action == "BLOCKDICECHOICE"){
 		  requestBlockDiceChoice(message);
-	  }    
+	  }  else if(message.action == "PUSHCHOICE"){
+		  requestPushChoice(message);
+	  }  else if(message.action == "PUSHRESULT"){
+		  if(animating == true){
+			  var task = function(m){
+	    		  showPushResult(m);
+	    	  };
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
+	      } else{ 	
+	    	  showPushResult(message); 
+	      }
+	  }
    }
 }
 
@@ -486,6 +499,9 @@ function showMovement(message){
 }
 
 function actOnClick(click){
+	if(inPush == true){
+		validatePush(click);
+	}
 	if(inModal == true || inBlock == true){
 		return;
 	}
@@ -622,6 +638,9 @@ function showMoved(message, type){
 		  var targetX = route[1].position[0] * squareH;
 		  var targetY = (14 - route[1].position[1]) * squareH;
 		  var speed = 10;
+		  if(type == "dodge"){
+				speed = 5;
+		   }
 		  xIncrement = (targetX - startingX) / speed;
 	      yIncrement = (targetY - startingY) / speed;
 	      if(type === "tripped"){
@@ -629,14 +648,11 @@ function showMoved(message, type){
 			console.log("tripping time");
 			speed = 5; // lower is faster
 		  }
-		  if(type === "dodge"){
-			speed = 5;
-		  }
 		  context.clearRect(startingX, startingY, squareH, squareH);
 		  context.clearRect(targetX, targetY, squareH, squareH);
 		  drawPlayerBorders();
 		  drawBall();
-		  animateMovement(message.route, 0, img, startingX, startingY, targetX, targetY, squareH, end, "N"); 
+		  animateMovement(message.route, 0, img, startingX, startingY, targetX, targetY, squareH, end, type); 
 		  player.location = route[route.length-1].position;
 	      waypoints.length = 0;
 	      inRoute = false;
@@ -645,13 +661,13 @@ function showMoved(message, type){
 	}
 }
 
-function animateMovement(route, counter, img, startingX, startingY, targetX, targetY, squareH, end, ball){
+function animateMovement(route, counter, img, startingX, startingY, targetX, targetY, squareH, end, type){
 	animationContext = animation.getContext("2d");
 	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	drawPlayerBorders();
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
-	if(ball == "Y"){
+	if(type == "BALL"){
 		animationContext.drawImage(img, newX, newY, squareH/1.5, squareH/1.5);	
 	} else{
 	animationContext.drawImage(img, newX, newY, squareH, squareH);
@@ -660,8 +676,10 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 		if(counter == route.length-1){
 			route.length = 0;
 			animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
-			if(ball == "Y"){
+			if(type == "BALL"){
 				drawBall();
+			}else if(type == "PUSH"){
+				drawPlayer(activePlayer);
 			} else if(end == "Y" || activePlayer.status == "prone"){
 		        drawPlayer(activePlayer);
 		        animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
@@ -684,7 +702,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 		xIncrement = (targetX - newX) / 10;
 	    yIncrement = (targetY - newY) / 10;
 	}
-	requestAnimationFrame(function() { animateMovement(route, counter, img, newX, newY, targetX, targetY, squareH, end, ball); });	
+	requestAnimationFrame(function() { animateMovement(route, counter, img, newX, newY, targetX, targetY, squareH, end, type); });	
 }
 
 function escCheck (e) {
@@ -881,7 +899,7 @@ function showBallScatter(message){
     console.log("route created: " + scatterRoute);
     ballLocation = message.target;
     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
-    animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "Y"); 
+    animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
     setTimeout(function(){
      document.getElementById("modal").style.display = "block";
     // modal.style.display = "block";
@@ -1195,7 +1213,7 @@ function showBlock(message){
 }
 
 function showBlockAssists(message){
-	var sContext = squares.getContext("2d");
+	 var sContext = squares.getContext("2d");
 	 sContext.clearRect(0, 0, squares.width, squares.height);
 	 sContext.save();
 	 var squareH = canvas.height / 15;
@@ -1311,5 +1329,51 @@ function removePlayer(player){
       if ( players[i].id == player.id) {
 	    players.splice(i, 1); 
 	  }
+    }
+}
+
+function requestPushChoice(message){
+	console.log("In request push choice");
+	var sContext = squares.getContext("2d");
+	sContext.clearRect(0, 0, squares.width, squares.height);
+	sContext.save();
+	var squareH = canvas.height / 15;
+	sContext.globalAlpha = 0.6;
+    sContext.fillStyle = "red";
+    sContext.fillRect(message.target[0] * squareH, (14 - message.target[1]) * squareH, squareH, squareH);
+    sContext.fillStyle = "white";
+    message.squares.forEach(function(square){
+  	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
+    });
+    pushOptions = message.squares;
+    if(message.userToChoose == team){
+      document.getElementById("modalOptions").innerHTML = "Please select where to push";
+  	  inPush = true;
+    } else{
+    	 document.getElementById("modalOptions").innerHTML = "Awaiting opponent's push choice";
+    }
+}
+
+function validatePush(click){
+	var square = determineSquare(click);
+	for(var i = 0 ; i < pushOptions.length; i++){
+		if(square[0] == pushOptions[i].position[0] && square[1] == pushOptions[i].position[1]){
+			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	                 JSON.stringify({"type": "ACTION", "action": "PUSHCHOICE", "target": square}));
+		}
+	}
+}
+
+function showPushResult(message){
+	message.end = "N";
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	getPlayerById(message.player).location = message.location;
+	message.route = [{position: message.location}, {position: message.target}];
+	document.getElementById("modalOptions").innerHTML = message.playerName + " was pushed to " + message.target;
+	var newRolls = document.getElementById("newRolls");
+	newRolls.innerHTML =  message.playerName + " was pushed to " + message.target + "</br>" + newRolls.innerHTML;
+	showMoved(message, "PUSH");
+	if(taskQueue.length != 0){
+    	(taskQueue.shift())();
     }
 }

@@ -980,7 +980,7 @@ public class GameService {
 		if (!rerollOptions.isEmpty()) {
 			awaitingReroll = new String[] { "Y", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
 		} else {
-			awaitingReroll = new String[] { "Y", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
+			awaitingReroll = new String[] { "N", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
 		}
 		return;
 	}
@@ -1006,25 +1006,21 @@ public class GameService {
 			}
 		} else if (result >= 2) { // push: 2 and 3
 			Tile follow = defender.getTile();
-			pushAction(attacker, defender, false);
-			if (followUp == true) {
-				followUp(attacker, follow);
-			}
-			if (result == 4 && !defender.hasSkill("dodge") || // defender stumbles
-					result == 5) { // defender down
-				knockDown(defender);
-			}
+			pushAction(attacker, defender, followUp);
+//			if (result == 4 && !defender.hasSkill("dodge") || // defender stumbles
+//					result == 5) { // defender down
+//				knockDown(defender);
+//			}
 		}
 		if (ballToScatter != null) { // ball has to scatter after all other actions
-				scatterBall(ballToScatter, 1);
-				ballToScatter = null;
+			scatterBall(ballToScatter, 1);
+			ballToScatter = null;
 		}
-		endOfAction(attacker);
+		//endOfAction(attacker);
 		if (attacker.getStatus() != "standing") {
 			turnover();
-		} else {
+		} else if (result < 2) { // end will be shown within push flow
 			sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
-			
 		}
 	}
 
@@ -1053,34 +1049,100 @@ public class GameService {
 		return new int[] { dice, strongerTeam };
 	}
 
-	public void pushAction(PlayerInGame attacker, PlayerInGame defender, boolean secondary) {
+	public void pushAction(PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
 		List<Tile> push = calculatePushOptions(attacker, defender);
 		if (push.isEmpty()) {
 			pushOffPitch(defender);
 		} else {
-			Tile pushChoice = push.get(getPushChoice(push,
-					defender.hasSkill("Side step") && !secondary ? defender.getTeamIG() : activeTeam));
-			if (pushChoice.containsPlayer()) {
-				pushAction(defender, pushChoice.getPlayer(), true);
-			} else {
-				Tile origin = defender.getTile();
-				pushChoice.addPlayer(defender);
-				origin.removePlayer();
-				System.out.println(defender.getName() + " is pushed back to " + pushChoice.getLocation()[0] + " "
-						+ pushChoice.getLocation()[1]);
-				if (secondary == true) {
-					followUp(attacker, origin);
-				}
-				if (pushChoice.containsBall()) {
-					ballToScatter = pushChoice; // scatter needs to happen after follow up and knockdown
-				}
+			ArrayList<jsonTile> jPush = new ArrayList<>();
+			for (Tile t : push) {
+				jsonTile jt = new jsonTile(t);
+				jt.setTackleZones(null);
+				jPush.add(jt);
 			}
+			Runnable task = new Runnable() {
+				@Override
+				public void run() {
+					carryOutPush(attacker.getId(), defender.getId(), attacker.getLocation(), defender.getLocation(),
+							push, followUp);
+				}
+			};
+			taskQueue.addFirst(task);
+			sender.requestPushChoice(game.getId(), attacker.getId(), defender.getId(), attacker.getLocation(),
+					defender.getLocation(), jPush,
+					defender.hasSkill("Side step") ? defender.getTeamIG().getId() : activeTeam.getId());
 		}
 	}
 
-	public int getPushChoice(List<Tile> options, TeamInGame team) {
-		// placeholder for handling getting push direction choice from relevant user
-		return 0;
+	public void carryOutPush(int pusher, int pushed, int[] pusherLocation, int[] pushedLocation, List<Tile> options, boolean followUp) {
+		boolean valid = false;
+		for(Tile t : options) {
+		   	if(Arrays.equals(t.getLocation(), runnableLocation[0])){
+		   		valid = true;
+		   	}
+		}
+	    if(valid == false) {
+	    	throw new IllegalArgumentException("not a valid choice");
+	    }
+		Tile pushChoice = pitch[runnableLocation[0][0]][runnableLocation[0][1]];
+		Tile origin = pitch[pushedLocation[0]][pushedLocation[1]];
+		PlayerInGame p = getPlayerById(pushed);
+		if (followUp == true) {
+			Runnable follow = new Runnable() {
+				@Override
+				  public void run() {
+					PlayerInGame p2 = getPlayerById(pusher);
+					origin.addPlayer(p2);
+					System.out.println(p2.getName() + " follows up to " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
+					//sender.sendFollowUp(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0]);
+					if(!taskQueue.isEmpty()) {
+						taskQueue.pop().run();
+					}
+				}
+			  };
+			taskQueue.add(follow); // follow up happens after pushes, before scatter or knockdown
+		}
+		if (pushChoice.containsBall()) {
+			Runnable scatter = new Runnable() {
+				@Override
+				  public void run() {
+					scatterBall(pushChoice, 1); 
+					// method includes continuing tasks if needed
+				  }
+			  };
+			taskQueue.add(scatter); // scatter needs to happen after follow up and knockdown
+		}
+		if (pushChoice.containsPlayer()) {
+			Runnable task = new Runnable() {
+				@Override
+				  public void run() {
+					pushChoice.addPlayer(p);
+					origin.removePlayer();
+					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0]);
+					if(!taskQueue.isEmpty()) {
+						taskQueue.pop().run();
+					}
+				  }
+			  };
+			Runnable task2 = new Runnable() {
+			  @Override
+			  public void run() {
+				pushAction(getPlayerById(pushed), pushChoice.getPlayer(), false);
+			  }
+		  };
+		  taskQueue.addFirst(task); // must carry out final push movement first
+		  taskQueue.addFirst(task2); // must carry out final push action logic first
+		} else {
+			System.out.println("push result about to send");
+			pushChoice.addPlayer(p);
+			origin.removePlayer();
+			sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0]);
+			//System.out.println(defender.getName() + " is pushed back to " + pushChoice.getLocation()[0] + " "
+			//		+ pushChoice.getLocation()[1]);	
+		}	
+		if(!taskQueue.isEmpty()) {
+			taskQueue.pop().run();
+		}
 	}
 
 	public List<Tile> calculatePushOptions(PlayerInGame attacker, PlayerInGame defender) {
@@ -1845,22 +1907,14 @@ public class GameService {
 			}
 		} else if (rollResult.equals("failed") && rerollOptions.size() > 0 && actionsNeeded > 0) {
 			Runnable task2 = new Runnable() {
-				@Override
-				public void run() {
-					System.out.println("carrying on rolls after reroll");
-					continueAction(playerId, route, jsonMoved, teamId);
-				}
-			};
-			taskQueue.add(1, task2);
-		}
-		if (p.isHasBall()) {
-			System.out.println("checking for touchdown");
-			if ((route.get(jsonMoved.size() - 1)[0] == 0 && p.getTeamIG() == team2)
-					|| route.get(jsonMoved.size() - 1)[0] == 25 && p.getTeamIG() == team1) {
-				touchdown(p);
-			}
-		}
+
+	@Override
+	public void run() {
+		System.out.println("carrying on rolls after reroll");
+		continueAction(playerId, route, jsonMoved, teamId);
 	}
+
+	};taskQueue.add(1,task2);}if(p.isHasBall()){System.out.println("checking for touchdown");if((route.get(jsonMoved.size()-1)[0]==0&&p.getTeamIG()==team2)||route.get(jsonMoved.size()-1)[0]==25&&p.getTeamIG()==team1){touchdown(p);}}}
 
 	public List<Tile> movePlayerRouteAction(PlayerInGame p, List<Tile> route) {
 		List<Tile> movedSoFar = new ArrayList<>();
@@ -1918,43 +1972,40 @@ public class GameService {
 			if (tempT.getTackleZones() != 0) {
 				actionsNeeded++;
 				Runnable task = new Runnable() {
+
+	@Override
+	public void run() {
+		System.out.println("In runnable dodge 1");
+		System.out.println(taskQueue.size());
+		boolean result = dodgeAction(p, tempT, t);
+		runnableLocation = tempLocation;
+		if (result == false) {
+			rerollOptions = determineRerollOptions("DODGE", p.getId(), tempLocation);
+			if (!rerollOptions.isEmpty()) { // only save task if opportunity for
+											// reroll
+				System.out.println("In runnable dodge 2");
+				awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
+
+				Runnable task = new Runnable() {
+
 					@Override
 					public void run() {
-						System.out.println("In runnable dodge 1");
-						System.out.println(taskQueue.size());
-						boolean result = dodgeAction(p, tempT, t);
+						runnableResults.add(dodgeAction(p, tempT, t));
 						runnableLocation = tempLocation;
-						if (result == false) {
-							rerollOptions = determineRerollOptions("DODGE", p.getId(), tempLocation);
-							if (!rerollOptions.isEmpty()) { // only save task if opportunity for
-															// reroll
-								System.out.println("In runnable dodge 2");
-								awaitingReroll = new String[] { "Y", "DODGE", "" + p.getId() };
-
-								Runnable task = new Runnable() {
-
-									@Override
-									public void run() {
-										runnableResults.add(dodgeAction(p, tempT, t));
-										runnableLocation = tempLocation;
-									}
-
-								};
-								taskQueue.addFirst(task);
-							} else {
-								awaitingReroll = new String[] { "N", "DODGE", "" + p.getId() };
-							}
-						} else {
-							rerollOptions.clear();
-						}
-						runnableResults.add(result);
 					}
+
 				};
-				taskQueue.add(task);
+				taskQueue.addFirst(task);
+			} else {
+				awaitingReroll = new String[] { "N", "DODGE", "" + p.getId() };
 			}
-			if (t.containsBall()) {
-				actionsNeeded++;
-				Runnable task = new Runnable() {
+		} else {
+			rerollOptions.clear();
+		}
+		runnableResults.add(result);
+	}};taskQueue.add(task);}if(t.containsBall()){actionsNeeded++;
+
+	Runnable task = new Runnable() {
 					@Override 
 					public void run() {
 						System.out.println("In runnable PICKUPBALL 1");
@@ -1985,16 +2036,9 @@ public class GameService {
 					}
 				};
 				taskQueue.add(task);
-			}
-
-			if (actionsNeeded > 0) {
-				return movedSoFar;
-			}
-			System.out.println(p.getName() + " moved to: " + t.getLocation()[0] + " " + t.getLocation()[1]);
-			movedSoFar.add(t);
-		}
-		return movedSoFar;
 	}
+
+	if(actionsNeeded>0){return movedSoFar;}System.out.println(p.getName()+" moved to: "+t.getLocation()[0]+" "+t.getLocation()[1]);movedSoFar.add(t);}return movedSoFar;}
 
 	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
 		List<String> results = new ArrayList<>();
@@ -2077,10 +2121,11 @@ public class GameService {
 			taskQueue.pop();
 			taskQueue.pop().run();
 			return;
-		} if(ballToScatter != null) {
+		}
+		if (ballToScatter != null) {
 			scatterBall(ballToScatter, 1);
 		}
-		if(p.getStatus() != "standing" || ballToScatter != null) {
+		if (p.getStatus() != "standing" || ballToScatter != null) {
 			ballToScatter = null;
 			turnover();
 		}
@@ -2149,4 +2194,10 @@ public class GameService {
 		// getPlayerById(opponent), true); // need to sort out follow up
 
 	}
+
+    public void carryOutPushChoice(int[] choice) {
+	  runnableLocation = new int[][]{choice};
+	  taskQueue.pop().run();
+    }
+
 }
