@@ -1126,6 +1126,8 @@ public class GameService {
 					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, runnableLocation[0], "PUSH");
 					if(!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
+					} else {
+						sender.sendBlockSuccess(game.getId(), pusher, pushed);
 					}
 				  }
 			  };
@@ -1192,16 +1194,6 @@ public class GameService {
 		}
 	}
 
-	public void followUp(PlayerInGame p, Tile to) {
-		p.getTile().removePlayer();
-		to.addPlayer(p);
-		System.out.println(p.getName() + " follows up to " + to.getLocation()[0] + " " + to.getLocation()[1]);
-	}
-
-	public int getBlockChoice(int[] dice, int team) {
-		// placeholder
-		return 0;
-	}
 
 	public void touchdown(PlayerInGame p) {
 		System.out.println(p.getName() + " scored a touchdown!");
@@ -2191,10 +2183,10 @@ public class GameService {
 		}
 	}
 
-	public void carryOutBlockChoice(int diceChoice, int player, int opponent, int team) {
+	public void carryOutBlockChoice(int diceChoice, int player, int opponent, boolean followUp, int team) {
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		blockChoiceAction(2, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
+		blockChoiceAction(2, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 		// blockChoiceAction(rolled.get(diceChoice), getPlayerById(player),
 		// getPlayerById(opponent), true); // need to sort out follow up
 
