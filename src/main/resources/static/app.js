@@ -362,7 +362,7 @@ function decodeMessage(message){
 			   setTimeout(function(){
 				   console.log("Block ended");
 				   showBlockEnd(message);
-			   } , 3000);  	
+			   } , 2500);  	
 		}else if(message.action == "SKILLUSED"){
 			console.log("skill used");
 			if(animating == true){
