@@ -1379,7 +1379,4 @@ function showPushResult(message){
 	  newRolls.innerHTML =  message.playerName + " followed up to " + message.target + "</br>" + newRolls.innerHTML;	
 	}
 	  showMoved(message, "PUSH");
-	if(taskQueue.length != 0){
-    	(taskQueue.shift())();
-    }
 }
