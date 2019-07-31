@@ -1109,31 +1109,15 @@ public class GameService {
 		Tile origin = pitch[pushedLocation[0]][pushedLocation[1]];
 		PlayerInGame p = getPlayerById(pushed);
 		PlayerInGame p2 = getPlayerById(pusher);
-		if (followUp == true) {
-			Runnable follow = new Runnable() {
-				@Override
-				public void run() {
-					p2.getTile().removePlayer();
-					origin.addPlayer(p2);
-					System.out.println(
-							p2.getName() + " follows up to " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
-					sender.sendPushResult(game.getId(), pusher, p2.getName(), pusherLocation, pushedLocation, "FOLLOW");
-					if (!taskQueue.isEmpty()) {
-						taskQueue.pop().run();
-					} else {
-						sender.sendBlockSuccess(game.getId(), pusher, pushed);
-					}
-				}
-			};
-			taskQueue.add(follow); // follow up happens after pushes, before scatter or knockdown
-		}
 		if (pushChoice.containsBall()) {
 			Runnable scatter = new Runnable() {
 				@Override
 				public void run() {
-					scatterBall(pushChoice, 1); // method includes continuing tasks if needed
+					scatterBall(pushChoice, 1);
 					if (taskQueue.isEmpty()) {
 						sender.sendBlockSuccess(game.getId(), pusher, pushed);
+					} else {
+						taskQueue.pop().run();
 					}
 				}
 			};
@@ -1174,6 +1158,8 @@ public class GameService {
 		}
 		if (!taskQueue.isEmpty()) {
 			taskQueue.pop().run();
+		} else {
+			sender.sendBlockSuccess(game.getId(), pusher, pushed);
 		}
 	}
 
@@ -1216,9 +1202,11 @@ public class GameService {
 			Runnable scatter = new Runnable() {
 				@Override
 				public void run() {
-					scatterBall(origin, 1); // method includes continuing tasks if needed
+					scatterBall(origin, 1);
 					if (taskQueue.isEmpty()) {
 						sender.sendBlockSuccess(game.getId(), pusher.getId(), pushed.getId());
+					} else {
+						taskQueue.pop().run();
 					}
 				}
 			};
@@ -1230,6 +1218,7 @@ public class GameService {
 						turnover(); 
 					}
 				};
+			taskQueue.add(task2); // scatter needs to happen after follow up and knockdown
 			}
 		}
 		if(taskQueue.size() > 0) {
@@ -2255,6 +2244,7 @@ public class GameService {
 	}
 
 	public void carryOutBlockChoice(int diceChoice, int player, int opponent, boolean followUp, int team) {
+		getPlayerById(player).setActionOver(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
 		blockChoiceAction(2, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
