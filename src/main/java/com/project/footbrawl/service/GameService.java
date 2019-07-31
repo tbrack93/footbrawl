@@ -1022,7 +1022,7 @@ public class GameService {
 		endOfAction(attacker);
 		if (attacker.getStatus() != "standing") {
 			turnover();
-		} else {
+		} else if(result <2){ // end will be shown within push flow
 			sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
 			
 		}
@@ -1058,24 +1058,33 @@ public class GameService {
 		if (push.isEmpty()) {
 			pushOffPitch(defender);
 		} else {
-			Tile pushChoice = push.get(getPushChoice(push,
-					defender.hasSkill("Side step") && !secondary ? defender.getTeamIG() : activeTeam));
-			if (pushChoice.containsPlayer()) {
-				pushAction(defender, pushChoice.getPlayer(), true);
-			} else {
-				Tile origin = defender.getTile();
-				pushChoice.addPlayer(defender);
-				origin.removePlayer();
-				System.out.println(defender.getName() + " is pushed back to " + pushChoice.getLocation()[0] + " "
-						+ pushChoice.getLocation()[1]);
-				if (secondary == true) {
-					followUp(attacker, origin);
-				}
-				if (pushChoice.containsBall()) {
-					ballToScatter = pushChoice; // scatter needs to happen after follow up and knockdown
-				}
+			ArrayList<jsonTile> jPush = new ArrayList<>();
+			for(Tile t : push) {
+				jsonTile jt = new jsonTile(t);
+				jt.setTackleZones(null);
+				jPush.add(jt);
 			}
+			sender.requestPushChoice(game.getId(), attacker.getId(), defender.getId(), attacker.getLocation(), defender.getLocation(), jPush, defender.hasSkill("Side step") && !secondary ? defender.getTeamIG().getId() : activeTeam.getId());
 		}
+	}
+	
+	public void carryOutPushChoice(PlayerInGame attacker, PlayerInGame defender, int[][] location, int[][] target, boolean secondary) {
+//		if (pushChoice.containsPlayer()) {
+//			pushAction(defender, pushChoice.getPlayer(), true);
+//		} else {
+//			Tile origin = defender.getTile();
+//			pushChoice.addPlayer(defender);
+//			origin.removePlayer();
+//			System.out.println(defender.getName() + " is pushed back to " + pushChoice.getLocation()[0] + " "
+//					+ pushChoice.getLocation()[1]);
+//			if (secondary == true) {
+//				followUp(attacker, origin);
+//			}
+//			if (pushChoice.containsBall()) {
+//				ballToScatter = pushChoice; // scatter needs to happen after follow up and knockdown
+//			}
+//		}
+	//}
 	}
 
 	public int getPushChoice(List<Tile> options, TeamInGame team) {

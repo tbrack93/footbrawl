@@ -274,4 +274,17 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
+	public void requestPushChoice(int gameId, int pusherId, int pushedId, int[] pusherLocation, int[] pushedLocation, List<jsonTile> pushOptions, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("PUSHCHOICE");
+		message.setPlayer(pushedId);
+		message.setOpponent(pushedId);
+		message.setLocation(pusherLocation);
+		message.setTarget(pushedLocation);
+		message.setSquares(pushOptions);
+		message.setUserToChoose(teamId);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
 }

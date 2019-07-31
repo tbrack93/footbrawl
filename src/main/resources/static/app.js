@@ -36,6 +36,7 @@ var ballLocation;
 var turnover;
 var inBlock;
 var lastRollLocation;
+var pushOptions;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
 var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
@@ -51,7 +52,7 @@ document.addEventListener("keydown", escCheck);
 
 function init() {
 	setDraggable();
-	yourTurn = true; // just for testing
+	inPush = false;
 	players = new Array();
 	waypoints = new Array();
 	route = new Array();
@@ -466,7 +467,9 @@ function decodeMessage(message){
 		  showBlockResult(message);
 	  }	else if(message.action == "BLOCKDICECHOICE"){
 		  requestBlockDiceChoice(message);
-	  }    
+	  }  else if(message.action == "PUSHCHOICE"){
+		  requestPushChoice(message);
+	  } 
    }
 }
 
@@ -486,6 +489,9 @@ function showMovement(message){
 }
 
 function actOnClick(click){
+	if(inPush == true){
+		validatePush(click);
+	}
 	if(inModal == true || inBlock == true){
 		return;
 	}
@@ -1195,7 +1201,7 @@ function showBlock(message){
 }
 
 function showBlockAssists(message){
-	var sContext = squares.getContext("2d");
+	 var sContext = squares.getContext("2d");
 	 sContext.clearRect(0, 0, squares.width, squares.height);
 	 sContext.save();
 	 var squareH = canvas.height / 15;
@@ -1312,4 +1318,33 @@ function removePlayer(player){
 	    players.splice(i, 1); 
 	  }
     }
+}
+
+function requestPushChoice(message){
+	console.log("In request push chocie");
+	inPush = true;
+	var sContext = squares.getContext("2d");
+	sContext.clearRect(0, 0, squares.width, squares.height);
+	sContext.save();
+	var squareH = canvas.height / 15;
+	sContext.globalAlpha = 0.6;
+    sContext.fillStyle = "red";
+    sContext.fillRect(message.target[0] * squareH, (14 - message.target[1]) * squareH, squareH, squareH);
+    sContext.fillStyle = "white";
+    message.squares.forEach(function(square){
+  	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
+    });
+    pushOptions = message.squares;
+    document.getElementById("modalOptions").innerHTML = "Please select where to push";
+}
+
+function validatePush(click){
+	var square = determineSquare(click);
+	for(var i = 0 ; i < pushOptions.length; i++){
+		if(square[0] == pushOptions[i].position[0] && square[1] == pushOptions[i].position[1]){
+			 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	                 JSON.stringify({"type": "ACTION", "action": "PUSHCHOICE", "target": square}));
+		}
+	}
+    console.log("Square clicked not a valid option");
 }
