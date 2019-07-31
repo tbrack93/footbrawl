@@ -358,7 +358,25 @@ function decodeMessage(message){
 		    showBlockDiceChoice(message);
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
-		} else{ if(message.action == "ARMOURROLL"){
+		} else if(message.action == "BLOCKOVER"){
+			   setTimeout(function(){
+				   console.log("Block ended");
+				   showBlockEnd(message);
+			   } , 3000);  	
+		}else if(message.action == "SKILLUSED"){
+			console.log("skill used");
+			if(animating == true){
+				  var task = function(m){
+					  console.log("showing skill use in task");
+						showSkillUsed(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 
+		    	  console.log("showing skill use immediately");
+		    		showSkillUsed(message);
+		      }
+		}else{ if(message.action == "ARMOURROLL"){
 			if(animating == true){
 				  var task = function(m){
 						showArmourRoll(message);
@@ -380,7 +398,7 @@ function decodeMessage(message){
 		      }
 		} else if(message.action == "TURNOVER"){
 			turnover = true;
-			if(animating == true){
+			if(animating == true || inBlock == true){
 				  var task = function(m){
 					  showTurnover(message);
 		    	  };
@@ -842,7 +860,7 @@ function showBallScatter(message){
 	console.log("scattering");
 	animating = true;
 	modal.style.display = "none";
-	//document.getElementById("modal").style.display = "none";
+	// document.getElementById("modal").style.display = "none";
 	newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>"
 	var ballImg = new Image();
@@ -1000,6 +1018,16 @@ function showRerollUsed(message){
     	}
     }
 
+function showBlockSkill(message){
+	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
+	var newRolls = document.getElementById("newRolls");
+	newRolls.innerHTML =  message.playerName + " used the block skill and remained in place." + "</br>" + newRolls.innerHTML;
+	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + " used the block skill and remained in place. </p>";
+	if(taskQueue.length != 0){
+    	(taskQueue.shift())();
+    }
+}
+
 function showArmourRoll(message){
 	console.log("showing armour");
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
@@ -1021,15 +1049,21 @@ function showInjuryRoll(message){
 	console.log("showing Injury");
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " was "+ message.rollOutcome + ". " + "Rolled: " + message.rolled + "</br>" + newRolls.innerHTML;
-	//var existing = document.getElementById("modalOptions").innerHTML;
+	// var existing = document.getElementById("modalOptions").innerHTML;
 	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + " is " + message.rollOutcome + "." + "</p>";
 	var player = getPlayerById(message.player);
     player.status = message.playerStatus;
-    player.location = message.location;
     player.hasBall = false;
-    drawPlayer(player);
+    if(message.location == null){
+    	removePlayer(player);
+    	var squareH = canvas.height / 15;
+    	context.clearRect(player.location[0] * squareH-5, (14 - player.location[1]) * squareH-5, squareH+10,squareH+10);
+    	drawPlayerBorders();
+    } else{
+        player.location = message.location;
+    	drawPlayer(player);
+    }
     document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	// drawPlayers();
 	if(taskQueue.length != 0){
     	(taskQueue.shift())();
     }
@@ -1253,4 +1287,29 @@ function cancelBlock(player){
 	inModal = false;
 	inBlock = false;
 	resetMovement();
+}
+
+function showSkillUsed(message){
+	if(message.description == "Block"){
+		showBlockSkill(message);
+	}
+}
+
+function showBlockEnd(message){
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("modal").style.display = "none";
+	document.getElementById("modalImages").innerHTML = "";
+	document.getElementById("modalOptions").innerHTML = "";
+	inModal = false;
+	inBlock = false;
+	drawPlayers();
+	drawBall();
+}
+
+function removePlayer(player){
+	for(var i = 0; i < players.length; i++){ 
+      if ( players[i].id == player.id) {
+	    players.splice(i, 1); 
+	  }
+    }
 }

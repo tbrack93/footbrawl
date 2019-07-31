@@ -252,7 +252,26 @@ public class MessageSendingService {
 		message.setUserToChoose(teamId);
 		message.setTeamName(teamName);
 		controller.sendMessageToBothUsers(gameId, message);	
-		
+	}
+
+	public void sendSkillUsed(int gameId, int playerId, String playerName, int team, String details) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("SKILLUSED");
+		message.setPlayer(playerId);
+		message.setPlayerName(playerName);
+		message.setUserToChoose(team); // team player belongs to
+		message.setDescription(details);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendBlockSuccess(int gameId, int attacker, int defender) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("BLOCKOVER");
+		message.setPlayer(attacker);
+		message.setOpponent(defender);
+		controller.sendMessageToBothUsers(gameId, message);
 	}
 
 }

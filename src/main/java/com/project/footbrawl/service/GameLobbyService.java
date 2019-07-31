@@ -46,10 +46,10 @@ public class GameLobbyService {
 		p3.setST(3);
 		p3.setAV(2);
 		p3.setAV(6);
-		//Skill block = new Skill("Block", "blocking is fun", "block");
+		Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		List<Skill> skills = new ArrayList<>();
-	//	skills.add(block);
+		skills.add(block);
 		skills.add(dodge);
 		p.setSkills(skills);
 		Player p4 = new Player();

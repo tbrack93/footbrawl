@@ -37,7 +37,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 1, 6, 6, 1, 4, 3, 6, 4, 2, 4, 1, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 6, 6, 1, 6, 6, 6, 6, 6, 6, 6, 6, 4, 1, 6, 6, 6, 6 }));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -993,11 +993,13 @@ public class GameService {
 			knockDown(attacker);
 		} else if (result == 1) { // both down
 			if (defender.hasSkill("Block")) {
+				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(), "Block");
 				System.out.println(defender.getName() + " used block skill");
 			} else {
 				knockDown(defender);
 			}
 			if (attacker.hasSkill("Block")) {
+				sender.sendSkillUsed(game.getId(), attacker.getId(), attacker.getName(), attacker.getTeam(), "Block");
 				System.out.println(attacker.getName() + " used block skill");
 			} else {
 				knockDown(attacker);
@@ -1020,6 +1022,9 @@ public class GameService {
 		endOfAction(attacker);
 		if (attacker.getStatus() != "standing") {
 			turnover();
+		} else {
+			sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
+			
 		}
 	}
 
