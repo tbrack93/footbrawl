@@ -2144,7 +2144,7 @@ public class GameService {
 	public void carryOutBlockChoice(int diceChoice, int player, int opponent, int team) {
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
+		blockChoiceAction(2, getPlayerById(player), getPlayerById(opponent), true); // need to sort out follow up
 		// blockChoiceAction(rolled.get(diceChoice), getPlayerById(player),
 		// getPlayerById(opponent), true); // need to sort out follow up
 
