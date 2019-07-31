@@ -1315,6 +1315,8 @@ function cancelBlock(player){
 function showSkillUsed(message){
 	if(message.description == "Block"){
 		showBlockSkill(message);
+	} else if(message.description == "Side Step"){
+		showSideStepSkill(message);
 	}
 }
 
@@ -1342,6 +1344,9 @@ function removePlayer(player){
 }
 
 function requestPushChoice(message){
+	if(inPush == true){
+		document.getElementById("modalText").innerHTML = "";
+	}
 	console.log("In request push choice");
 	var sContext = squares.getContext("2d");
 	sContext.clearRect(0, 0, squares.width, squares.height);
@@ -1355,9 +1360,9 @@ function requestPushChoice(message){
   	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
     });
     pushOptions = message.squares;
+    inPush = true;
     if(message.userToChoose == team){
       document.getElementById("modalOptions").innerHTML = "Please select where to push";
-  	  inPush = true;
     } else{
     	 document.getElementById("modalOptions").innerHTML = "Awaiting opponent's push choice";
     }
@@ -1385,7 +1390,6 @@ function showPushResult(message){
 	  newRolls.innerHTML =  message.playerName + " was pushed off pitch and beaten by the crowd! </br>" + newRolls.innerHTML;
 	  removePlayer(getPlayerById(message.player));
 	  drawPlayers();
-	  setTimeout()
 	  setTimeout(function(){
 	    if(taskQueue.length != 0){
 		  (taskQueue.shift())();
@@ -1401,4 +1405,15 @@ function showPushResult(message){
 	  newRolls.innerHTML =  message.playerName + " followed up to " + message.target + "</br>" + newRolls.innerHTML;	
 	}
 	  showMoved(message, "PUSH");
+}
+
+function showSideStepSkill(message){
+	var newRolls = document.getElementById("newRolls");
+	var modalText = document.getElementById("modalText");
+	var chooser = "your opponent chooses "
+	if(message.userToChoose == team){
+		chooser = "you choose ";
+	}
+	modalText.innerHTML = "<br>" +message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>";
+    newRolls.innerHTML =  message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>" + newRolls.innerHTML;
 }

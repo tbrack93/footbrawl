@@ -456,7 +456,7 @@ public class GameService {
 	}
 
 	// for internal endTurn actions (from within this object)
-	public void endTurn() { // may be additional steps or user actions at end of turn
+	public void endTurn() { // may be additional Steps or user actions at end of turn
 		awaitingReroll = null;
 		inPassOrHandOff = false;
 		activePlayer = null;
@@ -1088,9 +1088,13 @@ public class GameService {
 				}
 			};
 			taskQueue.addFirst(task);
+			int userToChoose = activeTeam.getId();
+			if(defender.hasSkill("Side Step") && defender.getTeam() != activeTeam.getId()) {
+				userToChoose = defender.getTeam();
+				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(), "Side Step");
+			}
 			sender.requestPushChoice(game.getId(), attacker.getId(), defender.getId(), attacker.getLocation(),
-					defender.getLocation(), jPush,
-					defender.hasSkill("Side step") ? defender.getTeamIG().getId() : activeTeam.getId());
+					defender.getLocation(), jPush, userToChoose);
 		}
 	}
 
