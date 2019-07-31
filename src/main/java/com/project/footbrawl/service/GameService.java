@@ -37,8 +37,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 1, 6, 6, 6, 6, 6, 6, 6, 6, 4, 1, 6, 6, 6, 6 }));
-	private static boolean testing = true;
+			Arrays.asList(new Integer[] { 4, 1, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -1011,7 +1011,7 @@ public class GameService {
 				Runnable knock = new Runnable(){
 					@Override 
 					public void run(){
-					if(defender.getStatus() == "standing") { // don't do knockdown if already been pushed off pitch	
+					if(team1.getPlayersOnPitch().contains(defender) || team2.getPlayersOnPitch().contains(defender)) { // don't do knockdown if already been pushed off pitch	
 					  knockDown(defender);
 					}
 					if(ballToScatter != null) {
@@ -1739,16 +1739,17 @@ public class GameService {
 		p2.setHasTackleZones(false);
 		addTackleZones(p2);
 		List<PlayerInGame> support = new ArrayList<>(p2.getTile().getTacklers());
-		List<PlayerInGame> results = new ArrayList<>();
+		List<PlayerInGame> results = new ArrayList<>(); // to prevent concurrent modification errors
 		results.addAll(support);
-		if (!support.isEmpty()) {
+		if (support != null && !support.isEmpty()) {
 			for (PlayerInGame p : support) {
 				addTackleZones(p);
-				Set<PlayerInGame> tacklers = p.getTile().getTacklers();
-				if (!tacklers.isEmpty()) {
-					for (PlayerInGame q : tacklers) {
+				Set<PlayerInGame> tacklers = p.getTile().getTacklers(); // set so unique
+				ArrayList<PlayerInGame> tacklersA = new ArrayList<>(tacklers); // to prevent concurrent modification errors
+				if (tacklersA != null && !tacklersA.isEmpty()) {
+					for (PlayerInGame q : tacklersA) {
 						addTackleZones(q);
-						if (!q.getTile().getTacklers().isEmpty()) {
+						if (q.getTile().getTacklers() != null && !q.getTile().getTacklers().isEmpty()) {
 							results.remove(p);
 						}
 					}
@@ -2274,9 +2275,8 @@ public class GameService {
 		getPlayerById(player).setActionOver(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		blockChoiceAction(4, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
-		// blockChoiceAction(rolled.get(diceChoice), getPlayerById(player),
-		// getPlayerById(opponent), true); // need to sort out follow up
+		//blockChoiceAction(5, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
+		 blockChoiceAction(rolled.get(diceChoice), getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 
 	}
 
