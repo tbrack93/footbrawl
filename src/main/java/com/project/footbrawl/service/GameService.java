@@ -1051,8 +1051,28 @@ public class GameService {
 
 	public void pushAction(PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
 		List<Tile> push = calculatePushOptions(attacker, defender);
+		if(followUp == true) {
+		  Tile target = defender.getTile();
+		  Tile origin = attacker.getTile();
+		  Runnable follow = new Runnable() {
+				@Override
+				public void run() {
+					attacker.getTile().removePlayer();
+					target.addPlayer(attacker);
+					System.out.println(
+							attacker.getName() + " follows up to " + target.getLocation()[0] + " " + target.getLocation()[1]);
+					sender.sendPushResult(game.getId(), attacker.getId(), attacker.getName(), origin.getLocation(), target.getLocation(), "FOLLOW");
+					if (!taskQueue.isEmpty()) {
+						taskQueue.pop().run();
+					} else {
+						sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
+					}
+				}
+			};
+			taskQueue.add(follow); // follow up happens after pushes, before scatter or knockdown
+		}
 		if (push.isEmpty()) {
-			pushOffPitch(defender);
+			pushOffPitch(attacker, defender);
 		} else {
 			ArrayList<jsonTile> jPush = new ArrayList<>();
 			for (Tile t : push) {
@@ -1181,23 +1201,42 @@ public class GameService {
 		return options.size() > 0 ? options : noEmptyOptions;
 	}
 
-	public void pushOffPitch(PlayerInGame p) {
-		System.out.println(p.getName() + " was pushed into the crowd and gets beaten!");
-		injuryRoll(p);
-		if (p.getStatus() == "stunned") {
-			System.out.println(p.getName() + " was put back in reserves");
-			p.setStatus("standing");
-			p.getTile().removePlayer();
-			p.getTeamIG().addToReserves(p);
+	public void pushOffPitch(PlayerInGame pusher, PlayerInGame pushed) {
+		System.out.println(pushed.getName() + " was pushed into the crowd and gets beaten!");
+		sender.sendPushResult(game.getId(), pushed.getId(), pushed.getName(), pushed.getLocation(), null, "OFFPITCH");
+		Tile origin = pushed.getTile();
+		injuryRoll(pushed);
+		if (pushed.getStatus() == "stunned") {
+			System.out.println(pushed.getName() + " was put back in reserves");
+			pushed.setStatus("standing");
+			pushed.getTile().removePlayer();
+			pushed.getTeamIG().addToReserves(pushed);
 		}
-		if (p.isHasBall()) {
-			p.setHasBall(false);
-			scatterBall(p.getTile(), 1);
-			if (p.getTeamIG() == activeTeam) {
-				turnover();
+		if (pushed.isHasBall()) {
+			Runnable scatter = new Runnable() {
+				@Override
+				public void run() {
+					scatterBall(origin, 1); // method includes continuing tasks if needed
+					if (taskQueue.isEmpty()) {
+						sender.sendBlockSuccess(game.getId(), pusher.getId(), pushed.getId());
+					}
+				}
+			};
+			taskQueue.add(scatter); // scatter needs to happen after follow up and knockdown
+			if (pushed.getTeamIG() == activeTeam) { // only turnover if player on active team and had ball
+				Runnable task2 = new Runnable() {
+					@Override
+					public void run() {
+						turnover(); 
+					}
+				};
 			}
 		}
+		if(taskQueue.size() > 0) {
+		taskQueue.pop().run();
+		}
 	}
+	
 
 	public void touchdown(PlayerInGame p) {
 		System.out.println(p.getName() + " scored a touchdown!");
