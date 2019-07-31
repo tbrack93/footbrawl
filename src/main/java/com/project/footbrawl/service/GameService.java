@@ -1005,12 +1005,30 @@ public class GameService {
 				knockDown(attacker);
 			}
 		} else if (result >= 2) { // push: 2 and 3
-			Tile follow = defender.getTile();
+			if (result == 4 && !defender.hasSkill("Dodge") || // defender stumbles
+					result == 5) { // defender down
+				System.out.println("stumble time");
+				Runnable knock = new Runnable(){
+					@Override 
+					public void run(){
+					if(defender.getStatus() == "standing") { // don't do knockdown if already been pushed off pitch	
+					  knockDown(defender);
+					}
+					if(ballToScatter != null) {
+						scatterBall(ballToScatter, 1);
+					}
+					if(taskQueue.size()>0) {
+						taskQueue.pop().run();
+					} else {
+					sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
+					}
+				}
+				};
+				taskQueue.add(knock);
+			} else if(result == 4 && defender.hasSkill("Dodge")) {
+				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(), "DodgeInBlock");
+			}
 			pushAction(attacker, defender, followUp);
-//			if (result == 4 && !defender.hasSkill("dodge") || // defender stumbles
-//					result == 5) { // defender down
-//				knockDown(defender);
-//			}
 		}
 		if (ballToScatter != null) { // ball has to scatter after all other actions
 			scatterBall(ballToScatter, 1);
@@ -1069,7 +1087,11 @@ public class GameService {
 					}
 				}
 			};
-			taskQueue.add(follow); // follow up happens after pushes, before scatter or knockdown
+			if(taskQueue.size()>0) {
+			  taskQueue.add(taskQueue.size()-1, follow); // in case knockdown, needs to be before this
+			} else {
+			  taskQueue.add(follow); // follow up happens after pushes, before scatter or knockdown
+			}
 		}
 		if (push.isEmpty()) {
 			pushOffPitch(attacker, defender);
@@ -1284,13 +1306,13 @@ public class GameService {
 		} else {
 			// possibility to use apothecary, etc. here
 			if (total <= 9) {
-				System.out.println(p.getName() + " is KO'd");
-				outcome = "KO'd and removed from the pitch";
+				System.out.println(p.getName() + " is KO'd and sent to the dugout");
+				outcome = "KO'd and sent to the dugout";
 				p.setStatus("KO");
 				p.getTeamIG().addToDugout(p);
 			} else {
-				System.out.println(p.getName() + " is injured");
-				outcome = "injured and removed from the pitch";
+				System.out.println(p.getName() + " is injured and sent to the injury box");
+				outcome = "injured and sent to the injury box";
 				p.setStatus("injured");
 				p.getTeamIG().addToInjured(p);
 			}
@@ -2251,7 +2273,7 @@ public class GameService {
 		getPlayerById(player).setActionOver(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		blockChoiceAction(2, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
+		blockChoiceAction(4, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 		// blockChoiceAction(rolled.get(diceChoice), getPlayerById(player),
 		// getPlayerById(opponent), true); // need to sort out follow up
 

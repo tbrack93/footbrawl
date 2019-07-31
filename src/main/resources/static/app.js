@@ -361,10 +361,14 @@ function decodeMessage(message){
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
 		} else if(message.action == "BLOCKOVER"){
-			   setTimeout(function(){
-				   console.log("Block ended");
-				   showBlockEnd(message);
-			   } , 2500);  	
+			var task = function(m){
+				 setTimeout(function(){
+					   console.log("Block ended");
+					   showBlockEnd(message);
+				   } , 2000); 
+	    	  };
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
 		}else if(message.action == "SKILLUSED"){
 			console.log("skill used");
 			if(animating == true){
