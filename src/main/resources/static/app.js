@@ -190,6 +190,9 @@ function drawPlayer(player) {
 			  drawPlayer(player);
 			  return;
 		  }
+		  if(getPlayerById(player.id) == null){ // in case taken off pitch in meantime
+			  return;
+		  }
 		  context.save();
 		  context.globalAlpha = 1;
 			var column = player.location[0];
@@ -249,6 +252,9 @@ function drawBall(){
 	  var img = new Image();
 	  img.src = "/images/ball.png";
 	  img.onload = function() {
+		  if(ballLocation == null){
+			  return;
+		  }
 		  context.save();
 		  context.globalAlpha = 1;
 			var column = ballLocation[0];
@@ -366,7 +372,15 @@ function decodeMessage(message){
 		    showRoute(message);
 		    showBlock(message, true);
 	    }else if(message.action == "BLOCKDICECHOICE"){
-		    showBlockDiceChoice(message);
+	    	if(animating == true || turnover == true){
+				  var task = function(m){
+					  showBlockDiceChoice(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showBlockDiceChoice(message); 
+		      }
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
 		} else if(message.action == "BLOCKOVER"){
@@ -413,13 +427,15 @@ function decodeMessage(message){
 		      }
 		} else if(message.action == "TURNOVER"){
 			turnover = true;
-			if(animating == true || inBlock == true){
+			if(animating == true){
+				console.log("saving turnover");
 				  var task = function(m){
 					  showTurnover(message);
 		    	  };
 		    	  var t = animateWrapFunction(task, this, [message]);
 		    	  taskQueue.push(t);
 		      } else{ 	
+		    	  console.log("going straight to turnover");
 		    	  showTurnover(message); 
 		      }
 		} else if(message.action == "NEWTURN"){
@@ -488,7 +504,15 @@ function decodeMessage(message){
 	    	  showBlockResult(message);
 	      }
 	  }	else if(message.action == "BLOCKDICECHOICE"){
-		  requestBlockDiceChoice(message);
+		  if(animating == true){
+			  var task = function(m){
+				  requestBlockDiceChoice(message);
+	    	  };
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
+	      } else{ 	
+	    	  requestBlockDiceChoice(message);
+	      }
 	  }  else if(message.action == "PUSHCHOICE"){
 		  requestPushChoice(message);
 	  }  else if(message.action == "PUSHRESULT"){
@@ -703,6 +727,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 	animationContext.drawImage(img, newX, newY, squareH, squareH);
 	}
 	if(Math.round(newX) == Math.round(targetX) && Math.round(newY) == Math.round(targetY)){
+		console.log("finished route");
 		if(counter == route.length-1){
 			route.length = 0;
 			animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
@@ -874,6 +899,7 @@ function showGFIResult(message){
 }
 
 function showPickUpResult(message){
+	animating = true;
 	inPickup = true;
 	if(!(lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
 			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1]))){ 
@@ -889,7 +915,7 @@ function showPickUpResult(message){
 		 ballLocation = null;
 	 }
 	 if(message.end == "Y"){
-			if(taskQueue.length == 0){
+			if(taskQueue.length == 0 && message.rollOutcome != "failed"){
                  drawPlayer(getPlayerById(message.player));
                  drawBall();
 			}
@@ -900,9 +926,9 @@ function showPickUpResult(message){
 			   inPickup = false;
 			}
 		}
-	 if(taskQueue.length > 0){
-		  (taskQueue.shift())();
-	}	
+//	 if(taskQueue.length > 0){
+//		  (taskQueue.shift())();
+//	}	
 }
 
 function showBallScatter(message){
@@ -916,16 +942,16 @@ function showBallScatter(message){
 	  ballImg.src = "/images/ball.png";
       ballImg.onload = function() { 
        var squareH = canvas.height / 15;
-      context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
        var p = getPlayerWithBall();
+       squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+       var startingX = message.location[0] * squareH + squareH/3;
+       var startingY = (14 - message.location[1]) * squareH + squareH/3;
+       context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
        if(p != null){
     	 console.log(p.name);
     	 p.hasBall = false;
-    	 drawPlayer(p);
       }
-      squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-      var startingX = message.location[0] * squareH + squareH/3;
-      var startingY = (14 - message.location[1]) * squareH + squareH/3;
+      drawPlayers();
       var targetX = message.target[0] * squareH + squareH/3;
       var targetY = (14 - message.target[1]) * squareH + squareH/3;
       var speed = 25;
@@ -956,7 +982,6 @@ var animateWrapFunction = function(func, context, params) {
 }
 
 function showFailedAction(message){
-	animationContext.clearRect(0,0, animation.width, animation.height);
 	inModal = true;
 	console.log("showingFailed");
 	var shadow = modal.getContext("2d");
@@ -964,6 +989,7 @@ function showFailedAction(message){
     shadow.globalAlpha = 0.4;
     shadow.fillStyle = "black";
     shadow.fillRect(0,0, modal.width, modal.height);
+    animationContext.clearRect(0,0, animation.width, animation.height);
     var player = getPlayerById(message.player); 
     var column = message.target[0];
 	var row = 14 - message.target[1];
@@ -1121,6 +1147,7 @@ function showInjuryRoll(message){
     	drawPlayer(player);
     }
     document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    console.log("injury tasks left: " + taskQueue.length);
 	if(taskQueue.length != 0){
     	(taskQueue.shift())();
     }
@@ -1252,6 +1279,7 @@ function showBlock(message, blitz){
         	 followUp = document.getElementById("follow").checked;
         	 sendCarryOutBlitz(message, followUp, route);
         	 document.getElementById("modal").style.display = "none"; 
+        	 modalMain.innerHTML = "";
          }; 
      } else{
        button2.onclick = function() {
@@ -1336,6 +1364,9 @@ function showBlockResult(message){
  	display.style.display = "block";
  	display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
  	display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+ 	if(taskQueue.length >0){
+      (taskQueue.shift())();
+ 	}
 }
 
 function requestBlockDiceChoice(message){
@@ -1396,6 +1427,7 @@ function showBlockEnd(message){
 	inPush = false;
 	followUp = false;
 	drawPlayers();
+	drawPlayerBorders();
 	drawBall();
 	taskQueue.length = 0;
 	if(message.description == "BLITZ"){
@@ -1513,4 +1545,13 @@ function getPlayerWithBall(){
 			return players[i];
 		}
 	}
+}
+
+function findPlayerInSquare(square){
+	for(var i = 0; i < players.length; i++){
+	   if(players[i].location[0] == square[0] && players[i].location[1] == square[1]) {
+		   return players[i];
+	   }
+    }
+	return null;
 }
