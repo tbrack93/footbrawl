@@ -744,6 +744,7 @@ public class GameService {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
 		}
 		attacker.getTeamIG().setBlitzed(true); // counts as blitzed even if movement fails, etc.
+		sender.sendBlitzUsed(game.getId(), attacker.getTeam());
 		blitz = new Runnable() {
 			@Override
 			public void run() {
@@ -2254,6 +2255,10 @@ public class GameService {
 
 	public void sendBlockDetails(int player, int opponent, int[] location, int team) {
 		PlayerInGame attacker = getPlayerById(player);
+		actionCheck(attacker);
+		if(attacker.isActedThisTurn()) {
+			throw new IllegalArgumentException("Can't block after acting, except when blitzing");
+		}
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] block = calculateBlock(getPlayerById(player), pitch[location[0]][location[1]], getPlayerById(opponent));
 		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
