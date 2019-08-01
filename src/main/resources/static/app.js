@@ -1176,6 +1176,8 @@ function showNewTurn(message){
 	inModal = false;
 	inBlock = false;
 	inPickup = false;
+	document.getElementById("team1Blitzed").innerHTML = "Not Blitzed This Turn";
+	document.getElementById("team2Blitzed").innerHTML = "Not Blitzed This Turn";
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -1559,7 +1561,7 @@ function findPlayerInSquare(square){
 }
 
 function showBlitzUsed(message){
-	if(message.UserToChoose == team1){
+	if(message.userToChoose == team1.id){
 		document.getElementById("team1Blitzed").innerHTML = "Has Blitzed This Turn";
 	} else {
 		document.getElementById("team2Blitzed").innerHTML = "Has Blitzed This Turn";
