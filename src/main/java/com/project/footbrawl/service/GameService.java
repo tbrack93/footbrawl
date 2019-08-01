@@ -18,10 +18,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.entity.Game;
-import com.project.footbrawl.entity.Player;
-import com.project.footbrawl.entity.Skill;
-import com.project.footbrawl.entity.Team;
-import com.project.footbrawl.instance.MessageToClient;
 import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
 import com.project.footbrawl.instance.Tile;
@@ -37,8 +33,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 4, 1, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
-	private static boolean testing = true;
+			Arrays.asList(new Integer[] { 6, 6, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -78,6 +74,7 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private boolean inTurnover;
+	private Runnable blitz;
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -741,34 +738,50 @@ public class GameService {
 		return totalRoute;
 	}
 
-	public void blitzAction(PlayerInGame attacker, List<int[]> waypoints, int[] goal, boolean followUp) {
+	public void blitzAction(PlayerInGame attacker, PlayerInGame defender, List<int[]> route, boolean followUp) {
 		actionCheck(attacker);
 		if (attacker.getTeamIG().hasBlitzed()) {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
 		}
-		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
-		PlayerInGame defender = pitch[goal[0]][goal[1]].getPlayer();
 		attacker.getTeamIG().setBlitzed(true); // counts as blitzed even if movement fails, etc.
-		movePlayerRouteAction(attacker, route);
-		if (attacker.getStatus().equals("standing")) { // only if movement was successful
-			blockAction(attacker, defender, followUp);
-			if (attacker.getStatus() == "standing") {
-				attacker.setActionOver(false); // player blitzing can move, etc. after
+		blitz = new Runnable() {
+			@Override
+			public void run() {
+				if (attacker.getStatus().equals("standing")) { // only if movement was successful
+					carryOutBlock(attacker.getId(), defender.getId(), route.get(route.size()-1), followUp, false, attacker.getTeam());
+				}
 			}
-		}
+		};
+		carryOutRouteAction(attacker.getId(), route, attacker.getTeam());
 	}
 
-	public void calculateBlitz(PlayerInGame attacker, List<int[]> waypoints, int[] goal) {
+	public void sendBlitzDetails(Integer player, Integer defender, List<int[]> waypoints, int[] goal, int team) {
+		PlayerInGame attacker = getPlayerById(player);
 		actionCheck(attacker);
 		if (attacker.getTeamIG().hasBlitzed()) {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
 		}
+		Tile target = pitch[goal[0]][goal[1]];
+		if(target.containsPlayer() == false || target.getPlayer().getTeam() == attacker.getTeam()||!Arrays.equals(target.getLocation(), goal)) {
+			throw new IllegalArgumentException("Invalid target");
+		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
-		PlayerInGame opponent = pitch[goal[0]][goal[1]].getPlayer();
+		List<jsonTile> jRoute = jsonRoute(route);
+		PlayerInGame opponent = target.getPlayer();
 		int[] block = calculateBlock(attacker, route.get(route.size() - 1), opponent);
 		System.out.println();
 		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
 				+ " chooses");
+		int routeMACost;
+		if (route.isEmpty()) {
+			routeMACost = 0;
+		} else {
+			routeMACost = jRoute.size() - 1 + (jRoute.get(1).getStandUpRoll() != null ? 3 : 0);
+		}
+		int[][] attLocations = getJsonFriendlyAssists(attacker, opponent);
+		int[][] defLocations = getJsonFriendlyAssists(opponent, attacker);
+		sender.sendBlitzDetails(game.getId(), attacker.getId(), opponent.getId(), route.get(route.size()-1).getLocation(),
+				               opponent.getLocation(), attLocations, defLocations, jRoute, routeMACost, block, attacker.getTeam());
 	}
 
 	public List<Tile> calculateBlitzRoute(PlayerInGame attacker, List<int[]> waypoints, int[] goal) {
@@ -788,6 +801,9 @@ public class GameService {
 			route = getOptimisedRoute(attacker.getId(), attacker.getLocation(), goal);
 		}
 		target = pitch[goal[0]][goal[1]];
+		if(route.isEmpty()) {
+			throw new IllegalArgumentException("Cant reach there");
+		}
 		route.remove(route.size() - 1); // remove movement to opponent's square
 		target.addPlayer(opponent);
 		return route;
@@ -966,6 +982,9 @@ public class GameService {
 
 	public void blockAction(PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
 		actionCheck(attacker);
+		if(attacker.isActedThisTurn() && blitz == null) {
+			throw new IllegalArgumentException("Can't act and then block unless blitzing");
+		}
 		int[] dice = calculateBlock(attacker, attacker.getTile(), defender);
 		System.out.println(attacker.getName() + " blocks " + defender.getName());
 		int[] rolls = diceRoller(dice[0], 6);
@@ -1020,7 +1039,7 @@ public class GameService {
 					if(taskQueue.size()>0) {
 						taskQueue.pop().run();
 					} else {
-					sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
+					  sendBlockSuccess(attacker, defender);
 					}
 				}
 				};
@@ -1038,7 +1057,7 @@ public class GameService {
 		if (attacker.getStatus() != "standing") {
 			turnover();
 		} else if (result < 2) { // end will be shown within push flow
-			sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
+			sendBlockSuccess(attacker, defender);
 		}
 	}
 
@@ -1083,7 +1102,7 @@ public class GameService {
 					if (!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
 					} else {
-						sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId());
+						sendBlockSuccess(attacker, defender);
 					}
 				}
 			};
@@ -1141,7 +1160,7 @@ public class GameService {
 				public void run() {
 					scatterBall(pushChoice, 1);
 					if (taskQueue.isEmpty()) {
-						sender.sendBlockSuccess(game.getId(), pusher, pushed);
+						sendBlockSuccess(getPlayerById(pusher), getPlayerById(pushed));
 					} else {
 						taskQueue.pop().run();
 					}
@@ -1161,7 +1180,7 @@ public class GameService {
 					if (!taskQueue.isEmpty()) {
 						taskQueue.pop().run();
 					} else {
-						sender.sendBlockSuccess(game.getId(), pusher, pushed);
+						sendBlockSuccess(getPlayerById(pusher), getPlayerById(pushed));
 					}
 				}
 			};
@@ -1185,7 +1204,7 @@ public class GameService {
 		if (!taskQueue.isEmpty()) {
 			taskQueue.pop().run();
 		} else {
-			sender.sendBlockSuccess(game.getId(), pusher, pushed);
+			sendBlockSuccess(getPlayerById(pusher), getPlayerById(pushed));
 		}
 	}
 
@@ -1231,7 +1250,7 @@ public class GameService {
 				public void run() {
 					scatterBall(origin, 1);
 					if (taskQueue.isEmpty()) {
-						sender.sendBlockSuccess(game.getId(), pusher.getId(), pushed.getId());
+						sendBlockSuccess(pusher, pushed);
 					} else {
 						taskQueue.pop().run();
 					}
@@ -1880,11 +1899,15 @@ public class GameService {
 			jsonMoved.add(jt);
 		}
 		if (jsonMoved.size() > 1) {
-			String end = "Y";
-			if (jsonMoved.size() != route.size()) { // if smaller, means a roll carried out
-				end = "N";
+			String end = "N";
+			if (jsonMoved.size() == route.size() && taskQueue.size() == 0 && blitz == null) { // if smaller, means a roll carried out
+				end = "Y";
 			}
 			sender.sendRouteAction(game.getId(), playerId, jsonMoved, end);
+			if(taskQueue.size() == 0 && blitz != null) {
+				blitz.run();
+				return;
+			}
 		}
 		if (p.isHasBall()) {
 			System.out.println("checking for touchdown");
@@ -1895,6 +1918,12 @@ public class GameService {
 		}
 		if (actionsNeeded > 0) {
 			continueAction(playerId, route, jsonMoved, teamId);
+		} else {
+			if(taskQueue.size() > 0) {
+				taskQueue.pop().run();
+			} else if(blitz != null) {
+				blitz.run();
+			}
 		}
 	}
 
@@ -1934,7 +1963,7 @@ public class GameService {
 		}
 		String finalRoll = "N";
 		if (Arrays.equals(runnableLocation[1], route.get(route.size() - 1))
-				&& (awaitingReroll == null || awaitingReroll[0] == "N") && actionsNeeded == 0) {
+				&& (awaitingReroll == null || awaitingReroll[0] == "N") && actionsNeeded == 0 && blitz == null) {
 			finalRoll = "Y";
 		}
 		PlayerInGame p = getPlayerById(playerId);
@@ -1950,7 +1979,12 @@ public class GameService {
 				continueAction(playerId, route, jsonMoved, teamId);
 			} else {
 				awaitingReroll = null;
-				carryOutRouteAction(playerId, remaining, teamId);
+				if(finalRoll == "N") {
+				  carryOutRouteAction(playerId, remaining, teamId);
+				  return;
+				} else if(blitz != null) {
+					blitz.run();
+				}
 			}
 		} else if (rerollOptions.isEmpty()) {
 			System.out.println("end of the line");
@@ -2184,8 +2218,7 @@ public class GameService {
 				e.printStackTrace();
 			}
 			String end = "N";
-			System.out.println("Tasks left: " + taskQueue.size());
-			if (result == true && taskQueue.isEmpty()) {
+			if (result == true && taskQueue.isEmpty() && blitz == null) {
 				end = "Y";
 			}
 			sender.sendRollResult(game.getId(), playerId, p.getName(), rollType, rollNeeded, rolled, rollResult,
@@ -2194,6 +2227,8 @@ public class GameService {
 				if (!taskQueue.isEmpty()) {
 					System.out.println("continuing route");
 					taskQueue.pop().run();
+				} else if(blitz != null) {
+					blitz.run();
 				}
 				return;
 			}
@@ -2273,17 +2308,36 @@ public class GameService {
 	}
 
 	public void carryOutBlockChoice(int diceChoice, int player, int opponent, boolean followUp, int team) {
-		getPlayerById(player).setActionOver(true);
+		if(blitz == null) {
+			getPlayerById(player).setActionOver(true);
+		}
+		getPlayerById(player).setActedThisTurn(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		//blockChoiceAction(5, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
-		 blockChoiceAction(5, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
+		System.out.println("dice choice: " + diceChoice);
+		System.out.println("rolled: " + rolled.get(0));
+		System.out.println("rolled: " + rolled.get(1));
+		System.out.println("chosen: " + rolled.get(diceChoice));
+		blockChoiceAction(rolled.get(diceChoice) -1, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
+		// blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 
 	}
 
 	public void carryOutPushChoice(int[] choice) {
 		runnableLocation = new int[][] { choice };
 		taskQueue.pop().run();
+	}
+
+	public void carryOutBlitz(Integer player, Integer opponent, List<int[]> route, int[] target, boolean followUp, int team) {
+		blitzAction(getPlayerById(player), getPlayerById(opponent), route, followUp);	
+	}
+	
+	public void sendBlockSuccess(PlayerInGame attacker, PlayerInGame defender) {
+		if(blitz != null && activePlayer.getStatus() == "standing") {
+			  //activePlayer.setActionOver(false);
+		 }
+		  sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId(), blitz != null);
+		  blitz = null;
 	}
 
 }

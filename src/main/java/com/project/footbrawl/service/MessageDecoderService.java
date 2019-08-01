@@ -38,6 +38,9 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).sendBlockDetails(message.getPlayer(), message.getOpponent(), message.getLocation(), team);
 				return;
 			}
+			if(action.equals("BLITZ")) {
+				lobby.getGameService(gameId).sendBlitzDetails(message.getPlayer(), message.getOpponent(), message.getWaypoints(), message.getTarget(), team);
+			}
 		}else if(type.equals("ACTION")) {
 			if(action.equals("ROUTE")){
 				lobby.getGameService(gameId).carryOutRouteAction(message.getPlayer(), message.getRoute(), team);
@@ -48,7 +51,9 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).endTurn(team);
 			} else if(action.equals("BLOCK")){
 				lobby.getGameService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(), message.getLocation(), message.isFollowUp(), false, team);
-			} else if(action.contentEquals("BLOCKDICECHOICE")) {
+			} else if(action.equals("BLITZ")){
+				lobby.getGameService(gameId).carryOutBlitz(message.getPlayer(), message.getOpponent(), message.getRoute(), message.getTarget(), message.isFollowUp(), team);
+		    } else if(action.contentEquals("BLOCKDICECHOICE")) {
 				lobby.getGameService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(), message.getOpponent(), message.isFollowUp(), team);
 			} else if(action.contentEquals("PUSHCHOICE")) {
 				lobby.getGameService(gameId).carryOutPushChoice(message.getTarget());

@@ -50,7 +50,7 @@ public class GameLobbyService {
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		Skill sideStep = new Skill("Side Step", "Who do you think you're pushing?", "block");
 		List<Skill> skills = new ArrayList<>();
-		skills.add(block);
+		//skills.add(block);
 		skills.add(dodge);
 		skills.add(sideStep);
 		p.setSkills(skills);
@@ -65,7 +65,7 @@ public class GameLobbyService {
 		p4.setSkills(skills);
 		Player p5 = new Player();
 		p5.setName("Bob");
-		p5.setMA(4);
+		p5.setMA(10);
 		p5.setAG(2);
 		p5.setTeam(1);
 		p5.setST(3);
@@ -95,9 +95,10 @@ public class GameLobbyService {
 		gs.pitch[5][6].addPlayer(team2Players.get(0));
 		gs.pitch[0][1].addPlayer(team2Players.get(1));
 		gs.pitch[5][7].addPlayer(team1Players.get(1));
-		gs.pitch[9][9].addPlayer(team1Players.get(2));
+		gs.pitch[11][11].addPlayer(team1Players.get(2));
 		//team2Players.get(1).setHasBall(true);
 		team2Players.get(0).setHasBall(true);
+		//gs.pitch[7][7].addBall();
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
 		gs.team2.setTurn(3);
