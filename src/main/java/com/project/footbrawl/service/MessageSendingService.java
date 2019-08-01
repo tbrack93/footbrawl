@@ -14,6 +14,7 @@ import com.project.footbrawl.controller.GameMessageController;
 import com.project.footbrawl.instance.MessageToClient;
 import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
+import com.project.footbrawl.instance.Tile;
 import com.project.footbrawl.instance.jsonTile;
 
 @Service
@@ -213,6 +214,26 @@ public class MessageSendingService {
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
 
+// keeping this seperate rather than using route + block messages to reduce interference with other methods/ actions
+public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLocation, int[] blitzTarget, 
+		                   int[][] attAssists, int[][]defAssists, List<jsonTile> route, int routeMACost, int[] block, int team) {
+	MessageToClient message = new MessageToClient();
+	message.setType("INFO");
+	message.setAction("BLITZ");
+	message.setNumberOfDice(block[0]);
+	message.setUserToChoose(block[1]);
+	message.setPlayer(player);
+	message.setOpponent(opponent);
+	message.setAttAssists(attAssists);
+	message.setDefAssists(defAssists);
+	message.setLocation(blitzLocation);
+	message.setTarget(blitzTarget);
+	message.setRouteMACost(routeMACost);
+	message.setPlayer(player);
+	message.setRoute(route);
+	controller.sendMessageToUser(gameId, team, message);
+}
+
 	public void sendBlockDiceResult(int gameId, int player, String playerName, int opponent, String opponentName, int[] location, int[] target,
 		List<Integer> rolled, int[][] attAssists, int[][] defAssists, List<String> rerollOptions, boolean reroll, int teamId) {
 		MessageToClient message = new MessageToClient();
@@ -265,12 +286,13 @@ public class MessageSendingService {
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
-	public void sendBlockSuccess(int gameId, int attacker, int defender) {
+	public void sendBlockSuccess(int gameId, int attacker, int defender, boolean blitz) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("BLOCKOVER");
 		message.setPlayer(attacker);
 		message.setOpponent(defender);
+		message.setDescription((blitz == true ? "BLITZ" : "BLOCK"));
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
@@ -298,5 +320,7 @@ public class MessageSendingService {
 		message.setDescription(type);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	
 
 }

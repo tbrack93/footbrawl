@@ -186,7 +186,6 @@ function drawPlayer(player) {
 			img.src = player.imgUrl;
 		}
 	  img.onload = function() {
-		  console.log(this.src);
 		  if(player.hasBall == false && !this.src.includes(player.imgUrl)){ // in case lost ball since request to draw made
 			  drawPlayer(player);
 			  return;
@@ -362,8 +361,11 @@ function decodeMessage(message){
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		} else if(message.action == "BLOCK"){
-			showBlock(message);
-	    } else if(message.action == "BLOCKDICECHOICE"){
+			showBlock(message, false);
+	    } else if(message.action == "BLITZ"){
+		    showRoute(message);
+		    showBlock(message, true);
+	    }else if(message.action == "BLOCKDICECHOICE"){
 		    showBlockDiceChoice(message);
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
@@ -476,7 +478,15 @@ function decodeMessage(message){
 	    	  showBallScatter(message); 
 	      }
 	  } else if(message.action == "BLOCK"){
-		  showBlockResult(message);
+		  if(animating == true){
+			  var task = function(m){
+				  showBlockResult(message);
+	    	  };
+	    	  var t = animateWrapFunction(task, this, [message]);
+	    	  taskQueue.push(t);
+	      } else{ 	
+	    	  showBlockResult(message);
+	      }
 	  }	else if(message.action == "BLOCKDICECHOICE"){
 		  requestBlockDiceChoice(message);
 	  }  else if(message.action == "PUSHCHOICE"){
@@ -538,6 +548,11 @@ function actOnClick(click){
 				                 JSON.stringify({"type": "INFO", "action": "BLOCK", "player": activePlayer.id,
 					                 "location": activePlayer.location, "opponent": player.id}));
 						
+					} else{
+						stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+				                 JSON.stringify({"type": "INFO", "action": "BLITZ", "player": activePlayer.id,
+					                 "location": activePlayer.location, "opponent": player.id, 
+					                 "target": square, "waypoints": waypoints}));
 					}
 				}else{
 			     var pTemp = activePlayer;
@@ -1196,10 +1211,14 @@ function showTouchdown(message){
 	alert(message.playerName + " scored a touchdown for Team " + message.teamName + "!");
 }
 
-function showBlock(message){
-	inBlock = true;
+function showBlock(message, blitz){
+	 inBlock = true;
 	 showBlockAssists(message);
+	 if(blitz == true){
+		 document.getElementById("modalTitle").innerHTML = "Blitz Details"; 
+	 } else {
      document.getElementById("modalTitle").innerHTML = "Block Details";
+	 }
  	 var modalMain = document.getElementById("modalImages");
  	 modalMain.innerHTML = ""; 
  	 var blankDice = new Image();
@@ -1227,9 +1246,19 @@ function showBlock(message){
      modalOptions.appendChild(button);
      var button2 = document.createElement("BUTTON")
      button2.innerHTML = "Block";
-     button2.onclick = function() {
+     if(blitz == true){
+    	 button2.innerHTML = "Blitz";
+    	 button2.onclick = function() {
+        	 followUp = document.getElementById("follow").checked;
+        	 sendCarryOutBlitz(message, followUp, route);
+        	 document.getElementById("modal").style.display = "none"; 
+         }; 
+     } else{
+       button2.onclick = function() {
     	 followUp = document.getElementById("follow").checked;
-    	 sendCarryOutBlock(message, followUp)};
+    	 sendCarryOutBlock(message, followUp)
+       };
+     }
      modalOptions.appendChild(button2);
  	 squareH = modal.clientHeight/15;
      var display = document.getElementById("modal");
@@ -1264,8 +1293,21 @@ function sendCarryOutBlock(message, follow){
                 "location": message.location, "opponent": message.opponent, "followUp": follow}));
 }
 
+function sendCarryOutBlitz(message, follow, route){
+	var messageRoute = new Array();
+	route.forEach(tile => {
+		var t = tile.position;
+		messageRoute.push(t);
+	});
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "BLITZ", "player": message.player,
+                "location": message.location, "opponent": message.opponent, "followUp": follow, 
+                "route": messageRoute}));
+}
+
 function showBlockResult(message){
 	inBlock = true;
+	drawPlayer(getPlayerById(message.player));
 	showBlockAssists(message);
 	document.getElementById("modalTitle").innerHTML = message.playerName + " blocks " + message.opponentName;
 	document.getElementById("modalText").innerHTML = "";
@@ -1356,6 +1398,12 @@ function showBlockEnd(message){
 	drawPlayers();
 	drawBall();
 	taskQueue.length = 0;
+	if(message.description == "BLITZ"){
+		var player = getPlayerById(message.player);
+		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
+                "location": player.location, "routeMACost": 0}));
+	}
 }
 
 function removePlayer(player){
