@@ -2311,9 +2311,14 @@ public class GameService {
 		if(blitz == null) {
 			getPlayerById(player).setActionOver(true);
 		}
+		getPlayerById(player).setActedThisTurn(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
-		blockChoiceAction(rolled.get(diceChoice -1), getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
+		System.out.println("dice choice: " + diceChoice);
+		System.out.println("rolled: " + rolled.get(0));
+		System.out.println("rolled: " + rolled.get(1));
+		System.out.println("chosen: " + rolled.get(diceChoice));
+		blockChoiceAction(rolled.get(diceChoice) -1, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 		// blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 
 	}
