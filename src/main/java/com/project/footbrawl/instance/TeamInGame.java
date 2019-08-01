@@ -80,6 +80,10 @@ public class TeamInGame {
 		playersOnPitch.add(player);
 	}
 	
+	public void removePlayerFromPitch(PlayerInGame player) {
+		playersOnPitch.remove(player);
+	}
+	
 	public void endTurn() {
 		for(PlayerInGame p : playersOnPitch) {
 			p.endTurn();

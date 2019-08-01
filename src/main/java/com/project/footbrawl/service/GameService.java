@@ -38,7 +38,7 @@ public class GameService {
 
 	private static List<Integer> diceRolls = new ArrayList<>(
 			Arrays.asList(new Integer[] { 4, 1, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
-	private static boolean testing = false;
+	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -1217,11 +1217,12 @@ public class GameService {
 		System.out.println(pushed.getName() + " was pushed into the crowd and gets beaten!");
 		sender.sendPushResult(game.getId(), pushed.getId(), pushed.getName(), pushed.getLocation(), null, "OFFPITCH");
 		Tile origin = pushed.getTile();
-		injuryRoll(pushed);
+		injuryRoll(pushed); // if KO'd or injured it will remove them from pitch
 		if (pushed.getStatus() == "stunned") {
 			System.out.println(pushed.getName() + " was put back in reserves");
 			pushed.setStatus("standing");
 			pushed.getTile().removePlayer();
+			pushed.getTeamIG().removePlayerFromPitch(pushed);
 			pushed.getTeamIG().addToReserves(pushed);
 		}
 		if (pushed.isHasBall()) {
@@ -2276,7 +2277,7 @@ public class GameService {
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
 		//blockChoiceAction(5, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
-		 blockChoiceAction(rolled.get(diceChoice), getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
+		 blockChoiceAction(5, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 
 	}
 
