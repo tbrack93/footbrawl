@@ -458,6 +458,8 @@ function decodeMessage(message){
 		      } else{ 	
 		    	  showTouchdown(message); 
 		      }
+		} else if(message.action == "TEAMBLITZED"){
+			showBlitzUsed(message);
 		}
 		}
 	} else if(message.type == "ACTION"){
@@ -1554,4 +1556,12 @@ function findPlayerInSquare(square){
 	   }
     }
 	return null;
+}
+
+function showBlitzUsed(message){
+	if(message.UserToChoose == team1){
+		document.getElementById("team1Blitzed").innerHTML = "Has Blitzed This Turn";
+	} else {
+		document.getElementById("team2Blitzed").innerHTML = "Has Blitzed This Turn";
+	}
 }
