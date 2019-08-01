@@ -186,6 +186,11 @@ function drawPlayer(player) {
 			img.src = player.imgUrl;
 		}
 	  img.onload = function() {
+		  console.log(this.src);
+		  if(player.hasBall == false && !this.src.includes(player.imgUrl)){ // in case lost ball since request to draw made
+			  drawPlayer(player);
+			  return;
+		  }
 		  context.save();
 		  context.globalAlpha = 1;
 			var column = player.location[0];
@@ -206,6 +211,7 @@ function drawPlayer(player) {
 							squareH);
 	
 				context.restore();
+				console.log("player displayed");
 			} else {
 				context.drawImage(img, column * squareH, row * squareH, squareH,
 						squareH);
@@ -239,6 +245,7 @@ function drawSelectionBorder(player){
 }
 
 function drawBall(){
+	console.log("drawing ball");
 	if(ballLocation != null){
 	  var img = new Image();
 	  img.src = "/images/ball.png";
@@ -687,7 +694,8 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			if(type == "BALL"){
 				drawBall();
 			}else if(type == "PUSH"){
-				drawPlayer(activePlayer);
+				drawPlayers();
+				animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			} else if(end == "Y" || activePlayer.status == "prone"){
 		        drawPlayer(activePlayer);
 		        animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
@@ -885,38 +893,43 @@ function showPickUpResult(message){
 function showBallScatter(message){
 	console.log("scattering");
 	animating = true;
-	modal.style.display = "none";
-	// document.getElementById("modal").style.display = "none";
-	newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
-	document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>"
-	var ballImg = new Image();
-	ballImg.src = "/images/ball.png";
-    ballImg.onload = function() { 
-    squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    var squareH = canvas.height / 15;
-    context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
-    var startingX = message.location[0] * squareH + squareH/3;
-    var startingY = (14 - message.location[1]) * squareH + squareH/3;
-    var targetX = message.target[0] * squareH + squareH/3;
-    var targetY = (14 - message.target[1]) * squareH + squareH/3;
-    var speed = 25;
-    xIncrement = (targetX - startingX) / speed;
-    yIncrement = (targetY - startingY) / speed;
-    drawPlayers();
-    var scatterRoute = [message.target];
-    console.log("route created: " + scatterRoute);
-    ballLocation = message.target;
-    animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
-    animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
-    setTimeout(function(){
-    // modal.style.display = "block";
-   // modal.style.display = "none";
-    if(taskQueue.length != 0){
-    (taskQueue.shift())();
+	  modal.style.display = "none";
+	  // document.getElementById("modal").style.display = "none";
+	  newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
+	  document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>";
+	  var ballImg = new Image();
+	  ballImg.src = "/images/ball.png";
+      ballImg.onload = function() { 
+       var squareH = canvas.height / 15;
+      context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+       var p = getPlayerWithBall();
+       if(p != null){
+    	 console.log(p.name);
+    	 p.hasBall = false;
+    	 drawPlayer(p);
+      }
+      squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      var startingX = message.location[0] * squareH + squareH/3;
+      var startingY = (14 - message.location[1]) * squareH + squareH/3;
+      var targetX = message.target[0] * squareH + squareH/3;
+      var targetY = (14 - message.target[1]) * squareH + squareH/3;
+      var speed = 25;
+      xIncrement = (targetX - startingX) / speed;
+      yIncrement = (targetY - startingY) / speed;
+      var scatterRoute = [message.target];
+      console.log("route created: " + scatterRoute);
+      ballLocation = message.target;
+      animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+      animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
+      setTimeout(function(){
+      // modal.style.display = "block";
+      // modal.style.display = "none";
+        if(taskQueue.length != 0){
+        (taskQueue.shift())();
+        }
+        }, 2000);  
+      }
     }
-    }, 2000);  
-  }
-}
 
 
 // adapted from
@@ -1055,6 +1068,10 @@ function showBlockSkill(message){
 
 function showArmourRoll(message){
 	console.log("showing armour");
+	getPlayerById(message.player).hasBall = false;
+	console.log("has ball? " + getPlayerById(message.player).hasBall);
+	getPlayerById(message.player).status = "prone";
+	drawPlayer(getPlayerById(message.player));
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 	document.getElementById("modal").style.display = "block";
 	var newRolls = document.getElementById("newRolls");
@@ -1429,4 +1446,23 @@ function showDodgeInBlock(message){
 	var modalText = document.getElementById("modalText");
 	modalText.innerHTML = "<br>" +message.playerName + " used the Dodge Skill, so is just pushed back<br>";
     newRolls.innerHTML =  message.playerName + " used the Dodge Skill, so is just pushed back<br>" + newRolls.innerHTML;
+}
+
+function removeBallFromPlayer(){
+	console.log("go away ball");
+	players.forEach(player => {
+		if(player.hasBall == true){
+			console.log("taking away ball");
+		 player.hasBall = false;
+		 return;
+		}
+	});
+}
+
+function getPlayerWithBall(){
+	for(var i = 0; i < players.length; i++){
+		if(players[i].hasBall == true){
+			return players[i];
+		}
+	}
 }
