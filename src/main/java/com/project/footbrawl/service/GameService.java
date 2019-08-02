@@ -33,8 +33,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
-	private static boolean testing = false;
+			Arrays.asList(new Integer[] { 1, 2, 1, 2, 1, 1, 1, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -458,6 +458,7 @@ public class GameService {
 		inPassOrHandOff = false;
 		activePlayer = null;
 		activeTeam.endTurn();
+		blitz = null;
 		activeTeam = (activeTeam == team1 ? team2 : team1);
 		if (activeTeam.getTurn() == 8) {
 			endOfHalf();
@@ -1246,6 +1247,7 @@ public class GameService {
 			pushed.getTeamIG().addToReserves(pushed);
 		}
 		if (pushed.isHasBall()) {
+			System.out.println("pushed off has ball");
 			Runnable scatter = new Runnable() {
 				@Override
 				public void run() {
@@ -1369,6 +1371,7 @@ public class GameService {
 
 	// if times > 1 cannot try to catch until final scatter
 	public void scatterBall(Tile origin, int times) {
+		ballToScatter = null;
 		origin.setContainsBall(false);
 		int value = diceRoller(1, 8)[0];
 		System.out.println("Scatter value: " + value);
@@ -1997,10 +2000,11 @@ public class GameService {
 				ballToScatter = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 			}
 			if (ballToScatter != null) {
+				System.out.println("SCATTER FROM HERE");
 				scatterBall(ballToScatter, 1);
+				turnover();
 			}
-			if (p.getStatus() != "standing" || ballToScatter != null) {
-				ballToScatter = null;
+			if (p.getStatus() != "standing") {
 				turnover();
 			}
 		} else if (rollResult.equals("failed") && rerollOptions.size() > 0 && actionsNeeded > 0) {
@@ -2246,8 +2250,9 @@ public class GameService {
 		}
 		if (ballToScatter != null) {
 			scatterBall(ballToScatter, 1);
+			turnover();
 		}
-		if (p.getStatus() != "standing" || ballToScatter != null) {
+		if (p.getStatus() != "standing") {
 			ballToScatter = null;
 			turnover();
 		}
@@ -2320,8 +2325,8 @@ public class GameService {
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
 		System.out.println("dice choice: " + diceChoice);
-		System.out.println("rolled: " + rolled.get(0));
-		System.out.println("rolled: " + rolled.get(1));
+	//	System.out.println("rolled: " + rolled.get(0));
+	//	System.out.println("rolled: " + rolled.get(1));
 		System.out.println("chosen: " + rolled.get(diceChoice));
 		blockChoiceAction(rolled.get(diceChoice) -1, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
 		// blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent), followUp); // need to sort out follow up
@@ -2343,6 +2348,7 @@ public class GameService {
 		 }
 		  sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId(), blitz != null);
 		  blitz = null;
+	      taskQueue.clear();
 	}
 
 }

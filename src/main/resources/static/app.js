@@ -476,7 +476,7 @@ function decodeMessage(message){
 	      }
 	  } else if(message.action == "ROLL"){
 		  activePlayer = getPlayerById(message.player);
-		  if(animating == true || inModal == true){
+		  if(animating == true){
 			  var task = function(m){
 	    		  showRoll(m);
 	    	  };
@@ -825,6 +825,11 @@ function showRoll(message){
 	if(message.rollType == "PICKUPBALL"){
 		showPickUpResult(message);
 	}
+	if(message.rollOutcome == "success"){
+		inModal = false;
+		modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+		document.getElementById("modal").style.display = "none";
+	}
 }
 
 function resizeActions(){
@@ -1079,7 +1084,13 @@ function showRerollUsed(message){
 	}
 	newRolls.innerHTML =  message.teamName + choice + "</br>" + newRolls.innerHTML;
 	if(message.rerollChoice != "Don't reroll"){
-		   resetModal(message);
+		 inModal == false;
+		 setTimeout(function(){
+			 console.log("task queue: " + taskQueue.length);
+			 if(taskQueue.length != 0){
+			    (taskQueue.shift())();
+			  }
+			}, 500);
     } else{
     	var chooser = message.teamName;
     	if(message.userToChoose == team){
@@ -1096,8 +1107,8 @@ function showRerollUsed(message){
     		team2.remainingTeamRerolls--;
     	}
     		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
-    	}
     }
+ }
 
 function showBlockSkill(message){
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
@@ -1165,6 +1176,15 @@ function showTurnover(message){
 	}
 	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
+	var button = document.createElement("BUTTON")
+    button.innerHTML = "Close";
+    button.onclick = function() {
+    	document.getElementById("modal").style.display = "none";
+    	document.getElementById("modalOptions").innerHTML = "";
+    	document.getElementById("modalText").innerHTML = "";
+    };
+    document.getElementById("modalOptions").appendChild(button);
+	
 	setTimeout(function(){
 	  if(taskQueue.length != 0){
 	    (taskQueue.shift())();
@@ -1182,7 +1202,6 @@ function showNewTurn(message){
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
-	document.getElementById("modal").style.display = "none";
 	newRolls.innerHTML =  message.teamName + "'s turn." + "</br>" + newRolls.innerHTML;
 	team1 = message.team1FullDetails;
 	team2 = message.team2FullDetails;
