@@ -52,7 +52,7 @@ public class GameLobbyService {
 		List<Skill> skills = new ArrayList<>();
 		//skills.add(block);
 		skills.add(dodge);
-		skills.add(sideStep);
+		//skills.add(sideStep);
 		p.setSkills(skills);
 		p3.setSkills(skills);
 		Player p4 = new Player();
@@ -98,7 +98,7 @@ public class GameLobbyService {
 		gs.pitch[11][11].addPlayer(team1Players.get(2));
 		//team2Players.get(1).setHasBall(true);
 		//team2Players.get(0).setHasBall(true);
-		gs.pitch[7][7].addBall();
+		gs.pitch[5][5].addBall();
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
 		gs.team2.setTurn(3);
