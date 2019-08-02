@@ -560,8 +560,9 @@ function actOnClick(click){
 			 taskQueue.length = 0;
 			 console.log(player.name);
 			 console.log(player.id);
+			
 			 if(player == activePlayer){
-				 resetMovement();
+			//	 resetMovement();
 				 done = true; // needed as return just escapes forEach block
 				 return;
 			 } else {
@@ -580,18 +581,17 @@ function actOnClick(click){
 				}else{
 			     var pTemp = activePlayer;
 			     activePlayer = player;
-			     if(pTemp != null){
-			       drawPlayer(pTemp);
-			     }
+			     drawPlayers();
 			     drawPlayer(activePlayer);
+			     drawBall();
 			     inRoute = false;
 			     waypoints.length = 0;
 			     route.length = 0;
 			   
 			     // console.log(player);
-			     stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-			                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
-			                 "location": player.location, "routeMACost": 0}));
+			    // stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+			      //           JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
+			        //         "location": player.location, "routeMACost": 0}));
 			 }
 			done = true;
 		    return;
@@ -1592,4 +1592,12 @@ function closeModal(){
 	document.getElementById("modalText").innerHTML = "";
 	document.getElementById("modalOptions").innerHTML = "";
 	document.getElementById("closeModal").style.display = "none";
+}
+
+function showPossibleActions(message){
+	 var actions = document.getElementById("actions");
+	 var squareH = canvas.clientHeight/15;
+	 actions.style.display = "block";
+	 actions.style.left = ""+ ((square[0] * squareH) - actions.offsetWidth/6)  + "px";
+	 actions.style.top = "" + (((14- square[1]) * squareH) - actions.offsetHeight) + "px";
 }
