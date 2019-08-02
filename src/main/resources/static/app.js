@@ -825,6 +825,10 @@ function showRoll(message){
 	if(message.rollType == "PICKUPBALL"){
 		showPickUpResult(message);
 	}
+	if(message.rollOutcome == "success"){
+		modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+		document.getElementById("modal").style.display = "none";
+	}
 }
 
 function resizeActions(){
@@ -1085,7 +1089,7 @@ function showRerollUsed(message){
 			 if(taskQueue.length != 0){
 			    (taskQueue.shift())();
 			  }
-			}, 100);
+			}, 500);
     } else{
     	var chooser = message.teamName;
     	if(message.userToChoose == team){
