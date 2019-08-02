@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 6, 1, 6, 1, 1, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+			Arrays.asList(new Integer[] { 1, 4, 6, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -1025,6 +1025,10 @@ public class GameService {
 			} else {
 				knockDown(attacker);
 			}
+			if (ballToScatter != null) { // ball has to scatter after all other actions
+				scatterBall(ballToScatter, 1);
+				ballToScatter = null;
+			}
 		} else if (result >= 2) { // push: 2 and 3
 			if (result == 4 && !defender.hasSkill("Dodge") || // defender stumbles
 					result == 5) { // defender down
@@ -1036,6 +1040,7 @@ public class GameService {
 					  knockDown(defender);
 					}
 					if(ballToScatter != null) {
+						System.out.println("scatter time");
 						scatterBall(ballToScatter, 1);
 					}
 					if(taskQueue.size()>0) {
@@ -1050,10 +1055,6 @@ public class GameService {
 				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(), "Dodge In Block");
 			}
 			pushAction(attacker, defender, followUp);
-		}
-		if (ballToScatter != null) { // ball has to scatter after all other actions
-			scatterBall(ballToScatter, 1);
-			ballToScatter = null;
 		}
 		// endOfAction(attacker);
 		if (attacker.getStatus() != "standing") {
@@ -1160,7 +1161,10 @@ public class GameService {
 			Runnable scatter = new Runnable() {
 				@Override
 				public void run() {
-					scatterBall(pushChoice, 1);
+					if(pushChoice.containsBall()) { // in case ball no longer there (i.e. scattered already)	
+					  System.out.println("second scatter?");
+					  scatterBall(pushChoice, 1);
+					}
 					if (taskQueue.isEmpty()) {
 						sendBlockSuccess(getPlayerById(pusher), getPlayerById(pushed));
 					} else {

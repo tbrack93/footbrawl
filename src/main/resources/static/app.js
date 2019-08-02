@@ -555,6 +555,7 @@ function actOnClick(click){
 	players.forEach(player => {
 		 // console.log("checking");
 		 if(player.location[0] == square[0] && player.location[1] == square[1]) {
+			 taskQueue.length = 0;
 			 console.log(player.name);
 			 console.log(player.id);
 			 if(player == activePlayer){
@@ -1441,12 +1442,13 @@ function showBlockEnd(message){
 	drawPlayers();
 	drawPlayerBorders();
 	drawBall();
-	taskQueue.length = 0;
 	if(message.description == "BLITZ"){
 		var player = getPlayerById(message.player);
 		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
                 "location": player.location, "routeMACost": 0}));
+	} else{
+		activePlayer.movement.length = 0;
 	}
 }
 
