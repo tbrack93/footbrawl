@@ -95,3 +95,6 @@ hr {
 	margin-right: auto;
 }
 
+#newRolls{
+	overflow-y: scroll;
+}

@@ -826,6 +826,7 @@ function showRoll(message){
 		showPickUpResult(message);
 	}
 	if(message.rollOutcome == "success"){
+		inModal = false;
 		modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 		document.getElementById("modal").style.display = "none";
 	}
