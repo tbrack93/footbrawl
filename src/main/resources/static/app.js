@@ -932,16 +932,16 @@ function showPickUpResult(message){
 	          "location": message.target, "routeMACost": 0}));
 			   inPickup = false;
 			}
-		}
-//	 if(taskQueue.length > 0){
-//		  (taskQueue.shift())();
-//	}	
+	} else if(taskQueue.length > 0){
+		  (taskQueue.shift())();
+	}
 }
+
 
 function showBallScatter(message){
 	console.log("scattering");
 	animating = true;
-	  modal.style.display = "none";
+	 // modal.style.display = "none";
 	  // document.getElementById("modal").style.display = "none";
 	  newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
 	  document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>";
@@ -1083,31 +1083,31 @@ function showRerollUsed(message){
 		choice = " chose to reroll using " + message.rerollChoice + ".";
 	}
 	newRolls.innerHTML =  message.teamName + choice + "</br>" + newRolls.innerHTML;
+	var chooser = message.teamName;
+	if(message.userToChoose == team){
+		chooser = "You"
+	}
+	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
+    if(message.rerollChoice == "Team Reroll"){
+	  var rerolls = "";
+	  if(message.userToChoose == team1.id){
+	  	rerolls = "team1Rerolls";
+		team1.remainingTeamRerolls--;
+	  } else{
+		rerolls = "team2Rerolls";
+		team2.remainingTeamRerolls--;
+	  }
+		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
+    }
 	if(message.rerollChoice != "Don't reroll"){
 		 inModal == false;
-		 setTimeout(function(){
-			 console.log("task queue: " + taskQueue.length);
-			 if(taskQueue.length != 0){
-			    (taskQueue.shift())();
-			  }
-			}, 500);
-    } else{
-    	var chooser = message.teamName;
-    	if(message.userToChoose == team){
-    		chooser = "You"
-    	}
-    	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
-    } if(message.rerollChoice == "Team Reroll"){
-    	var rerolls = "";
-    	if(message.userToChoose == team1.id){
-    		rerolls = "team1Rerolls";
-    		team1.remainingTeamRerolls--;
-    	} else{
-    		rerolls = "team2Rerolls";
-    		team2.remainingTeamRerolls--;
-    	}
-    		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
-    }
+	}
+	setTimeout(function(){
+		 console.log("task queue: " + taskQueue.length);
+		 if(taskQueue.length != 0){
+		    (taskQueue.shift())();
+		  }
+		}, 800);	
  }
 
 function showBlockSkill(message){
@@ -1176,20 +1176,12 @@ function showTurnover(message){
 	}
 	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
-	var button = document.createElement("BUTTON")
-    button.innerHTML = "Close";
-    button.onclick = function() {
-    	document.getElementById("modal").style.display = "none";
-    	document.getElementById("modalOptions").innerHTML = "";
-    	document.getElementById("modalText").innerHTML = "";
-    };
-    document.getElementById("modalOptions").appendChild(button);
-	
+	document.getElementById("closeModal").style.display = "block";
 	setTimeout(function(){
 	  if(taskQueue.length != 0){
 	    (taskQueue.shift())();
 	  }
-	}, 2000);  
+	}, 500);  
 }
 
 function showNewTurn(message){
@@ -1262,6 +1254,7 @@ function showTouchdown(message){
 }
 
 function showBlock(message, blitz){
+	 document.getElementById("modalText").innerHTML = "";
 	 inBlock = true;
 	 showBlockAssists(message);
 	 if(blitz == true){
@@ -1440,11 +1433,7 @@ function showSkillUsed(message){
 }
 
 function showBlockEnd(message){
-	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	document.getElementById("modalImages").innerHTML = "";
-	document.getElementById("modalOptions").innerHTML = "";
-	document.getElementById("modal").style.display = "none";
-	document.getElementById("modalCanvas").style.display = "block";
+	document.getElementById("closeModal").style.display = "block";
 	inModal = false;
 	inBlock = false;
 	inPush = false;
@@ -1586,4 +1575,13 @@ function showBlitzUsed(message){
 	} else {
 		document.getElementById("team2Blitzed").innerHTML = "Has Blitzed This Turn";
 	}
+}
+
+function closeModal(){
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("modal").style.display = "none";
+	document.getElementById("modalOptions").innerHTML = "";
+	document.getElementById("modalText").innerHTML = "";
+	document.getElementById("modalOptions").innerHTML = "";
+	document.getElementById("closeModal").style.display = "none";
 }

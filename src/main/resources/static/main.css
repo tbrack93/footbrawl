@@ -95,6 +95,11 @@ hr {
 	margin-right: auto;
 }
 
+#close{
+	display:flex;	
+}
+
 #newRolls{
-	overflow-y: scroll;
+	overflow-y: auto;
+    height: 100px;
 }
