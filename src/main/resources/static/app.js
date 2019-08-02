@@ -1079,7 +1079,7 @@ function showRerollUsed(message){
 	}
 	newRolls.innerHTML =  message.teamName + choice + "</br>" + newRolls.innerHTML;
 	if(message.rerollChoice != "Don't reroll"){
-		   resetModal(message);
+		//   resetModal(message);
     } else{
     	var chooser = message.teamName;
     	if(message.userToChoose == team){
