@@ -248,7 +248,7 @@ function drawSelectionBorder(player){
 
 function drawBall(){
 	console.log("drawing ball");
-	if(ballLocation != null){
+	if(ballLocation != null && getPlayerWithBall() == null){
 	  var img = new Image();
 	  img.src = "/images/ball.png";
 	  img.onload = function() {
@@ -273,7 +273,7 @@ function drawBall(){
 }
 
 function drawBallBorder(){
-	if(ballLocation != null){
+	if(ballLocation != null && getPlayerWithBall() == null){
 	  var column = ballLocation[0];
 	  var row = 14 -ballLocation[1];
 	  var squareH = canvas.height / 15;
@@ -384,14 +384,7 @@ function decodeMessage(message){
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
 		} else if(message.action == "BLOCKOVER"){
-			var task = function(m){
-				 setTimeout(function(){
-					   console.log("Block ended");
-					   showBlockEnd(message);
-				   } , 2000); 
-	    	  };
-	    	  var t = animateWrapFunction(task, this, [message]);
-	    	  taskQueue.push(t);
+			showBlockEnd(message);
 		}else if(message.action == "SKILLUSED"){
 			console.log("skill used");
 			if(animating == true){
@@ -446,6 +439,7 @@ function decodeMessage(message){
 		    	  var t = animateWrapFunction(task, this, [message]);
 		    	  taskQueue.push(t);
 		      } else{ 	
+		    	  message.alert = true;
 		    	  showNewTurn(message); 
 		      }
 		} else if(message.action == "TOUCHDOWN"){
@@ -862,6 +856,7 @@ function showDodgeResult(message){
 			}
 		}
 		if(taskQueue.length > 0){
+			console.log("continue?");
 		  (taskQueue.shift())();
 		}	
 	} else {
@@ -906,7 +901,7 @@ function showGFIResult(message){
 }
 
 function showPickUpResult(message){
-	animating = true;
+	//animating = true;
 	inPickup = true;
 	if(!(lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
 			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1]))){ 
@@ -932,16 +927,17 @@ function showPickUpResult(message){
 	          "location": message.target, "routeMACost": 0}));
 			   inPickup = false;
 			}
-		}
-//	 if(taskQueue.length > 0){
-//		  (taskQueue.shift())();
-//	}	
+	} if(taskQueue.length > 0 && (animating == false || message.rollOutcome == "failed")){
+		  (taskQueue.shift())();
+	}
+	
 }
+
 
 function showBallScatter(message){
 	console.log("scattering");
 	animating = true;
-	  modal.style.display = "none";
+	 // modal.style.display = "none";
 	  // document.getElementById("modal").style.display = "none";
 	  newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
 	  document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>";
@@ -1083,31 +1079,31 @@ function showRerollUsed(message){
 		choice = " chose to reroll using " + message.rerollChoice + ".";
 	}
 	newRolls.innerHTML =  message.teamName + choice + "</br>" + newRolls.innerHTML;
+	var chooser = message.teamName;
+	if(message.userToChoose == team){
+		chooser = "You"
+	}
+	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
+    if(message.rerollChoice == "Team Reroll"){
+	  var rerolls = "";
+	  if(message.userToChoose == team1.id){
+	  	rerolls = "team1Rerolls";
+		team1.remainingTeamRerolls--;
+	  } else{
+		rerolls = "team2Rerolls";
+		team2.remainingTeamRerolls--;
+	  }
+		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
+    }
 	if(message.rerollChoice != "Don't reroll"){
 		 inModal == false;
-		 setTimeout(function(){
-			 console.log("task queue: " + taskQueue.length);
-			 if(taskQueue.length != 0){
-			    (taskQueue.shift())();
-			  }
-			}, 500);
-    } else{
-    	var chooser = message.teamName;
-    	if(message.userToChoose == team){
-    		chooser = "You"
-    	}
-    	document.getElementById("modalOptions").innerHTML = "<p>" + chooser + choice + "</p>";
-    } if(message.rerollChoice == "Team Reroll"){
-    	var rerolls = "";
-    	if(message.userToChoose == team1.id){
-    		rerolls = "team1Rerolls";
-    		team1.remainingTeamRerolls--;
-    	} else{
-    		rerolls = "team2Rerolls";
-    		team2.remainingTeamRerolls--;
-    	}
-    		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
-    }
+	}
+	setTimeout(function(){
+		 console.log("task queue: " + taskQueue.length);
+		 if(taskQueue.length != 0){
+		    (taskQueue.shift())();
+		  }
+		}, 800);	
  }
 
 function showBlockSkill(message){
@@ -1176,20 +1172,12 @@ function showTurnover(message){
 	}
 	newRolls.innerHTML =  name + " suffered a turnover" + "</br>" + newRolls.innerHTML;
 	document.getElementById("modalOptions").innerHTML = existing + "<hr> <p style='color:red;'>" + name + " suffered a turnover" + "</p>";
-	var button = document.createElement("BUTTON")
-    button.innerHTML = "Close";
-    button.onclick = function() {
-    	document.getElementById("modal").style.display = "none";
-    	document.getElementById("modalOptions").innerHTML = "";
-    	document.getElementById("modalText").innerHTML = "";
-    };
-    document.getElementById("modalOptions").appendChild(button);
-	
+	document.getElementById("closeModal").style.display = "block";
 	setTimeout(function(){
 	  if(taskQueue.length != 0){
 	    (taskQueue.shift())();
 	  }
-	}, 2000);  
+	}, 500);  
 }
 
 function showNewTurn(message){
@@ -1226,6 +1214,9 @@ function showNewTurn(message){
 	document.getElementById("team2Name").innerHTML = message.team2Name;
 	document.getElementById("activeTeam").innerHTML = teamName;
 	turnover = false;
+	if(message.alert == true){
+		alert(teamName);
+	}
 	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
 	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
@@ -1262,6 +1253,7 @@ function showTouchdown(message){
 }
 
 function showBlock(message, blitz){
+	 document.getElementById("modalText").innerHTML = "";
 	 inBlock = true;
 	 showBlockAssists(message);
 	 if(blitz == true){
@@ -1440,11 +1432,8 @@ function showSkillUsed(message){
 }
 
 function showBlockEnd(message){
-	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	document.getElementById("modalImages").innerHTML = "";
-	document.getElementById("modalOptions").innerHTML = "";
-	document.getElementById("modal").style.display = "none";
-	document.getElementById("modalCanvas").style.display = "block";
+	document.getElementById("modalImages").html = "";
+	document.getElementById("closeModal").style.display = "block";
 	inModal = false;
 	inBlock = false;
 	inPush = false;
@@ -1486,12 +1475,13 @@ function requestPushChoice(message){
   	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
     });
     pushOptions = message.squares;
-    inPush = true;
     if(message.userToChoose == team){
+       inPush = true;
       document.getElementById("modalOptions").innerHTML = "Please select where to push";
     } else{
     	 document.getElementById("modalOptions").innerHTML = "Awaiting opponent's push choice";
     }
+    sContext.restore();
 }
 
 function validatePush(click){
@@ -1585,4 +1575,13 @@ function showBlitzUsed(message){
 	} else {
 		document.getElementById("team2Blitzed").innerHTML = "Has Blitzed This Turn";
 	}
+}
+
+function closeModal(){
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("modal").style.display = "none";
+	document.getElementById("modalOptions").innerHTML = "";
+	document.getElementById("modalText").innerHTML = "";
+	document.getElementById("modalOptions").innerHTML = "";
+	document.getElementById("closeModal").style.display = "none";
 }
