@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 2, 6, 2, 1, 1, 1, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+			Arrays.asList(new Integer[] { 6, 6, 6, 1, 6, 1, 1, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles

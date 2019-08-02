@@ -856,6 +856,7 @@ function showDodgeResult(message){
 			}
 		}
 		if(taskQueue.length > 0){
+			console.log("continue?");
 		  (taskQueue.shift())();
 		}	
 	} else {
@@ -900,7 +901,7 @@ function showGFIResult(message){
 }
 
 function showPickUpResult(message){
-	animating = true;
+	//animating = true;
 	inPickup = true;
 	if(!(lastRollLocation != null  && (lastRollLocation[0][0] == message.location[0] && lastRollLocation[0][1] == message.location[1] &&
 			lastRollLocation[1][0] == message.target[0] && lastRollLocation[1][1] == message.target[1]))){ 
@@ -929,6 +930,7 @@ function showPickUpResult(message){
 	} if(taskQueue.length > 0 && (animating == false || message.rollOutcome == "failed")){
 		  (taskQueue.shift())();
 	}
+	
 }
 
 
