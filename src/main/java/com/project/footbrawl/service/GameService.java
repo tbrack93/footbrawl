@@ -982,7 +982,7 @@ public class GameService {
 		return result;
 	}
 
-	public void blockAction(PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
+	public int[] blockAction(PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
 		actionCheck(attacker);
 		if(attacker.isActedThisTurn() && blitz == null) {
 			throw new IllegalArgumentException("Can't act and then block unless blitzing");
@@ -997,13 +997,13 @@ public class GameService {
 			rolled.add(i);
 		}
 		rerollOptions = determineRerollOptions("BLOCK", attacker.getId(),
-				new int[][] { attacker.getTile().getLocation() });
+		                new int[][] { attacker.getTile().getLocation() });
 		if (!rerollOptions.isEmpty()) {
 			awaitingReroll = new String[] { "Y", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
 		} else {
 			awaitingReroll = new String[] { "N", "BLOCK", "" + attacker.getId(), "" + defender.getId() };
 		}
-		return;
+		return dice;
 	}
 
 	// get choice of dice from stronger player's user
@@ -2285,7 +2285,7 @@ public class GameService {
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
 		PlayerInGame attacker = getPlayerById(player);
 		PlayerInGame defender = getPlayerById(opponent);
-		blockAction(attacker, defender, followUp);
+		int[] details = blockAction(attacker, defender, followUp);
 		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
 		int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
 		runnableLocation = new int[][] { location, defender.getLocation() };
@@ -2305,7 +2305,7 @@ public class GameService {
 				public void run() {
 					System.out.println("in block not rerolling");
 					awaitingReroll = null;
-					sender.requestBlockDiceChoice(game.getId(), player, opponent, team);
+					sender.requestBlockDiceChoice(game.getId(), player, opponent, details[1]);
 				}
 			};
 			taskQueue.add(task2);
@@ -2313,7 +2313,7 @@ public class GameService {
 		sender.sendBlockDiceResult(game.getId(), player, attacker.getName(), opponent, defender.getName(), location,
 				defender.getLocation(), rolled, attLocations, defLocations, rerollOptions, reroll, team);
 		if (rerollOptions == null || rerollOptions.size() == 0) {
-			sender.requestBlockDiceChoice(game.getId(), player, opponent, team);
+			sender.requestBlockDiceChoice(game.getId(), player, opponent, details[1]);
 		}
 	}
 
