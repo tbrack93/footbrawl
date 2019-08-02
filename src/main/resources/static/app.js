@@ -247,12 +247,13 @@ function drawSelectionBorder(player){
 }
 
 function drawBall(){
-	console.log("drawing ball");
 	if(ballLocation != null && getPlayerWithBall() == null){
+		console.log("drawing ball");
 	  var img = new Image();
 	  img.src = "/images/ball.png";
 	  img.onload = function() {
 		  if(ballLocation == null){
+			  console.log("where's the ball?");
 			  return;
 		  }
 		  context.save();
@@ -268,6 +269,7 @@ function drawBall(){
 					squareH);
 			context.drawImage(img, column * squareH + squareH/3, row * squareH + squareH/3, squareH/1.5,
 					squareH/1.5);
+			context.restore();
 			}
   }
 }
@@ -732,6 +734,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 				drawBall();
 			}else if(type == "PUSH"){
 				drawPlayers();
+				drawBall();
 				animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			} else if(end == "Y" || activePlayer.status == "prone"){
 		        drawPlayer(activePlayer);
@@ -1448,7 +1451,9 @@ function showBlockEnd(message){
                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
                 "location": player.location, "routeMACost": 0}));
 	} else{
-		activePlayer.movement.length = 0;
+		if(activePlayer.movement != null){
+		  activePlayer.movement.length = 0;
+		}
 	}
 }
 
@@ -1508,6 +1513,7 @@ function showPushResult(message){
 	  newRolls.innerHTML =  message.playerName + " was pushed off pitch and beaten by the crowd! </br>" + newRolls.innerHTML;
 	  removePlayer(getPlayerById(message.player));
 	  drawPlayers();
+	  drawBall();
 	  setTimeout(function(){
 	    if(taskQueue.length != 0){
 		  (taskQueue.shift())();
