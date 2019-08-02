@@ -33,8 +33,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
-	private static boolean testing = false;
+			Arrays.asList(new Integer[] { 1, 2, 1, 1, 1, 6, 6, 6, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -1999,6 +1999,7 @@ public class GameService {
 				ballToScatter = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
 			}
 			if (ballToScatter != null) {
+				System.out.println("SCATTER FROM HERE");
 				scatterBall(ballToScatter, 1);
 				turnover();
 			}
@@ -2248,8 +2249,9 @@ public class GameService {
 		}
 		if (ballToScatter != null) {
 			scatterBall(ballToScatter, 1);
+			turnover();
 		}
-		if (p.getStatus() != "standing" || ballToScatter != null) {
+		if (p.getStatus() != "standing") {
 			ballToScatter = null;
 			turnover();
 		}
