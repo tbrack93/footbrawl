@@ -34,7 +34,7 @@ public class GameService {
 
 	private static List<Integer> diceRolls = new ArrayList<>(
 			Arrays.asList(new Integer[] { 1, 2, 1, 2, 1, 1, 1, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
-	private static boolean testing = true;
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },

@@ -248,7 +248,7 @@ function drawSelectionBorder(player){
 
 function drawBall(){
 	console.log("drawing ball");
-	if(ballLocation != null){
+	if(ballLocation != null && getPlayerWithBall() == null){
 	  var img = new Image();
 	  img.src = "/images/ball.png";
 	  img.onload = function() {
@@ -273,7 +273,7 @@ function drawBall(){
 }
 
 function drawBallBorder(){
-	if(ballLocation != null){
+	if(ballLocation != null && getPlayerWithBall() == null){
 	  var column = ballLocation[0];
 	  var row = 14 -ballLocation[1];
 	  var squareH = canvas.height / 15;
@@ -1486,12 +1486,13 @@ function requestPushChoice(message){
   	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
     });
     pushOptions = message.squares;
-    inPush = true;
     if(message.userToChoose == team){
+       inPush = true;
       document.getElementById("modalOptions").innerHTML = "Please select where to push";
     } else{
     	 document.getElementById("modalOptions").innerHTML = "Awaiting opponent's push choice";
     }
+    sContext.restore();
 }
 
 function validatePush(click){
