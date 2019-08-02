@@ -926,7 +926,7 @@ function showPickUpResult(message){
 	          "location": message.target, "routeMACost": 0}));
 			   inPickup = false;
 			}
-	} else if(taskQueue.length > 0){
+	} if(taskQueue.length > 0 && (animating == false || message.rollOutcome == "failed")){
 		  (taskQueue.shift())();
 	}
 }
