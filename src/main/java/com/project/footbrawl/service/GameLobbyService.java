@@ -73,7 +73,7 @@ public class GameLobbyService {
 		p6.setName("Job");
 		p6.setMA(3);
 		p6.setAG(2);
-		p6.setTeam(1);
+		p6.setTeam(2);
 		p6.setST(3);
 		p.setImgUrl("/images/human_blitzer.png");
 		p2.setImgUrl("/images/orc_lineman.png");
