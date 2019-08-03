@@ -14,6 +14,7 @@ public class MessageToClient extends Message {
 	private List<jsonTile> route; // for moving to a specific point
 	private List<jsonTile> squares; // for seeing all squares player can move to
 	private Integer rollNeeded;
+	private Integer secondaryRollNeeded;
 	private List<Integer> rolled;
 	private String rollOutcome;
 	private String rollType;
@@ -274,6 +275,14 @@ public class MessageToClient extends Message {
 
 	public void setPossibleActions(List<String> possibleActions) {
 		this.possibleActions = possibleActions;
+	}
+
+	public Integer getSecondaryRollNeeded() {
+		return secondaryRollNeeded;
+	}
+
+	public void setSecondaryRollNeeded(Integer secondaryRollNeeded) {
+		this.secondaryRollNeeded = secondaryRollNeeded;
 	}
 	
 }

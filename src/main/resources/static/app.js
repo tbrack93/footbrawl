@@ -560,7 +560,15 @@ function actOnClick(click){
 	}
 	var square = determineSquare(click);
 	console.log(square);
-	var done = false;
+    if(actionChoice == "throw" && !(square[0] == activePlayer.location[0] && square[1] == activePlayer.location[1])){
+    	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                JSON.stringify({"type": "INFO", "action": "THROW", "player": activePlayer.id,
+	                 "location": activePlayer.location, "target": square}));
+    	return;
+	} else if(actionChoice == "throw" && "throw" && square[0] == activePlayer.location[0] && square[1] == activePlayer.location[1]){
+		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                 JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
+	}
 	for(var i = 0 ; i < players.length; i++){
 		var player = players[i];
 		 // console.log("checking");
@@ -614,8 +622,8 @@ function actOnClick(click){
 			 }
 		    return;
 		 }
-		 } // will be more options for blitz/ block/ throw actions
-	if(activePlayer != null && activePlayer.team == team && yourTurn == true){ 
+		 } 
+	if(activePlayer != null && activePlayer.team == team && yourTurn == true && actionChoice != null && actionChoice != "throw"){ 
 		if(lastSquareClicked != null && square[0] == lastSquareClicked[0] && square[1] == lastSquareClicked[1]){
 			var messageRoute = new Array();
 			route.forEach(tile => {
@@ -1673,11 +1681,35 @@ function startBlock(){
     sContext.save();
     sContext.fillStyle = "white";
     sContext.globalAlpha = 0.3;
-	squares.getContext("2d").fillRect(column * squareH, row * squareH, squareH *3,squareH * 3);
-	context.restore();
+	sContext.fillRect(column * squareH, row * squareH, squareH *3,squareH * 3);
+	sContext.restore();
 }
 
 function startBlitz(){
 	requestMovement();
 	actionChoice = "blitz";
+}
+
+function showThrowRange(){
+	closeActions();
+	actionChoice = "throw";
+	var location = activePlayer.location;
+	var sContext = squares.getContext("2d");
+	sContext.clearRect(0, 0, squares.width, squares.height);
+	var column = location[0];
+	var row = 14 - location[1];
+	var squareH = canvas.height / 15;
+	sContext.save();
+	sContext.fillStyle = "red";
+	sContext.globalAlpha = 0.4;
+	sContext.fillRect((column- 13) * squareH, (row -13) * squareH, squareH *27, squareH * 27);
+	sContext.clearRect((column- 10) * squareH, (row - 10) * squareH, squareH * 21, squareH * 21);
+	sContext.fillStyle = "orange";
+	sContext.fillRect((column- 10) * squareH, (row - 10) * squareH, squareH * 21, squareH * 21);
+	sContext.clearRect((column- 6) * squareH, (row - 6) * squareH, squareH * 13, squareH * 13);
+	sContext.fillStyle = "yellow";
+	sContext.fillRect((column- 6) * squareH, (row - 6) * squareH, squareH * 13, squareH * 13);
+	sContext.clearRect((column- 3) * squareH, (row - 3) * squareH, squareH * 7, squareH * 7);
+	sContext.fillStyle = "green";
+	sContext.fillRect((column- 3) * squareH, (row - 3) * squareH, squareH * 7, squareH * 7);
 }

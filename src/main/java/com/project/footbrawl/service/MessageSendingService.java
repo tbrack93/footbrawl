@@ -338,4 +338,17 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToUser(gameId, team, message);
 	}
 
+	public void sendThrowDetails(int gameId, Integer player, int[] location, int[] target, String targetName, int rollNeeded, int catchRoll, List<jsonTile> interceptLocations,
+			int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("THROW");
+		message.setPlayer(player);
+		message.setLocation(location);
+		message.setTarget(target);
+		message.setOpponentName(targetName); // not really an opponent, but saves creating new field just for this
+		message.setRollNeeded(rollNeeded);
+		message.setSecondaryRollNeeded(catchRoll);
+		message.setSquares(interceptLocations);
+		controller.sendMessageToUser(gameId, team, message);
+	}
 }
