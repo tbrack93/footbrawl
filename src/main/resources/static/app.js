@@ -1600,13 +1600,18 @@ function closeModal(){
 function closeActions(){
 	var actions = document.getElementById("actions");
 	actions.style.display = "none";
+	resetActions();
+}
+
+function resetActions(){
 	var actions = document.getElementsByClassName("actionImg");
-	for(var i = 0 ; i < actions.legnth; i++){
+	for(var i = 0 ; i < actions.length; i++){
 		actions[i].style.display = "none";
 	}
 }
 
 function showPossibleActions(message){
+	 resetActions();
 	 console.log("show actions");
 	 var actions = document.getElementById("actions");
 	 canvas = document.getElementById("canvas");
