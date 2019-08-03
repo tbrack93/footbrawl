@@ -1551,7 +1551,10 @@ public class GameService {
 	}
 
 	public int calculateInterception(PlayerInGame p) {
-		return calculateAgilityRoll(p, p.getTile(), -2);
+		int modifier = -2;
+		addTackleZones(p);
+		modifier += p.getTile().getTackleZones();
+		return calculateAgilityRoll(p, p.getTile(), modifier);
 	}
 
 	public int calculatePickUpBall(PlayerInGame p, Tile location) {
@@ -1576,22 +1579,23 @@ public class GameService {
 		// Pythagoras' theorem)
 		int distance = (int) Math.sqrt(((origin[0] - destination[0]) * (origin[0] - destination[0]))
 				+ ((origin[0] - destination[0]) * (origin[0] - destination[0])));
-		int distanceModifier = 0;// short pass
+		int modifier = 0;// short pass
 		if (distance > 13) {
 			throw new IllegalArgumentException("Cannot throw more than 13 squares");
 		} else if (distance < 4) { // quick pass
-			distanceModifier = 1;
+			modifier = 1;
 		} else if (distance > 6 && distance < 11) { // long pass
-			distanceModifier = -1;
+			modifier = -1;
 		} else if (distance > 11) { // bomb
-			distanceModifier = -2;
+			modifier = -2;
 		}
-		List<Tile> path = calculateThrowTiles(thrower, from, target);
-		calculatePossibleInterceptors(path, thrower);
-		return calculateAgilityRoll(thrower, from, distanceModifier);
+		addTackleZones(thrower);
+		modifier += from.getTackleZones();
+		return calculateAgilityRoll(thrower, from, modifier);
 	}
 
 	public List<PlayerInGame> calculatePossibleInterceptors(List<Tile> path, PlayerInGame thrower) {
+		path.remove(path.size()-1); // if opponent is in target square, they're the target, not an interceptor (can throw to opponent if you want)
 		List<PlayerInGame> interceptors = new ArrayList<>();
 		for (Tile t : path) {
 			if (t.containsPlayer() && t.getPlayer().getTeam() != thrower.getTeam()
@@ -2391,5 +2395,27 @@ public class GameService {
 	public void showPossibleActions(Integer player, int team) {
 		List<String> actions = getPossibleActions(getPlayerById(player));
 		sender.sendPossibleActions(game.getId(), player, getPlayerById(player).getLocation(), actions, team);
+	}
+	
+	public void sendThrowDetails(Integer player, int[] target, int team) {
+		PlayerInGame p = getPlayerById(player);
+		Tile goal = pitch[target[0]][target[1]];
+		int roll = calculateThrow(p, p.getTile(), goal);
+		List<PlayerInGame> interceptors = calculatePossibleInterceptors(calculateThrowTiles(p, p.getTile(), goal),p);
+	    List<jsonTile> interceptLocations = new ArrayList<>();
+	    for(PlayerInGame pg : interceptors) {
+	    	jsonTile jt = new jsonTile();
+	    	jt.setPosition(pg.getLocation());
+	    	jt.setCatchRoll(calculateInterception(pg));
+	    	jt.setDescription(pg.getName());
+	    	interceptLocations.add(jt);
+	    }
+	    int catchRoll = 0;
+	    String targetName = null;
+	    if(goal.containsPlayer()) {
+	      catchRoll = calculateCatch(goal.getPlayer(), true);
+	      targetName = goal.getPlayer().getName();
+	    }
+	    sender.sendThrowDetails(game.getId(), player, p.getLocation(), target, targetName, roll, catchRoll, interceptLocations, team);
 	}
 }

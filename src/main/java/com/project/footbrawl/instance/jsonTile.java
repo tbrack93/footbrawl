@@ -11,6 +11,8 @@ public class jsonTile {
 	private Integer goingForItRoll; // goingForItRoll
 	private Integer pickUpBallRoll; // pickUpBallRoll
 	private Integer standUpRoll; // standUpRoll
+    private Integer catchRoll;
+    private String description;
 
 	public jsonTile(Tile tile) {
 		this.position = tile.getLocation();
@@ -69,4 +71,22 @@ public class jsonTile {
 	public void setStandUpRoll(int standUpRoll) {
 		this.standUpRoll = standUpRoll;
 	}
+
+	public Integer getCatchRoll() {
+		return catchRoll;
+	}
+
+	public void setCatchRoll(Integer catchRoll) {
+		this.catchRoll = catchRoll;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	
 }

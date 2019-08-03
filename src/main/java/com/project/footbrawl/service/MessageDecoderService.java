@@ -45,6 +45,9 @@ public class MessageDecoderService {
 			if(action.equals("BLITZ")) {
 				lobby.getGameService(gameId).sendBlitzDetails(message.getPlayer(), message.getOpponent(), message.getWaypoints(), message.getTarget(), team);
 			}
+			if(action.equals("THROW")) {
+				lobby.getGameService(gameId).sendThrowDetails(message.getPlayer(), message.getTarget(), team);
+			}
 		}else if(type.equals("ACTION")) {
 			if(action.equals("ROUTE")){
 				lobby.getGameService(gameId).carryOutRouteAction(message.getPlayer(), message.getRoute(), team);
