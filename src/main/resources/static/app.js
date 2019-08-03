@@ -463,7 +463,9 @@ function decodeMessage(message){
 		}
 		}
 	} else if(message.type == "ACTION"){
-		actionChoice = null;
+		if(actionChoice != "blitz"){
+			actionChoice = null;
+		}
 	    if(message.action == "ROUTE"){
 	      activePlayer = getPlayerById(message.player);
 	      if(animating == true){
@@ -592,7 +594,7 @@ function actOnClick(click){
 						                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
 						                 "location": player.location, "routeMACost": 0}));
 					return;
-				} else if(actionChoice == null || actionChoice == "move" && player.team == team){
+				} else if(actionChoice == null || player.team == team && (actionChoice == "move" || actionChoice == "blitz")){
 			     var pTemp = activePlayer;
 			     activePlayer = player;
 			     drawPlayerBorders();
@@ -792,7 +794,7 @@ function resetMovement(){
 	route.length = 0;
 	lastSquareClicked = null;
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-	if(activePlayer.movement.length>0){
+	if(activePlayer.movement.length>0 && (actionChoice != "blitz"|| actionChoice != "block")){
 	  activePlayer.movement.forEach(tile => {
 		drawMovementSquare(tile);
 	  });
@@ -1437,7 +1439,7 @@ function cancelBlock(player){
 	document.getElementById("modalImages").innerHTML = "";
 	inModal = false;
 	inBlock = false;
-	//resetMovement();
+	resetMovement();
 	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
              JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
 	
