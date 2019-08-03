@@ -46,7 +46,6 @@ public class PlayerInGame{
 	}
 	
 	public void newTurn() {
-		remainingMA = player.getMA();
 		actedThisTurn = false;
 		actionOver = false;
 	}
@@ -55,7 +54,8 @@ public class PlayerInGame{
 		if(status.equals("stunned")) {
 			status = "prone";
 		}
-		actionOver = true;
+		remainingMA = player.getMA(); // here so users can see opponent players' full movement range in their turn
+		//actionOver = true;
 	}
 	
 	public void setMA(int MA) {
