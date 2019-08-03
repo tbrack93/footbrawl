@@ -38,6 +38,7 @@ var inBlock;
 var lastRollLocation;
 var pushOptions;
 var followUp;
+var actionChoice;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
 var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
@@ -462,6 +463,7 @@ function decodeMessage(message){
 		}
 		}
 	} else if(message.type == "ACTION"){
+		actionChoice = null;
 	    if(message.action == "ROUTE"){
 	      activePlayer = getPlayerById(message.player);
 	      if(animating == true){
@@ -565,20 +567,32 @@ function actOnClick(click){
 			 console.log(player.name);
 			 console.log(player.id);
 			
-			 
+			     
 				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
 					if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
-				      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+						if(actionChoice != null && actionChoice == "block"){
+						
+						stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				                 JSON.stringify({"type": "INFO", "action": "BLOCK", "player": activePlayer.id,
 					                 "location": activePlayer.location, "opponent": player.id}));
-						
-					} else{
-						stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+						return;
+						}
+					} else if (actionChoice != null && actionChoice == "blitz"){
+						  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				                 JSON.stringify({"type": "INFO", "action": "BLITZ", "player": activePlayer.id,
 					                 "location": activePlayer.location, "opponent": player.id, 
 					                 "target": square, "waypoints": waypoints}));
+						  return;
 					}
-				}else{
+				
+				}
+				if(player.team != team && actionChoice == null|| player.team == team && yourTurn == false){
+					closeActions();
+					stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+						                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
+						                 "location": player.location, "routeMACost": 0}));
+					return;
+				} else if(actionChoice == null || actionChoice == "move" && player.team == team){
 			     var pTemp = activePlayer;
 			     activePlayer = player;
 			     drawPlayerBorders();
@@ -586,9 +600,11 @@ function actOnClick(click){
 			     inRoute = false;
 			     waypoints.length = 0;
 			     route.length = 0;
-			     stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+			     if(player.team == team){
+			       stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			                 JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": player.id}));
-			     
+			     }
+			     lastSquareClicked = square;
 			     // console.log(player);
 			    // stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			      //           JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
@@ -1421,7 +1437,10 @@ function cancelBlock(player){
 	document.getElementById("modalImages").innerHTML = "";
 	inModal = false;
 	inBlock = false;
-	resetMovement();
+	//resetMovement();
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
+	
 }
 
 function showSkillUsed(message){
@@ -1435,8 +1454,9 @@ function showSkillUsed(message){
 }
 
 function showBlockEnd(message){
-	document.getElementById("modalImages").html = "";
+	document.getElementById("modalImages").innerHTML = "";
 	document.getElementById("closeModal").style.display = "block";
+	document.getElementById("modalText").innerHTML = "";
 	inModal = false;
 	inBlock = false;
 	inPush = false;
@@ -1596,7 +1616,9 @@ function closeModal(){
 function closeActions(){
 	var actions = document.getElementById("actions");
 	actions.style.display = "none";
+	 document.getElementById("actionsTitle").innerHTML = "Actions";
 	resetActions();
+	actionChoice = null;
 }
 
 function resetActions(){
@@ -1614,8 +1636,13 @@ function showPossibleActions(message){
 	 canvas = document.getElementById("canvas");
 	 actions.style.display = "block";
 	 var squareH = canvas.clientHeight/15;
-	 for(var i = 0; i < message.possibleActions.length; i++){
+	 if(message.possibleActions[0] != "None"){
+		document.getElementById("actionsTitle").innerHTML = "Actions";
+	   for(var i = 0; i < message.possibleActions.length; i++){
 		 document.getElementById(message.possibleActions[i]).style.display = "inline";
+	   }
+	 } else{
+		 document.getElementById("actionsTitle").innerHTML = "No Possible Actions";
 	 }
 	 actions = document.getElementById("actions"); // have to get updated height & width based on number of images shown
 	 actions.style.left = ""+ ((message.location[0] * squareH) - actions.offsetWidth/6)  + "px";
@@ -1623,8 +1650,32 @@ function showPossibleActions(message){
 }
 
 function requestMovement(){
-	 closeActions();
+	closeActions();
+	actionChoice = "move";
 	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
                JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
                "location": activePlayer.location, "routeMACost": 0}));
+}
+
+function startBlock(){
+	closeActions();
+	actionChoice = "block";
+	var centre = activePlayer.location;
+	canvas = document.getElementById("canvas");
+	var squareH = canvas.clientHeight/15;
+	console.log(centre);
+	var column = centre[0] -1;
+	var row = 14 - centre[1] - 1;
+	var squareH = canvas.height / 15;
+    var sContext = squares.getContext("2d");
+    sContext.save();
+    sContext.fillStyle = "white";
+    sContext.globalAlpha = 0.3;
+	squares.getContext("2d").fillRect(column * squareH, row * squareH, squareH *3,squareH * 3);
+	context.restore();
+}
+
+function startBlitz(){
+	requestMovement();
+	actionChoice = "blitz";
 }
