@@ -1451,6 +1451,7 @@ public class GameService {
 			turnover();
 			return true;
 		} else {
+			runnableLocation = new int[][] {source, player.getLocation()};
 			System.out.println(player.getName() + " failed to intercept the ball!");
 			List<String> options = determineRerollOptions("CATCH", player.getId(), new int[][] {source, player.getLocation()});
 			String end = "N";
@@ -1509,6 +1510,7 @@ public class GameService {
 		System.out.println(thrower.getName() + " tries to throw the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		if (roll == 1 || roll + modifier <= 1) { // on a natural 1 or 1 after modifiers
+			runnableLocation = new int[][] {thrower.getLocation(), target.getLocation()};
 			System.out.println(thrower.getName() + " fumbled the ball!");
 			List<String> options = determineRerollOptions("THROW", thrower.getId(),
 					new int[][] { thrower.getLocation(), target.getLocation() });
