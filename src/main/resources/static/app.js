@@ -372,7 +372,11 @@ function decodeMessage(message){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
-		} else if(message.action == "BLOCK"){
+		} else if(message.action == "THROWRANGES"){
+			showThrowRanges(message);
+		} else if(message.action == "THROW"){
+		    showThrowDetails(message);
+		}else if(message.action == "BLOCK"){
 			showBlock(message, false);
 	    } else if(message.action == "BLITZ"){
 		    showRoute(message);
@@ -1690,26 +1694,132 @@ function startBlitz(){
 	actionChoice = "blitz";
 }
 
-function showThrowRange(){
-	closeActions();
-	actionChoice = "throw";
-	var location = activePlayer.location;
+function showThrowRanges(message){
+	var location = message.location;
 	var sContext = squares.getContext("2d");
 	sContext.clearRect(0, 0, squares.width, squares.height);
-	var column = location[0];
-	var row = 14 - location[1];
 	var squareH = canvas.height / 15;
 	sContext.save();
+	for(var i = 0 ; i < message.squares.length; i++){
+		var type = message.squares[i].description;
+		if(type == "quick pass"){
+			sContext.fillStyle = "blue";
+		} else if(type == "short pass"){
+			sContext.fillStyle = "yellow";
+		} else if(type == "long pass"){
+			sContext.fillStyle = "orange";
+		} else{
+			sContext.fillStyle = "red";
+		}
+		sContext.globalAlpha = 0.4;
+		sContext.fillRect(message.squares[i].position[0] * squareH + 3, (14 - message.squares[i].position[1]) * squareH + 3 , squareH-5, squareH-5);
+	}
+	context.restore();
+}
+
+function startThrow(){
+	closeActions();
+	actionChoice = "throw";
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+               JSON.stringify({"type": "INFO", "action": "THROWRANGES", "player": activePlayer.id,
+               "location": activePlayer.location}));
+}
+
+function showThrowDetails(message){
+	var sContext = squares.getContext("2d");
+	sContext.clearRect(0, 0, squares.width, squares.height);
+	sContext.save();
 	sContext.fillStyle = "red";
-	sContext.globalAlpha = 0.4;
-	sContext.fillRect((column- 13) * squareH, (row -13) * squareH, squareH *27, squareH * 27);
-	sContext.clearRect((column- 10) * squareH, (row - 10) * squareH, squareH * 21, squareH * 21);
-	sContext.fillStyle = "orange";
-	sContext.fillRect((column- 10) * squareH, (row - 10) * squareH, squareH * 21, squareH * 21);
-	sContext.clearRect((column- 6) * squareH, (row - 6) * squareH, squareH * 13, squareH * 13);
-	sContext.fillStyle = "yellow";
-	sContext.fillRect((column- 6) * squareH, (row - 6) * squareH, squareH * 13, squareH * 13);
-	sContext.clearRect((column- 3) * squareH, (row - 3) * squareH, squareH * 7, squareH * 7);
-	sContext.fillStyle = "green";
-	sContext.fillRect((column- 3) * squareH, (row - 3) * squareH, squareH * 7, squareH * 7);
+	var squareH = canvas.height / 15;
+	for(var i = 0; i < message.squares.length; i++){
+		sContext.fillRect(message.squares[i].position[0] * squareH, (14 - message.squares[i].position[1]) * squareH, squareH, squareH);
+	}
+	sContext.fillStyle = "white";
+	sContext.fillRect(message.target[0] * squareH, (14 - message.target[1]) * squareH, squareH, squareH);
+	sContext.restore();
+	var column = message.location[0];
+	var row = 14 - message.location[1];
+	var aContext = animation.getContext("2d");
+	aContext.clearRect(0, 0, canvas.width, canvas.height);
+	aContext.save();
+	var distance = Math.floor(Math.sqrt(((message.location[0] - message.target[0]) * (message.location[0] - message.target[0]))
+			+ ((message.location[1] - message.target[1]) * (message.location[1] - message.target[1]))));
+	if(distance < 4){
+		aContext.strokeStyle = "blue";
+	} else if (distance < 7){
+		aContext.strokeStyle = "yellow";
+	} else if(distance < 11){
+		aContext.strokeStyle = "orange";
+	} else {
+		aContext.strokeStyle = "red";
+	}
+	aContext.globalAlpha = 0.8;
+	aContext.beginPath();
+	aContext.moveTo((column +0.5) * squareH, (row +0.5) * squareH);
+	aContext.lineTo((message.target[0]  + 0.5) * squareH, (14 - message.target[1] +0.5) * squareH);
+	//sContext.lineTo((message.target[0] + 1) * squareH, (14 - message.target[1] + 1) * squareH);
+	//sContext.lineTo((column + 1) * squareH, (row + 1) * squareH);
+	aContext.closePath();
+	aContext.lineWidth = 10;
+	aContext.stroke();
+	aContext.restore();
+	//showThrowModal(message);
+}
+
+function showThrowModal(message){
+	document.getElementById("modalText").innerHTML = "";
+	 inBlock = true;
+	 showBlockAssists(message);
+	 if(blitz == true){
+		 document.getElementById("modalTitle").innerHTML = "Blitz Details"; 
+	 } else {
+    document.getElementById("modalTitle").innerHTML = "Block Details";
+	 }
+	 var modalMain = document.getElementById("modalImages");
+	 modalMain.innerHTML = ""; 
+	 var blankDice = new Image();
+	 blankDice.src = "/images/blank_dice.png";
+	 for(i = 0; i<message.numberOfDice; i++){
+		 modalMain.innerHTML += "<img height='50px' class ='dice' src=" + blankDice.src + "/>"; 
+	 }
+	 var toChoose;
+	 var style = "black"
+	 if(message.userToChoose == team){
+		 toChoose = "You choose 1 outcome dice.";
+		 var style = "red";
+	 } else{
+		 toChoose = "Your opponent chooses 1 outcome dice.";
+	 }
+	 document.getElementById("modalOptions").innerHTML = "<p style='font-color:" + style +"'>"+ toChoose +"</p>Follow Up? "; 
+	 var follow = document.createElement("input");
+	 follow.type = "checkbox";
+	 follow.id = "follow";
+	  modalOptions.appendChild(follow);
+	 document.getElementById("modalOptions").innerHTML += "<br><hr>";
+	 var button = document.createElement("BUTTON")
+    button.innerHTML = "Cancel";
+    button.onclick = function() {cancelBlock(message.player)};
+    modalOptions.appendChild(button);
+    var button2 = document.createElement("BUTTON")
+    button2.innerHTML = "Block";
+    if(blitz == true){
+   	 button2.innerHTML = "Blitz";
+   	 button2.onclick = function() {
+       	 followUp = document.getElementById("follow").checked;
+       	 sendCarryOutBlitz(message, followUp, route);
+       	 document.getElementById("modal").style.display = "none"; 
+       	 modalMain.innerHTML = "";
+        }; 
+    } else{
+      button2.onclick = function() {
+   	 followUp = document.getElementById("follow").checked;
+   	 sendCarryOutBlock(message, followUp)
+      };
+    }
+    modalOptions.appendChild(button2);
+	 squareH = modal.clientHeight/15;
+    var display = document.getElementById("modal");
+	 display.style.display = "block";
+	 display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
+	 display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
 }

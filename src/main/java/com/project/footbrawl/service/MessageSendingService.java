@@ -341,7 +341,8 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 	public void sendThrowDetails(int gameId, Integer player, int[] location, int[] target, String targetName, int rollNeeded, int catchRoll, List<jsonTile> interceptLocations,
 			int team) {
 		MessageToClient message = new MessageToClient();
-		message.setType("THROW");
+		message.setType("INFO");
+		message.setAction("THROW");
 		message.setPlayer(player);
 		message.setLocation(location);
 		message.setTarget(target);
@@ -349,6 +350,16 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setRollNeeded(rollNeeded);
 		message.setSecondaryRollNeeded(catchRoll);
 		message.setSquares(interceptLocations);
+		controller.sendMessageToUser(gameId, team, message);
+	}
+
+	public void sendThrowRanges(int gameId, Integer playerId, int[] location, List<jsonTile> squares, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("THROWRANGES");
+		message.setPlayer(playerId);
+		message.setLocation(location);
+		message.setSquares(squares);
 		controller.sendMessageToUser(gameId, team, message);
 	}
 }

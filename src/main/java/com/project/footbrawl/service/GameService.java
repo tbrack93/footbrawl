@@ -1575,10 +1575,11 @@ public class GameService {
 		}
 		int[] origin = from.getLocation();
 		int[] destination = target.getLocation();
-		// rounds distance to target to nearest square (in a straight line, using
+		// rounds down distance to target to nearest square (in a straight line, using
 		// Pythagoras' theorem)
 		int distance = (int) Math.sqrt(((origin[0] - destination[0]) * (origin[0] - destination[0]))
-				+ ((origin[0] - destination[0]) * (origin[0] - destination[0])));
+				+ ((origin[1] - destination[1]) * (origin[1] - destination[1])));
+		System.out.println("distance: " + distance);
 		int modifier = 0;// short pass
 		if (distance > 13) {
 			throw new IllegalArgumentException("Cannot throw more than 13 squares");
@@ -2417,5 +2418,37 @@ public class GameService {
 	      targetName = goal.getPlayer().getName();
 	    }
 	    sender.sendThrowDetails(game.getId(), player, p.getLocation(), target, targetName, roll, catchRoll, interceptLocations, team);
+	}
+	
+	public List<jsonTile> calculateThrowRanges(Integer player, int[] location){
+		List<jsonTile> results = new ArrayList<>();
+		for(Tile[] array : pitch) {
+			for(Tile t : array) {
+				int[] place = t.getLocation();
+				jsonTile jt = new jsonTile();
+				int distance = (int) Math.sqrt(((place[0] - location[0]) * (place[0] - location[0]))
+						        + ((place[1] - location[1]) * (place[1] - location[1])));
+				if(distance < 14) {
+				   jt.setPosition(place);
+				   if(distance < 4) {
+				   jt.setDescription("quick pass");
+				   
+				} else if(distance <7) {
+				  jt.setDescription("short pass");
+				} else if(distance < 11) {
+					jt.setDescription("long pass");
+				} else {
+					jt.setDescription("long bomb");
+				}
+				   results.add(jt);
+			    }
+		   }
+		}	
+		return results;
+	}
+
+	public void sendThrowRange(Integer player, int[] location, int team) {
+		List<jsonTile> squares = calculateThrowRanges(player, location);
+		sender.sendThrowRanges(game.getId(), player, location, squares, team);
 	}
 }
