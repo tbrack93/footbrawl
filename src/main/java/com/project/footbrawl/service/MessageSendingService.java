@@ -329,4 +329,13 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
+	public void sendPossibleActions(int gameId, Integer player, int[] location, List<String> actions, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("ACTIONS");
+		message.setLocation(location);
+		message.setPossibleActions(actions);
+		controller.sendMessageToUser(gameId, team, message);
+	}
+
 }

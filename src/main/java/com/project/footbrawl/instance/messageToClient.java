@@ -33,6 +33,7 @@ public class MessageToClient extends Message {
 	private String playerStatus;
 	private int[] ballLocation;
 	private boolean isReroll;
+	private List<String> possibleActions;
 	
 	public MessageToClient() {
         route = null;
@@ -266,7 +267,13 @@ public class MessageToClient extends Message {
 	public void setOpponentName(String opponentName) {
 		this.opponentName = opponentName;
 	}
-	
-	
+
+	public List<String> getPossibleActions() {
+		return possibleActions;
+	}
+
+	public void setPossibleActions(List<String> possibleActions) {
+		this.possibleActions = possibleActions;
+	}
 	
 }

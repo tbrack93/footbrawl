@@ -364,7 +364,10 @@ function decodeMessage(message){
 	console.log("Decoding message");
 	if(message.type == "INFO"){
 		console.log("in info");
-		if(message.action == "MOVEMENT"){
+		if(message.action == "ACTIONS"){
+			showPossibleActions(message);
+		}
+		else if(message.action == "MOVEMENT"){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
@@ -554,7 +557,8 @@ function actOnClick(click){
 	var square = determineSquare(click);
 	console.log(square);
 	var done = false;
-	players.forEach(player => {
+	for(var i = 0 ; i < players.length; i++){
+		var player = players[i];
 		 // console.log("checking");
 		 if(player.location[0] == square[0] && player.location[1] == square[1]) {
 			 taskQueue.length = 0;
@@ -563,7 +567,6 @@ function actOnClick(click){
 			
 			 if(player == activePlayer){
 			//	 resetMovement();
-				 done = true; // needed as return just escapes forEach block
 				 return;
 			 } else {
 				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
@@ -581,24 +584,24 @@ function actOnClick(click){
 				}else{
 			     var pTemp = activePlayer;
 			     activePlayer = player;
-			     drawPlayers();
-			     drawPlayer(activePlayer);
-			     drawBall();
+			     drawPlayerBorders();
+			     drawSelectionBorder(activePlayer);
 			     inRoute = false;
 			     waypoints.length = 0;
 			     route.length = 0;
-			   
+			     stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+			                 JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": player.id}));
+			     
 			     // console.log(player);
 			    // stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			      //           JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
 			        //         "location": player.location, "routeMACost": 0}));
 			 }
-			done = true;
 		    return;
 		  }
+		 }
 		 } // will be more options for blitz/ block/ throw actions
-	 });
-	if(done == false && activePlayer != null && activePlayer.team == team && yourTurn == true){ 
+	if(activePlayer != null && activePlayer.team == team && yourTurn == true){ 
 		if(lastSquareClicked != null && square[0] == lastSquareClicked[0] && square[1] == lastSquareClicked[1]){
 			var messageRoute = new Array();
 			route.forEach(tile => {
@@ -1594,10 +1597,25 @@ function closeModal(){
 	document.getElementById("closeModal").style.display = "none";
 }
 
+function closeActions(){
+	var actions = document.getElementById("actions");
+	actions.style.display = "none";
+	var actions = document.getElementsByClassName("actionImg");
+	for(var i = 0 ; i < actions.legnth; i++){
+		actions[i].style.display = "none";
+	}
+}
+
 function showPossibleActions(message){
+	 console.log("show actions");
 	 var actions = document.getElementById("actions");
-	 var squareH = canvas.clientHeight/15;
+	 canvas = document.getElementById("canvas");
 	 actions.style.display = "block";
-	 actions.style.left = ""+ ((square[0] * squareH) - actions.offsetWidth/6)  + "px";
-	 actions.style.top = "" + (((14- square[1]) * squareH) - actions.offsetHeight) + "px";
+	 var squareH = canvas.clientHeight/15;
+	 for(var i = 0; i < message.possibleActions.length; i++){
+		 document.getElementById(message.possibleActions[i]).style.display = "inline";
+	 }
+	 actions = document.getElementById("actions"); // have to get updated height & width based on number of images shown
+	 actions.style.left = ""+ ((message.location[0] * squareH) - actions.offsetWidth/6)  + "px";
+	 actions.style.top = "" + (((14- message.location[1]) * squareH) - actions.offsetHeight) + "px";
 }
