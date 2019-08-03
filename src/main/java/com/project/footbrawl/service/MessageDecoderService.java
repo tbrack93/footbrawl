@@ -52,10 +52,12 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(), message.getLocation(), message.isFollowUp(), false, team);
 			} else if(action.equals("BLITZ")){
 				lobby.getGameService(gameId).carryOutBlitz(message.getPlayer(), message.getOpponent(), message.getRoute(), message.getTarget(), message.isFollowUp(), team);
-		    } else if(action.contentEquals("BLOCKDICECHOICE")) {
+		    } else if(action.equals("BLOCKDICECHOICE")) {
 				lobby.getGameService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(), message.getOpponent(), message.isFollowUp(), team);
-			} else if(action.contentEquals("PUSHCHOICE")) {
+			} else if(action.equals("PUSHCHOICE")) {
 				lobby.getGameService(gameId).carryOutPushChoice(message.getTarget());
+			} else if(action.equals("THROW")){
+				lobby.getGameService(gameId).carryOutThrow(message.getPlayer(), message.getLocation(), message.getTarget(), team);
 			}
 		}
 		

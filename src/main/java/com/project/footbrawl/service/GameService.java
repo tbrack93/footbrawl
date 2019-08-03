@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 4, 6, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
+			Arrays.asList(new Integer[] { 6, 6, 6, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6}));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -2450,5 +2450,10 @@ public class GameService {
 	public void sendThrowRange(Integer player, int[] location, int team) {
 		List<jsonTile> squares = calculateThrowRanges(player, location);
 		sender.sendThrowRanges(game.getId(), player, location, squares, team);
+	}
+
+	public void carryOutThrow(Integer player, int[] location, int[] target, int team) {
+		passBallAction(getPlayerById(player), pitch[target[0]][target[1]]);
+		
 	}
 }

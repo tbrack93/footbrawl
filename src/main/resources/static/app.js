@@ -606,7 +606,7 @@ function actOnClick(click){
 						                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
 						                 "location": player.location, "routeMACost": 0}));
 					return;
-				} else if(actionChoice == null || player.team == team && (actionChoice == "move" || actionChoice == "blitz")){
+				} else if(actionChoice == null || player.team == team && (actionChoice == "move" || actionChoice == "blitz" || actionChoice == "block")){
 			     var pTemp = activePlayer;
 			     activePlayer = player;
 			     drawPlayerBorders();
@@ -1451,7 +1451,9 @@ function cancelBlock(player){
 	document.getElementById("modalImages").innerHTML = "";
 	inModal = false;
 	inBlock = false;
-	resetMovement();
+	if(actionChoice != "block"){
+	  resetMovement();
+	}
 	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
              JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
 	
@@ -1763,63 +1765,56 @@ function showThrowDetails(message){
 	aContext.lineWidth = 10;
 	aContext.stroke();
 	aContext.restore();
-	//showThrowModal(message);
+	showThrowModal(message);
 }
 
 function showThrowModal(message){
-	document.getElementById("modalText").innerHTML = "";
-	 inBlock = true;
-	 showBlockAssists(message);
-	 if(blitz == true){
-		 document.getElementById("modalTitle").innerHTML = "Blitz Details"; 
-	 } else {
-    document.getElementById("modalTitle").innerHTML = "Block Details";
-	 }
+	var player = getPlayerById(message.player);
+	document.getElementById("modalText").innerHTML = ""
+	document.getElementById("modalOptions").innerHTML = "";
+    document.getElementById("modalTitle").innerHTML = "Throw Details"; 
 	 var modalMain = document.getElementById("modalImages");
 	 modalMain.innerHTML = ""; 
-	 var blankDice = new Image();
-	 blankDice.src = "/images/blank_dice.png";
-	 for(i = 0; i<message.numberOfDice; i++){
-		 modalMain.innerHTML += "<img height='50px' class ='dice' src=" + blankDice.src + "/>"; 
+	 document.getElementById("modalText").innerHTML = "<p>Throw Roll Needed: " + message.rollNeeded + "+</p>"; 
+	 if(message.secondaryRollNeeded != 0){
+		 document.getElementById("modalText").innerHTML += "<p>Catch Roll Needed: " + message.secondaryRollNeeded + "+</p>";
 	 }
-	 var toChoose;
-	 var style = "black"
-	 if(message.userToChoose == team){
-		 toChoose = "You choose 1 outcome dice.";
-		 var style = "red";
-	 } else{
-		 toChoose = "Your opponent chooses 1 outcome dice.";
+	 if(message.squares.length > 0){
+		 var interceptors = document.getElementById("modalOptions");
+		 interceptors.innerHTML = "<p style='color:red'>Possible Interceptors: </p>";
+		 for(var i = 0; i < message.squares.length; i++){
+			 interceptors.innerHTML += message.squares[i].description + ": " + message.squares[i].catchRoll + "+<br>";
+		 }
+		 interceptors.innerHTML += "<hr>";
 	 }
-	 document.getElementById("modalOptions").innerHTML = "<p style='font-color:" + style +"'>"+ toChoose +"</p>Follow Up? "; 
-	 var follow = document.createElement("input");
-	 follow.type = "checkbox";
-	 follow.id = "follow";
-	  modalOptions.appendChild(follow);
-	 document.getElementById("modalOptions").innerHTML += "<br><hr>";
-	 var button = document.createElement("BUTTON")
+	var button = document.createElement("BUTTON")
     button.innerHTML = "Cancel";
-    button.onclick = function() {cancelBlock(message.player)};
+    button.onclick = function() {cancelThrow(message.player)};
     modalOptions.appendChild(button);
     var button2 = document.createElement("BUTTON")
-    button2.innerHTML = "Block";
-    if(blitz == true){
-   	 button2.innerHTML = "Blitz";
-   	 button2.onclick = function() {
-       	 followUp = document.getElementById("follow").checked;
-       	 sendCarryOutBlitz(message, followUp, route);
-       	 document.getElementById("modal").style.display = "none"; 
-       	 modalMain.innerHTML = "";
-        }; 
-    } else{
-      button2.onclick = function() {
-   	 followUp = document.getElementById("follow").checked;
-   	 sendCarryOutBlock(message, followUp)
+    button2.innerHTML = "Throw";
+     button2.onclick = function() {
+   	   sendCarryOutThrow(message);
       };
-    }
     modalOptions.appendChild(button2);
-	 squareH = modal.clientHeight/15;
+	squareH = modal.clientHeight/15;
     var display = document.getElementById("modal");
 	 display.style.display = "block";
-	 display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
-	 display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+	 display.style.left = ""+ (message.target[0] +3) * squareH-5 + "px";
+	 display.style.top = "" + ((14- message.target[1])-5) * squareH-5 + "px";
+}
+
+function cancelThrow(player){
+	document.getElementById("modal").style.display = "none";
+	document.getElementById("modalImages").innerHTML = "";
+    animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+    JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": player}));
+}
+
+function sendCarryOutThrow(message){
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+			    JSON.stringify({"type": "ACTION", "action": "THROW", "player": message.player,
+			    	"location": message.location, "target": message.target}));
 }
