@@ -565,10 +565,7 @@ function actOnClick(click){
 			 console.log(player.name);
 			 console.log(player.id);
 			
-			 if(player == activePlayer){
-			//	 resetMovement();
-				 return;
-			 } else {
+			 
 				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
 					if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
 				      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
@@ -598,7 +595,6 @@ function actOnClick(click){
 			        //         "location": player.location, "routeMACost": 0}));
 			 }
 		    return;
-		  }
 		 }
 		 } // will be more options for blitz/ block/ throw actions
 	if(activePlayer != null && activePlayer.team == team && yourTurn == true){ 
@@ -1612,6 +1608,7 @@ function resetActions(){
 
 function showPossibleActions(message){
 	 resetActions();
+	 document.getElementById("squaresCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.width);
 	 console.log("show actions");
 	 var actions = document.getElementById("actions");
 	 canvas = document.getElementById("canvas");
@@ -1623,4 +1620,11 @@ function showPossibleActions(message){
 	 actions = document.getElementById("actions"); // have to get updated height & width based on number of images shown
 	 actions.style.left = ""+ ((message.location[0] * squareH) - actions.offsetWidth/6)  + "px";
 	 actions.style.top = "" + (((14- message.location[1]) * squareH) - actions.offsetHeight) + "px";
+}
+
+function requestMovement(){
+	 closeActions();
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+               JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
+               "location": activePlayer.location, "routeMACost": 0}));
 }
