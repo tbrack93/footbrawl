@@ -20,32 +20,24 @@ public class MessageDecoderService {
 		if(type.equals("INFO")) {
 			if(action.equals("ACTIONS")){
 				lobby.getGameService(gameId).showPossibleActions(message.getPlayer(), team);
-				return;
-			}
-			if(action.equals("MOVEMENT")){
+			} else if(action.equals("MOVEMENT")){
 				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), message.getRouteMACost(), team);
-				return;
-			}
-			if(action.equals("TEAMS")){
+			} else if(action.equals("TEAMS")){
 				lobby.getGameService(gameId).sendTeamsInfo(team);
-				return;
-			}
-			if(action.equals("ROUTE")) {
+			} else if(action.equals("ROUTE")) {
 				if(message.getWaypoints().size() != 0) {
 					lobby.getGameService(gameId).sendWaypointRoute(message.getPlayer(), message.getTarget(), message.getWaypoints(), team);
 				} else {
 				lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getLocation(), message.getTarget(), team);
 				}
 				return;
-			}
-			if(action.equals("BLOCK")) {
+			} else if(action.equals("BLOCK")) {
 				lobby.getGameService(gameId).sendBlockDetails(message.getPlayer(), message.getOpponent(), message.getLocation(), team);
-				return;
-			}
-			if(action.equals("BLITZ")) {
+			} else if(action.equals("BLITZ")) {
 				lobby.getGameService(gameId).sendBlitzDetails(message.getPlayer(), message.getOpponent(), message.getWaypoints(), message.getTarget(), team);
-			}
-			if(action.equals("THROW")) {
+			} else if(action.equals("THROWRANGES")) {
+				lobby.getGameService(gameId).sendThrowRange(message.getPlayer(), message.getLocation(), team);
+			} else if(action.equals("THROW")) {
 				lobby.getGameService(gameId).sendThrowDetails(message.getPlayer(), message.getTarget(), team);
 			}
 		}else if(type.equals("ACTION")) {

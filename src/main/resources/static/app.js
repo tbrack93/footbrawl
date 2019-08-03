@@ -372,7 +372,11 @@ function decodeMessage(message){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
-		} else if(message.action == "BLOCK"){
+		} else if(message.action == "THROWRANGES"){
+			showThrowRanges(message);
+		} else if(message.action == "THROW"){
+		    showThrowDetails(message);
+		}else if(message.action == "BLOCK"){
 			showBlock(message, false);
 	    } else if(message.action == "BLITZ"){
 		    showRoute(message);
@@ -1690,26 +1694,51 @@ function startBlitz(){
 	actionChoice = "blitz";
 }
 
-function showThrowRange(){
-	closeActions();
-	actionChoice = "throw";
-	var location = activePlayer.location;
+function showThrowRanges(message){
+	var location = message.location;
 	var sContext = squares.getContext("2d");
 	sContext.clearRect(0, 0, squares.width, squares.height);
-	var column = location[0];
-	var row = 14 - location[1];
 	var squareH = canvas.height / 15;
 	sContext.save();
-	sContext.fillStyle = "red";
-	sContext.globalAlpha = 0.4;
-	sContext.fillRect((column- 13) * squareH, (row -13) * squareH, squareH *27, squareH * 27);
-	sContext.clearRect((column- 10) * squareH, (row - 10) * squareH, squareH * 21, squareH * 21);
-	sContext.fillStyle = "orange";
-	sContext.fillRect((column- 10) * squareH, (row - 10) * squareH, squareH * 21, squareH * 21);
-	sContext.clearRect((column- 6) * squareH, (row - 6) * squareH, squareH * 13, squareH * 13);
-	sContext.fillStyle = "yellow";
-	sContext.fillRect((column- 6) * squareH, (row - 6) * squareH, squareH * 13, squareH * 13);
-	sContext.clearRect((column- 3) * squareH, (row - 3) * squareH, squareH * 7, squareH * 7);
-	sContext.fillStyle = "green";
-	sContext.fillRect((column- 3) * squareH, (row - 3) * squareH, squareH * 7, squareH * 7);
+	for(var i = 0 ; i < message.squares.length; i++){
+		var type = message.squares[i].description;
+		if(type == "quick pass"){
+			sContext.fillStyle = "green";
+		} else if(type == "short pass"){
+			sContext.fillStyle = "yellow";
+		} else if(type == "long pass"){
+			sContext.fillStyle = "orange";
+		} else{
+			sContext.fillStyle = "red";
+		}
+		sContext.globalAlpha = 0.4;
+		sContext.fillRect(message.squares[i].position[0] * squareH + 3, (14 - message.squares[i].position[1]) * squareH + 3 , squareH-5, squareH-5);
+	}
+	context.restore();
+}
+
+function startThrow(){
+	closeActions();
+	actionChoice = "throw";
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+               JSON.stringify({"type": "INFO", "action": "THROWRANGES", "player": activePlayer.id,
+               "location": activePlayer.location}));
+}
+
+function showThrowDetails(message){
+	var sContext = squares.getContext("2d");
+	var column = message.location[0];
+	var row = 14 - message.location[1];
+	var squareH = canvas.height / 15;
+	sContext.save();
+	sContext.globalAlpha = 1;
+	sContext.clearRect(0, 0, squares.width, squares.height);
+	sContext.beginPath();
+	sContext.moveTo((column +0.5) * squareH, (row +0.5) * squareH);
+	sContext.lineTo((message.target[0]  + 0.5) * squareH, (14 - message.target[1] +0.5) * squareH);
+	//sContext.lineTo((message.target[0] + 1) * squareH, (14 - message.target[1] + 1) * squareH);
+	//sContext.lineTo((column + 1) * squareH, (row + 1) * squareH);
+	sContext.closePath();
+	sContext.lineWidth = 10;
+	sContext.stroke();
 }
