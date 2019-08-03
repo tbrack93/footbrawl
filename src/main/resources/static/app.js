@@ -852,6 +852,13 @@ function showRoll(message){
 	if(message.rollType == "PICKUPBALL"){
 		showPickUpResult(message);
 	}
+	if(message.rollType == "THROW"){
+		if(message.rollOutcome == "failed"){
+		  (taskQueue.shift())();
+		   return;
+		}
+		showThrowResult(message);
+	}
 	if(message.rollOutcome == "success"){
 		inModal = false;
 		modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -1039,6 +1046,9 @@ function showFailedAction(message){
 	var effect = " fell down.";
 	if(message.rollType == "PICKUPBALL"){
 		effect = " dropped the ball";
+	}
+	if(message.rollType == "THROW"){
+		effect = " fumbled the throw";
 	}
 	document.getElementById("modalTitle").innerHTML = message.playerName + effect;
 	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
