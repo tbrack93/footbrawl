@@ -2354,5 +2354,42 @@ public class GameService {
 		  blitz = null;
 	      taskQueue.clear();
 	}
+	
+	public ArrayList<String> getPossibleActions(PlayerInGame player) {
+		if(player.getTeam() != activeTeam.getId()) {
+			throw new IllegalArgumentException("Not their turn");
+		}
+		ArrayList<String> actions = new ArrayList<>();
+		if(player.getActionOver() == true || player.getStatus() == "stunned") {
+			actions.add("None");
+			return actions;
+		}
+		if(player.getStatus() == "prone") {
+			actions.add("standUp");
+		}
+		if(!activeTeam.hasBlitzed() && player.getActedThisTurn() == false) {
+		  actions.add("blitz");
+		}
+		if(player.getRemainingMA() > -3) {
+			actions.add("move");
+		}
+		if(player.isHasBall()) {
+			if(!activeTeam.hasPassed()){
+			  actions.add("throw");
+			}
+			if(!activeTeam.hasHandedOff()) {
+			  actions.add("handOff");
+			}
+		}
+		addTackleZones(player);
+		if(player.getTile().getTackleZones() != 0 && player.getActedThisTurn() == false) {
+			actions.add("block");
+		}
+	    return actions;
+	}
 
+	public void showPossibleActions(Integer player, int team) {
+		List<String> actions = getPossibleActions(getPlayerById(player));
+		sender.sendPossibleActions(game.getId(), player, getPlayerById(player).getLocation(), actions, team);
+	}
 }

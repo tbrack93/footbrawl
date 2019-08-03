@@ -31,7 +31,7 @@ canvas {
 #modal {
 	display: none;
 	position: absolute;
-	z-index:100;
+	z-index:90;
 	background-color: #FBFBFB;
     padding: 10px;
     border: 1px solid #b4b4b4;
@@ -102,4 +102,23 @@ hr {
 #newRolls{
 	overflow-y: auto;
     height: 100px;
+}
+
+
+#actions{
+  position: absolute;
+  width: 100px;
+  z-index: 100;
+  color: #fafafa;
+  padding-top: -10px;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+#actionsMain{
+	 background-color: rgba(0, 0, 255, .4);
+	 border-radius: 10px;
+}
+
+#cancel {
+	padding:0px;
 }

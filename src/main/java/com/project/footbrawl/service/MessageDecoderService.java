@@ -18,6 +18,10 @@ public class MessageDecoderService {
 		String type = message.getType();
 		String action = message.getAction();
 		if(type.equals("INFO")) {
+			if(action.equals("ACTIONS")){
+				lobby.getGameService(gameId).showPossibleActions(message.getPlayer(), team);
+				return;
+			}
 			if(action.equals("MOVEMENT")){
 				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(), message.getRouteMACost(), team);
 				return;
