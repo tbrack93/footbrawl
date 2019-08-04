@@ -53,7 +53,7 @@ public class GameLobbyService {
 		List<Skill> skills = new ArrayList<>();
 		//skills.add(block);
 		skills.add(dodge);
-		skills.add(catching);
+		//skills.add(catching);
 		//skills.add(sideStep);
 		p.setSkills(skills);
 		p3.setSkills(skills);

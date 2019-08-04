@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 1, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 3, 1, 1, 2, 6, 1, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -1416,6 +1416,7 @@ public class GameService {
 		int roll = diceRoller(1, 6)[0];
 		rolled.clear();
 		rolled.add(roll);
+		rollType = "CATCH";
 		System.out.println(player.getName() + " tries to catch the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		if (roll >= needed) {
@@ -1428,9 +1429,9 @@ public class GameService {
 				return;
 			}
 		} else {
-			runnableLocation = new int[][] { player.getLocation(), {} };
 			System.out.println(player.getName() + " failed to catch the ball!");
 			rerollOptions = determineRerollOptions("CATCH", roll, runnableLocation);
+			runnableLocation = new int[][] { player.getLocation(), player.getLocation() };
 			String end = "Y";
 			if (!rerollOptions.isEmpty()) {
 				awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId() };
@@ -1479,6 +1480,7 @@ public class GameService {
 		int roll = diceRoller(1, 6)[0];
 		rolled.clear();
 		rolled.add(roll);
+		rollType = "CATCH";
 		System.out.println(player.getName() + " tries to intercept the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		if (roll >= needed) {
@@ -1490,10 +1492,11 @@ public class GameService {
 			turnover();
 			return;
 		} else {
-			runnableLocation = new int[][] { source, player.getLocation() };
 			System.out.println(player.getName() + " failed to intercept the ball!");
 			List<String> options = determineRerollOptions("CATCH", player.getId(),
 					new int[][] { source, player.getLocation() });
+			runnableLocation = new int[][] { source, player.getLocation() };
+			awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId()};
 			if (options.isEmpty()) {
 				taskQueue.pop(); // get rid of existing throw result;
 				Runnable task = new Runnable() {
@@ -1541,6 +1544,7 @@ public class GameService {
 	}
 
 	public void passBallAction(PlayerInGame thrower, Tile target, boolean reroll) {
+		taskQueue.clear();
 		int[] details = calculateThrow(thrower, thrower.getTile(), target);
 		int needed = details[0];
 		int modifier = details[1];
@@ -1611,6 +1615,8 @@ public class GameService {
 	}
 
 	public void continuePass(int roll, int needed, PlayerInGame thrower, Tile target) {
+		rolled.clear();
+		rolled.add(roll);
 		if (roll >= needed) {
 			System.out.println(thrower.getName() + " threw the ball accurately!");
 			thrower.setHasBall(false);
@@ -2350,10 +2356,10 @@ public class GameService {
 			}
 			awaitingReroll = null;
 			taskQueue.pop().run();
-			if (rollType == "INTERCEPT") {
+			if (rollType == "INTERCEPT" || rollType == "THROW" || rollType == "CATCH") {
 				return;
 			}
-			if (rollType == "BLOCK" || rollType == "THROW") {
+			if (rollType == "BLOCK") {
 				taskQueue.pop(); // kill saved task for not rerolling
 				return;
 			}
