@@ -39,6 +39,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).sendThrowRange(message.getPlayer(), message.getLocation(), team);
 			} else if(action.equals("THROW")) {
 				lobby.getGameService(gameId).sendThrowDetails(message.getPlayer(), message.getTarget(), team);
+			} else if(action.equals("HANDOFF")) {
+				lobby.getGameService(gameId).sendHandOffDetails(message.getPlayer(), message.getTarget(), message.getOpponent(), team);
 			}
 		}else if(type.equals("ACTION")) {
 			if(action.equals("ROUTE")){
@@ -57,8 +59,10 @@ public class MessageDecoderService {
 			} else if(action.equals("PUSHCHOICE")) {
 				lobby.getGameService(gameId).carryOutPushChoice(message.getTarget());
 			} else if(action.equals("THROW")){
-				System.out.println("throw received");
 				lobby.getGameService(gameId).carryOutThrow(message.getPlayer(), message.getLocation(), message.getTarget(), team);
+			} else if(action.equals("HANDOFF")){
+				lobby.getGameService(gameId).carryOutHandOff(message.getPlayer(), message.getTarget(), message.getOpponent(), team);
+				
 			}
 		}
 		

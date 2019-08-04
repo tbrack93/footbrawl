@@ -362,4 +362,29 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setSquares(squares);
 		controller.sendMessageToUser(gameId, team, message);
 	}
+
+	public void sendHandOffDetails(int gameId, int roll, Integer player, int[] location, int[] target, Integer opponent, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("HANDOFF");
+		message.setPlayer(player);
+		message.setLocation(location);
+		message.setTarget(target);
+		message.setOpponent(opponent);
+		message.setRollNeeded(roll);
+		controller.sendMessageToUser(gameId, team, message);
+	}
+
+	public void sendHandOffAction(int gameId, int player, int[] location, String playerName, int[] target, int targetPlayer, String targetName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("HANDOFF");
+		message.setPlayer(player);
+		message.setPlayerName(playerName);
+		message.setLocation(location);
+		message.setTarget(target);
+		message.setOpponent(targetPlayer);
+		message.setOpponentName(targetName);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 }

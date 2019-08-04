@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 3, 6, 6, 6, 1, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 6, 6, 6, 6, 1, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
 	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
@@ -1667,8 +1667,9 @@ public class GameService {
 		endOfAction(thrower);
 	}
 
-	public void handOffBallAction(PlayerInGame player, Tile target) {
+	public void handOffBallAction(PlayerInGame player, Tile target, PlayerInGame targetPlayer) {
 		actionCheck(player);
+		inPassOrHandOff = true;
 		if (!player.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
@@ -1679,6 +1680,7 @@ public class GameService {
 			throw new IllegalArgumentException("Can only hand off ball once per turn");
 		}
 		player.getTeamIG().setHandedOff(true);
+		sender.sendHandOffAction(game.getId(), player.getId(), player.getLocation(), player.getName(), target.getLocation(), targetPlayer.getId(), targetPlayer.getName());
 		System.out.println(player.getName() + " hands off the ball to " + target.getPlayer().getName());
 		player.setHasBall(false);
 		catchBallAction(target.getPlayer(), true);
@@ -1700,7 +1702,7 @@ public class GameService {
 		return calculateAgilityRoll(p, location, 1);
 	}
 
-	public int calculateHandOff(PlayerInGame p, Tile from, Tile target) {
+	public int calculateHandOff(PlayerInGame p, Tile target) {
 		if (!target.containsPlayer()) {
 			throw new IllegalArgumentException("Must hand off ball to a player");
 		}
@@ -2648,5 +2650,16 @@ public class GameService {
 			interceptor = interceptors.get(0);
 		} 
 		passBallAction(getPlayerById(player), goal, false);
+	}
+
+	public void sendHandOffDetails(Integer player, int[] target, Integer opponent, int team) {
+		PlayerInGame p = getPlayerById(player);
+		Tile goal = pitch[target[0]][target[1]];
+		int roll = calculateHandOff(p, goal);
+		sender.sendHandOffDetails(game.getId(), roll, player, p.getLocation(), target, opponent, team);
+	}
+
+	public void carryOutHandOff(Integer player, int[] target, Integer opponent, int team) {
+		handOffBallAction(getPlayerById(player), pitch[target[0]][target[1]], getPlayerById(opponent));
 	}
 }
