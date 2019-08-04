@@ -33,8 +33,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = true;
+			Arrays.asList(new Integer[] { 3, 6, 6, 6, 1, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -1427,6 +1427,11 @@ public class GameService {
 					player.getLocation(), player.getLocation(), null, player.getTeam(), "Y", false);
 			player.setHasBall(true);
 			inPassOrHandOff = false;
+			if((player.getLocation()[0] == 0 && player.getTeamIG() == team2)
+					|| (player.getLocation()[0] == 25 && player.getTeamIG() == team1)) {
+				touchdown(player);
+				return;
+			} 
 			if (player.getTeamIG() != activeTeam) {
 				turnover();
 				return;
