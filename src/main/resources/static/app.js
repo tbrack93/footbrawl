@@ -1944,9 +1944,11 @@ function showCatchResult(message){
 	getPlayerById(message.player).hasBall = true;
 	ballLocation = null;
 	drawPlayers();
-	if(taskQueue.length >0){
-	  (taskQueue.shift())();
-	}
+	 setTimeout(function(){	   
+		if(taskQueue.length != 0){
+		  (taskQueue.shift())();
+		 }
+	}, 300);
 }
 
 function showIntercept(message){
@@ -2029,6 +2031,7 @@ function sendCarryOutHandOff(message){
 		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				    JSON.stringify({"type": "ACTION", "action": "HANDOFF", "player": message.player,
 				    	"location": message.location, "target": message.target, "opponent": message.opponent}));
+		 document.getElementById("modalOptions").innerHTML = "";
 }
 
 function showHandOff(message){
