@@ -1036,6 +1036,10 @@ function showFailedAction(message){
     var player = getPlayerById(message.player); 
     var column = message.target[0];
 	var row = 14 - message.target[1];
+	if(message.rollType == "THROW"){
+		column = message.location[0];
+		row = 14 - message.location[1];
+	}
 	var squareH = canvas.height / 15;
 	shadow.clearRect(column * squareH-5, row * squareH-5, squareH+10,squareH+10);
 	var display = document.getElementById("modal");
