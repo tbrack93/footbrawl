@@ -377,7 +377,9 @@ function decodeMessage(message){
 			showThrowRanges(message);
 		} else if(message.action == "THROW"){
 		    showThrowDetails(message);
-		}else if(message.action == "BLOCK"){
+		} else if(message.action == "HANDOFF"){
+			showHandOffDetails(message);
+		} else if(message.action == "BLOCK"){
 			showBlock(message, false);
 	    } else if(message.action == "BLITZ"){
 		    showRoute(message);
@@ -465,7 +467,7 @@ function decodeMessage(message){
 		      }
 		} else if(message.action == "TEAMBLITZED"){
 			showBlitzUsed(message);
-		}
+		} 
 		}
 	} else if(message.type == "ACTION"){
 		if(actionChoice != "blitz"){
@@ -535,6 +537,8 @@ function decodeMessage(message){
 	      } else{ 	
 	    	  showPushResult(message); 
 	      }
+	  } else if(message.action == "HANDOFF"){
+		  showHandOff(message);
 	  }
    }
 }
@@ -573,7 +577,7 @@ function actOnClick(click){
 	} else if(actionChoice == "throw" && "throw" && square[0] == activePlayer.location[0] && square[1] == activePlayer.location[1]){
 		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
                  JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
-	}
+	} 
 	for(var i = 0 ; i < players.length; i++){
 		var player = players[i];
 		 // console.log("checking");
@@ -581,17 +585,22 @@ function actOnClick(click){
 			 taskQueue.length = 0;
 			 console.log(player.name);
 			 console.log(player.id);
-			
-			     
+			    
+			    if(activePlayer!= null & activePlayer != player && actionChoice != null && actionChoice == "handOff" && Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1){
+							stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+					                 JSON.stringify({"type": "INFO", "action": "HANDOFF", "player": activePlayer.id,
+						                 "location": activePlayer.location, "target": square, "opponent": player.id}));
+				}
 				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
 					if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
 						if(actionChoice != null && actionChoice == "block"){
-						
+		
 						stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				                 JSON.stringify({"type": "INFO", "action": "BLOCK", "player": activePlayer.id,
 					                 "location": activePlayer.location, "opponent": player.id}));
 						return;
-						}
+						} 
+						
 					} else if (actionChoice != null && actionChoice == "blitz"){
 						  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				                 JSON.stringify({"type": "INFO", "action": "BLITZ", "player": activePlayer.id,
@@ -628,7 +637,7 @@ function actOnClick(click){
 		    return;
 		 }
 		 } 
-	if(activePlayer != null && activePlayer.team == team && yourTurn == true && actionChoice != null && actionChoice != "throw"){ 
+	if(activePlayer != null && activePlayer.team == team && yourTurn == true && actionChoice != null && actionChoice != "throw" && actionChoice != "handOff"){ 
 		if(lastSquareClicked != null && square[0] == lastSquareClicked[0] && square[1] == lastSquareClicked[1]){
 			var messageRoute = new Array();
 			route.forEach(tile => {
@@ -1310,6 +1319,7 @@ function showTurnover(message){
 }
 
 function showNewTurn(message){
+	turnover = false;
 	inModal = false;
 	inBlock = false;
 	inPickup = false;
@@ -1934,6 +1944,9 @@ function showCatchResult(message){
 	getPlayerById(message.player).hasBall = true;
 	ballLocation = null;
 	drawPlayers();
+	if(taskQueue.length >0){
+	  (taskQueue.shift())();
+	}
 }
 
 function showIntercept(message){
@@ -1964,5 +1977,96 @@ function showIntercept(message){
      ballLocation = message.target;
      animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
      animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
-    }
+    }    
+}
+
+
+function startHandOff(){
+    	closeActions();
+    	actionChoice = "handOff";
+    	var centre = activePlayer.location;
+    	canvas = document.getElementById("canvas");
+    	var squareH = canvas.clientHeight/15;
+    	console.log(centre);
+    	var column = centre[0] -1;
+    	var row = 14 - centre[1] - 1;
+        var squareH = canvas.height / 15;
+    	var sContext = squares.getContext("2d");
+    	sContext.save();
+    	sContext.fillStyle = "white";
+    	sContext.globalAlpha = 0.3;
+        sContext.fillRect(column * squareH, row * squareH, squareH *3,squareH * 3);
+        sContext.restore();
+}
+
+function showHandOffDetails(message){
+		var player = getPlayerById(message.player);
+		document.getElementById("modalText").innerHTML = ""
+		document.getElementById("modalOptions").innerHTML = "";
+	    document.getElementById("modalTitle").innerHTML = "Handoff Details"; 
+		 var modalMain = document.getElementById("modalImages");
+		 modalMain.innerHTML = ""; 
+		 document.getElementById("modalText").innerHTML = "<p>Ball is passed automatically, no roll needed</p>"; 
+	     document.getElementById("modalText").innerHTML += "<p>Catch Roll Needed: " + message.rollNeeded + "+</p>";
+		var button = document.createElement("BUTTON")
+	    button.innerHTML = "Cancel";
+	    button.onclick = function() {cancelThrow(message.player)}; 
+	    modalOptions.appendChild(button);
+	    var button2 = document.createElement("BUTTON")
+	    button2.innerHTML = "Hand Off";
+	     button2.onclick = function() {
+	   	   sendCarryOutHandOff(message);
+	      };
+	    modalOptions.appendChild(button2);
+		squareH = modal.clientHeight/15;
+	    var display = document.getElementById("modal");
+		 display.style.display = "block";
+		 display.style.left = ""+ (message.target[0] +3) * squareH-5 + "px";
+		 display.style.top = "" + ((14- message.target[1])-5) * squareH-5 + "px";
+}
+
+function sendCarryOutHandOff(message){
+		 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+				    JSON.stringify({"type": "ACTION", "action": "HANDOFF", "player": message.player,
+				    	"location": message.location, "target": message.target, "opponent": message.opponent}));
+}
+
+function showHandOff(message){
+	inThrow = true;
+	animating = true;
+	console.log("showing throw");
+	var outcome = " threw the ball";
+	document.getElementById("modalText").innerHTML = message.playerName + " handed off the ball to " + message.opponentName +"</br></br>"
+	document.getElementById("modalTitle").innerHTML = "Hand Off";
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById("newRolls").innerHTML =  message.playerName + " handed off the ball to " + message.opponentName + "</br>" + newRolls.innerHTML;
+	 var ballImg = new Image();
+	  ballImg.src = "/images/ball.png";
+     ballImg.onload = function() { 
+       var squareH = canvas.height / 15;
+       var p = getPlayerById(message.player);
+       animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+       var startingX = message.location[0] * squareH + squareH/3;
+       var startingY = (14 - message.location[1]) * squareH + squareH/3;
+       context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+       if(p != null){
+   	   console.log(p.name);
+   	   p.hasBall = false;
+       }
+       drawPlayers();
+       var targetX = message.target[0] * squareH + squareH/3;
+       var targetY = (14 - message.target[1]) * squareH + squareH/3;
+       var speed = 25;
+       xIncrement = (targetX - startingX) / speed;
+       yIncrement = (targetY - startingY) / speed;
+       var throwRoute = [message.target];
+     console.log("route created: " + throwRoute);
+     ballLocation = message.target;
+     if(message.rollOutcome == "success" && message.end == "Y"){
+    	 document.getElementById("modalOptions").innerHTML = "";
+    	 document.getElementById("closeModal").style.display = "block";
+     }
+     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+     animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
+     }
 }
