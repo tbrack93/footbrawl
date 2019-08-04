@@ -774,11 +774,17 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 				                         "location": activePlayer.location, "routeMACost": 0}));
 			  }
 		    } 
-			animating = false;
 			console.log("tasks in queue: " + taskQueue.length);
-			if(taskQueue.length != 0){
-		    	(taskQueue.shift())();
-		    }
+			var timeout = 0;
+			if(type == "BALL"){ 
+				timeout = 800;
+			}
+			animating = false;
+			 setTimeout(function(){	   
+				   if(taskQueue.length != 0){
+				   (taskQueue.shift())();
+				   }
+				   }, timeout);
 			return;
 		}
 		counter++;
@@ -862,11 +868,15 @@ function showRoll(message){
 		showThrowResult(message);
 	}
 	if(message.rollType == "INTERCEPT"){
+		if(message.rollOutcome == "failed"){
 		 setTimeout(function(){	   
 		   if(taskQueue.length != 0){
 		   (taskQueue.shift())();
 		   }
-		   }, 200);  
+		   }, 200);
+		}else{
+			showIntercept(message);
+		}
 	}
 	if(message.rollType == "CATCH"){
 		if(message.rollOutcome == "failed"){
@@ -1021,27 +1031,33 @@ function showBallScatter(message){
       ballLocation = message.target;
       animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
       animateMovement(scatterRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
-      setTimeout(function(){
+      //setTimeout(function(){
       // modal.style.display = "block";
       // modal.style.display = "none";
-        if(taskQueue.length != 0){
-        (taskQueue.shift())();
-        }
-        }, 2000);  
+//        if(taskQueue.length != 0){
+//        (taskQueue.shift())();
+//        }
+//        }, 3000);  
       }
     }
+      
 
 function showThrowResult(message){
+	if(message.rollOutcome == "intercepted"){
+	  return;
+	}
+	animating = true;
 	console.log("showing throw");
 	var outcome = " threw the ball";
 	if(message.rollOutcome == "success"){
 		outcome += " accurately";
 	} else if(message.rollOutcome == "badly"){
 		outcome += " badly";
+		document.getElementById("modalTitle").innerHTML = "Bad Throw";
 	}
+	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + outcome + "." + "</p>";
-	
-	animating = true;
+
 	 var ballImg = new Image();
 	  ballImg.src = "/images/ball.png";
      ballImg.onload = function() { 
@@ -1908,4 +1924,35 @@ function showCatchResult(message){
 	getPlayerById(message.player).hasBall = true;
 	ballLocation = null;
 	drawPlayers();
+}
+
+function showIntercept(message){
+	document.getElementById("modalTitle").innerHTML = "Ball Intercept";
+	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + " intercepted the ball! </p>";
+	animating = true;
+	 var ballImg = new Image();
+	  ballImg.src = "/images/ball.png";
+     ballImg.onload = function() { 
+       var squareH = canvas.height / 15;
+       var p = getPlayerById(message.player);
+       animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+       var startingX = message.location[0] * squareH + squareH/3;
+       var startingY = (14 - message.location[1]) * squareH + squareH/3;
+       context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+       if(p != null){
+   	   console.log(p.name);
+   	   p.hasBall = false;
+       }
+       drawPlayers();
+       var targetX = message.target[0] * squareH + squareH/3;
+       var targetY = (14 - message.target[1]) * squareH + squareH/3;
+       var speed = 25;
+       xIncrement = (targetX - startingX) / speed;
+       yIncrement = (targetY - startingY) / speed;
+       var throwRoute = [message.target];
+     console.log("route created: " + throwRoute);
+     ballLocation = message.target;
+     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+     animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
+    }
 }

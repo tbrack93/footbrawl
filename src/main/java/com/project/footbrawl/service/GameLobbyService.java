@@ -104,12 +104,12 @@ public class GameLobbyService {
 		gs.setGame(g);
 		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-		gs.pitch[4][5].addPlayer(team1Players.get(0));
+		gs.pitch[5][2].addPlayer(team1Players.get(0));
 		gs.pitch[4][6].addPlayer(team2Players.get(0));
 		gs.pitch[5][5].addPlayer(team2Players.get(1));
 		gs.pitch[5][4].addPlayer(team1Players.get(1));
 		gs.pitch[4][2].addPlayer(team1Players.get(2));
-		gs.pitch[7][7].addPlayer(team2Players.get(2));
+		gs.pitch[4][4].addPlayer(team2Players.get(2));
 		team1Players.get(2).setHasBall(true);
 		//team2Players.get(0).setHasBall(true);
 		//gs.pitch[4][3].addBall();
