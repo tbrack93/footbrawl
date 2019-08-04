@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 6, 1, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 6, 6, 1, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -1433,6 +1433,7 @@ public class GameService {
 			rerollOptions = determineRerollOptions("CATCH", roll, runnableLocation);
 			String end = "Y";
 			if (!rerollOptions.isEmpty()) {
+				awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId() };
 				end = "N";
 				Runnable task = new Runnable() {
 					@Override
@@ -1441,6 +1442,21 @@ public class GameService {
 					}
 				};
 				taskQueue.addFirst(task);
+				taskQueue.add(task);
+				Runnable task2 = new Runnable() { // for if choose not to reroll
+					@Override
+					public void run() {
+						System.out.println("in no reroll");
+						scatterBall(player.getTile(), 1);
+						if(inPassOrHandOff == true) {
+							Tile scatteredTo = ballLocationCheck();
+							if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
+								turnover(); // only a turnover if is not caught by player on same team before comes to rest	
+							}
+						}
+					}
+				};
+				taskQueue.add(task2);
 			}
 			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "CATCH", needed, rolled, "failed",
 					player.getLocation(), player.getLocation(), rerollOptions, player.getTeam(), end, false);
@@ -1458,7 +1474,7 @@ public class GameService {
 		}
 	}
 
-	public boolean interceptBallAction(int[] source, PlayerInGame player, boolean reroll) {
+	public void interceptBallAction(int[] source, PlayerInGame player, boolean reroll) {
 		int needed = calculateInterception(player);
 		int roll = diceRoller(1, 6)[0];
 		rolled.clear();
@@ -1468,32 +1484,34 @@ public class GameService {
 		if (roll >= needed) {
 			System.out.println(player.getName() + " intercepted the ball!");
 			player.setHasBall(true);
+			taskQueue.pop().run();
 			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled,
 					"success", source, player.getLocation(), rerollOptions, player.getTeam(), "Y", reroll);
 			turnover();
-			return true;
+			return;
 		} else {
 			runnableLocation = new int[][] { source, player.getLocation() };
 			System.out.println(player.getName() + " failed to intercept the ball!");
 			List<String> options = determineRerollOptions("CATCH", player.getId(),
 					new int[][] { source, player.getLocation() });
-			String end = "N";
 			if (options.isEmpty()) {
-				taskQueue.pop().run();
-			} else {
-				awaitingReroll = new String[] { "Y", "INTERCEPT", "" + player.getId() };
+				taskQueue.pop(); // get rid of existing throw result;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
-						interceptBallAction(source, player, true);
+						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
+								source, player.getLocation(), null, player.getTeam(), "Y", reroll);
 					}
 				};
-				taskQueue.addFirst(task);
-				end = "N";
+				taskQueue.add(task);
+				taskQueue.pop().run();
+			} 
+			if(!options.isEmpty()) { // will automatically use reroll if available, as no reason not to (can only be a skill)
+				sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
+						source, player.getLocation(), null, player.getTeam(), "N", reroll);
+				sender.sendSkillUsed(game.getId(), player.getId(), player.getName(), player.getTeam(), options.get(0));
+				interceptBallAction(source, player, true);
 			}
-			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
-					source, player.getLocation(), rerollOptions, player.getTeam(), end, reroll);
-			return false;
 		}
 	}
 
@@ -1573,10 +1591,18 @@ public class GameService {
 				Runnable task2 = new Runnable() {
 					@Override
 					public void run() {
-						continuePass(roll, needed, thrower, target);
+						sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "intercepted",
+								thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), "N", reroll);
 					}
 				};
 				taskQueue.add(task2);
+				Runnable task3 = new Runnable() {
+					@Override
+					public void run() {
+						continuePass(roll, needed, thrower, target);
+					}
+				};
+				taskQueue.add(task3);
 				interceptBallAction(thrower.getLocation(), interceptor, false);
 			} else {
 				continuePass(roll, needed, thrower, target);
@@ -1594,6 +1620,9 @@ public class GameService {
 			}
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "success",
 					thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), end, false);
+			if(taskQueue.size()>0) {
+				taskQueue.pop().run(); // send intercept failure if happened
+			}
 			if (target.containsPlayer()) {
 				catchBallAction(target.getPlayer(), true);
 			} else {
@@ -1603,6 +1632,9 @@ public class GameService {
 			System.out.println(thrower.getName() + " threw the ball badly");
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "badly",
 					thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), "N", false);
+			if(taskQueue.size()>0) {
+				taskQueue.pop().run(); // send intercept failure if happened
+			}
 			scatterBall(target, 3);
 			Tile scatteredTo = ballLocationCheck();
 			if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
@@ -2586,9 +2618,7 @@ public class GameService {
 			return;
 		} else if (interceptors.size() == 1) {
 			interceptor = interceptors.get(0);
-		}
-
+		} 
 		passBallAction(getPlayerById(player), goal, false);
-
 	}
 }

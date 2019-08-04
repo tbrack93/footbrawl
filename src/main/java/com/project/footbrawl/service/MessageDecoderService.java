@@ -57,6 +57,7 @@ public class MessageDecoderService {
 			} else if(action.equals("PUSHCHOICE")) {
 				lobby.getGameService(gameId).carryOutPushChoice(message.getTarget());
 			} else if(action.equals("THROW")){
+				System.out.println("throw received");
 				lobby.getGameService(gameId).carryOutThrow(message.getPlayer(), message.getLocation(), message.getTarget(), team);
 			}
 		}

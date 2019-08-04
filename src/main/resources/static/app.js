@@ -859,6 +859,13 @@ function showRoll(message){
 		}
 		showThrowResult(message);
 	}
+	if(message.rollType == "CATCH"){
+		if(message.rollOutcome == "failed"){
+			  (taskQueue.shift())();
+			   return;
+			}
+			showCatchResult(message);
+	}
 	if(message.rollOutcome == "success"){
 		inModal = false;
 		modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -1015,6 +1022,36 @@ function showBallScatter(message){
       }
     }
 
+function showThrowResult(message){
+	console.log("showing throw");
+	animating = true;
+	 var ballImg = new Image();
+	  ballImg.src = "/images/ball.png";
+     ballImg.onload = function() { 
+       var squareH = canvas.height / 15;
+       var p = getPlayerById(message.player);
+       animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+       var startingX = message.location[0] * squareH + squareH/3;
+       var startingY = (14 - message.location[1]) * squareH + squareH/3;
+       context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+       if(p != null){
+   	   console.log(p.name);
+   	   p.hasBall = false;
+       }
+       drawPlayers();
+       var targetX = message.target[0] * squareH + squareH/3;
+       var targetY = (14 - message.target[1]) * squareH + squareH/3;
+       var speed = 25;
+       xIncrement = (targetX - startingX) / speed;
+       yIncrement = (targetY - startingY) / speed;
+       var throwRoute = [message.target];
+     console.log("route created: " + throwRoute);
+     ballLocation = message.target;
+     animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
+     animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
+   }
+}
+
 
 // adapted from
 // https://stackoverflow.com/questions/899102/how-do-i-store-javascript-functions-in-a-queue-for-them-to-be-executed-eventuall
@@ -1048,7 +1085,7 @@ function showFailedAction(message){
 	display.style.left = ""+ (column +3) * squareH-5 + "px";
 	display.style.top = "" + (row) * squareH-5 + "px";
 	var effect = " fell down.";
-	if(message.rollType == "PICKUPBALL"){
+	if(message.rollType == "PICKUPBALL" || message.rollType == "CATCH"){
 		effect = " dropped the ball";
 	}
 	if(message.rollType == "THROW"){
