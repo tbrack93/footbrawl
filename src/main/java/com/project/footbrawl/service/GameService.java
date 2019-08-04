@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 5, 1, 6, 6, 1, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 3, 6, 6, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -1488,6 +1488,9 @@ public class GameService {
 			System.out.println(player.getName() + " intercepted the ball!");
 			player.setHasBall(true);
 			taskQueue.pop().run();
+//			if(reroll == true) {
+//				taskQueue.pop().run();
+//			}
 			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled,
 					"success", source, player.getLocation(), rerollOptions, player.getTeam(), "Y", reroll);
 			turnover();
@@ -1499,21 +1502,28 @@ public class GameService {
 			runnableLocation = new int[][] { source, player.getLocation() };
 			awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId()};
 			if (options.isEmpty()) {
-				taskQueue.pop(); // get rid of existing throw result;
+				taskQueue.pop(); // get rid of intercepted throw result;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
-						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
-								source, player.getLocation(), null, player.getTeam(), "Y", reroll);
+							sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
+									source, player.getLocation(), null, player.getTeam(), "Y", reroll);
 					}
 				};
 				taskQueue.add(task);
 				taskQueue.pop().run();
 			} 
 			if(!options.isEmpty()) { // will automatically use reroll if available, as no reason not to (can only be a skill)
-				sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
-						source, player.getLocation(), null, player.getTeam(), "N", reroll);
-				sender.sendSkillUsed(game.getId(), player.getId(), player.getName(), player.getTeam(), options.get(0));
+				Runnable task2 = new Runnable() {
+					@Override
+					public void run() {
+					sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
+							source, player.getLocation(), null, player.getTeam(), "N", reroll);
+					sender.sendSkillUsed(game.getId(), player.getId(), player.getName(), player.getTeam(), options.get(0));
+					taskQueue.pop().run();
+					}
+				};
+				taskQueue.add(task2);
 				interceptBallAction(source, player, true);
 			}
 		}

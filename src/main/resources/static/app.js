@@ -35,6 +35,7 @@ var inPickUp;
 var ballLocation;
 var turnover;
 var inBlock;
+var inThrow;
 var lastRollLocation;
 var pushOptions;
 var followUp;
@@ -777,7 +778,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			console.log("tasks in queue: " + taskQueue.length);
 			var timeout = 0;
 			if(type == "BALL"){ 
-				timeout = 800;
+				timeout = 100;
 			}
 			animating = false;
 			 setTimeout(function(){	   
@@ -869,11 +870,9 @@ function showRoll(message){
 	}
 	if(message.rollType == "INTERCEPT"){
 		if(message.rollOutcome == "failed"){
-		 setTimeout(function(){	   
-		   if(taskQueue.length != 0){
-		   (taskQueue.shift())();
-		   }
-		   }, 200);
+		     if(taskQueue.length != 0){
+		       (taskQueue.shift())();
+		      }
 		}else{
 			showIntercept(message);
 		}
@@ -1043,6 +1042,7 @@ function showBallScatter(message){
       
 
 function showThrowResult(message){
+	inThrow = true;
 	if(message.rollOutcome == "intercepted"){
 	  return;
 	}
@@ -1050,9 +1050,13 @@ function showThrowResult(message){
 	console.log("showing throw");
 	var outcome = " threw the ball";
 	if(message.rollOutcome == "success"){
+		document.getElementById("modalTitle").innerHTML = "Accurate Throw";
+		document.getElementById("modalText").innerHTML = message.playerName + " threw the ball to the target</br></br>" +
+        "Needed: " + message.rollNeeded + "  Rolled: " + message.rolled;
 		outcome += " accurately";
 	} else if(message.rollOutcome == "badly"){
 		outcome += " badly";
+		document.getElementById("modalText").innerHTML = message.playerName + " threw the ball inaccurately</br></br>"
 		document.getElementById("modalTitle").innerHTML = "Bad Throw";
 	}
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -1358,6 +1362,7 @@ function endTurn(){
 		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 					    JSON.stringify({"type": "ACTION", action: "ENDTURN"}));
 		  squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
+		  closeActions();
 		} else {
 		  return;
 		}
@@ -1683,6 +1688,11 @@ function showCatchSkill(message){
 	var modalText = document.getElementById("modalText");
 	modalText.innerHTML = "<br>" +message.playerName + " used the Catch Skill<br>";
     newRolls.innerHTML =  message.playerName + " used the Catch Skill to reroll<br>" + newRolls.innerHTML;
+    if(inThrow == true){
+    	if(taskQueue.length >0){
+    		(taskQueue.shift())();
+    	}
+    }
 }
 
 function removeBallFromPlayer(){
