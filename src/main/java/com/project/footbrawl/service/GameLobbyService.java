@@ -50,10 +50,12 @@ public class GameLobbyService {
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		Skill sideStep = new Skill("Side Step", "Who do you think you're pushing?", "block");
 		Skill catching = new Skill("Catch", "That ball is mine", "catch");
+		Skill pass = new Skill("Pass", "fly my pretty", "throw");
 		List<Skill> skills = new ArrayList<>();
 		//skills.add(block);
 		skills.add(dodge);
-		//skills.add(catching);
+		skills.add(catching);
+		skills.add(pass);
 		//skills.add(sideStep);
 		p.setSkills(skills);
 		p3.setSkills(skills);
@@ -71,6 +73,7 @@ public class GameLobbyService {
 		p5.setAG(2);
 		p5.setTeam(1);
 		p5.setST(3);
+		p5.setSkills(skills);
 		Player p6 = new Player();
 		p6.setName("Job");
 		p6.setMA(3);

@@ -833,11 +833,13 @@ function getPlayerById(id){
 
 function showRoll(message){
 	if(message.rollOutcome == "failed"){
-		var task = function(m){
-		  showFailedAction(m);
-  	  };
-  	  var t = animateWrapFunction(task, this, [message]);
-  	  taskQueue.unshift(t);
+		if(!(message.rollType == "INTERCEPT" && (message.rerollOptions == null || messsage.rerollOptions.length > 0))){
+		  var task = function(m){
+		    showFailedAction(m);
+  	      };
+  	      var t = animateWrapFunction(task, this, [message]);
+  	      taskQueue.unshift(t);
+		}
 	}
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 	var newRolls = document.getElementById("newRolls");
@@ -858,6 +860,13 @@ function showRoll(message){
 		   return;
 		}
 		showThrowResult(message);
+	}
+	if(message.rollType == "INTERCEPT"){
+		 setTimeout(function(){	   
+		   if(taskQueue.length != 0){
+		   (taskQueue.shift())();
+		   }
+		   }, 200);  
 	}
 	if(message.rollType == "CATCH"){
 		if(message.rollOutcome == "failed"){
@@ -1024,6 +1033,14 @@ function showBallScatter(message){
 
 function showThrowResult(message){
 	console.log("showing throw");
+	var outcome = " threw the ball";
+	if(message.rollOutcome == "success"){
+		outcome += " accurately";
+	} else if(message.rollOutcome == "badly"){
+		outcome += " badly";
+	}
+	document.getElementById("modalOptions").innerHTML = "<p>" + message.playerName + outcome + "." + "</p>";
+	
 	animating = true;
 	 var ballImg = new Image();
 	  ballImg.src = "/images/ball.png";
@@ -1047,9 +1064,14 @@ function showThrowResult(message){
        var throwRoute = [message.target];
      console.log("route created: " + throwRoute);
      ballLocation = message.target;
+     if(message.rollOutcome == "success" && message.end == "Y"){
+    	 document.getElementById("modalOptions").innerHTML = "";
+    	 document.getElementById("closeModal").style.display = "block";
+     }
      animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
      animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
-   }
+     
+     }
 }
 
 
@@ -1090,6 +1112,9 @@ function showFailedAction(message){
 	}
 	if(message.rollType == "THROW"){
 		effect = " fumbled the throw";
+	}
+	if(message.rollType == "INTERCEPT"){
+	    effect = " failed to intercept";	
 	}
 	document.getElementById("modalTitle").innerHTML = message.playerName + effect;
 	document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
@@ -1517,8 +1542,10 @@ function showSkillUsed(message){
 		showSideStepSkill(message);
 	} else if(message.description == "Dodge In Block"){
 		showDodgeInBlock(message);
-	}
+	} else if(message.description == "Catch")P
+	    showCatchSkill(message);
 }
+
 
 function showBlockEnd(message){
 	document.getElementById("modalImages").innerHTML = "";
@@ -1633,6 +1660,13 @@ function showDodgeInBlock(message){
 	var modalText = document.getElementById("modalText");
 	modalText.innerHTML = "<br>" +message.playerName + " used the Dodge Skill, so is just pushed back<br>";
     newRolls.innerHTML =  message.playerName + " used the Dodge Skill, so is just pushed back<br>" + newRolls.innerHTML;
+}
+
+function showCatchSkill(message){
+	var newRolls = document.getElementById("newRolls");
+	var modalText = document.getElementById("modalText");
+	modalText.innerHTML = "<br>" +message.playerName + " used the Catch Skill<br>";
+    newRolls.innerHTML =  message.playerName + " used the Catch Skill to reroll<br>" + newRolls.innerHTML;
 }
 
 function removeBallFromPlayer(){
@@ -1868,4 +1902,10 @@ function sendCarryOutThrow(message){
 	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			    JSON.stringify({"type": "ACTION", "action": "THROW", "player": message.player,
 			    	"location": message.location, "target": message.target}));
+}
+
+function showCatchResult(message){
+	getPlayerById(message.player).hasBall = true;
+	ballLocation = null;
+	drawPlayers();
 }

@@ -33,7 +33,7 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 3, 1, 1, 2, 6, 1, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 1, 6, 1, 6, 6, 1, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
 	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
@@ -487,9 +487,6 @@ public class GameService {
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
 		inTurnover = false;
-		if (awaitingReroll != null && awaitingReroll[0] == "Y") {
-			throw new IllegalArgumentException("Can't do anything whilst waiting for reroll decision");
-		}
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
 		PlayerInGame p = getPlayerById(playerId);
@@ -1405,6 +1402,10 @@ public class GameService {
 				}
 			} else {
 				target.setContainsBall(true); // will need a message to inform front end of this ball movement
+				if(inPassOrHandOff) {
+					inPassOrHandOff = false;
+					turnover();
+				}
 			}
 		} else {
 			ballOffPitch(origin);
@@ -1413,6 +1414,7 @@ public class GameService {
 
 	public void catchBallAction(PlayerInGame player, boolean accuratePass) {
 		int needed = calculateCatch(player, accuratePass);
+		rerollOptions.clear();
 		int roll = diceRoller(1, 6)[0];
 		rolled.clear();
 		rolled.add(roll);
@@ -1424,37 +1426,35 @@ public class GameService {
 			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "CATCH", needed, rolled, "success",
 					player.getLocation(), player.getLocation(), null, player.getTeam(), "Y", false);
 			player.setHasBall(true);
+			inPassOrHandOff = false;
 			if (player.getTeamIG() != activeTeam) {
 				turnover();
 				return;
 			}
 		} else {
 			System.out.println(player.getName() + " failed to catch the ball!");
-			rerollOptions = determineRerollOptions("CATCH", roll, runnableLocation);
-			runnableLocation = new int[][] { player.getLocation(), player.getLocation() };
+			rerollOptions = determineRerollOptions("CATCH", player.getId(), new int[][] {player.getLocation(), player.getLocation()});
+            if(awaitingReroll != null && player.getId() == Integer.parseInt(awaitingReroll[2]) && runnableLocation[0] == player.getLocation()) {
+	 		  rerollOptions.clear();	
+			}
 			String end = "Y";
 			if (!rerollOptions.isEmpty()) {
+				runnableLocation = new int[][] { player.getLocation(), player.getLocation() };
 				awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId() };
 				end = "N";
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
+						taskQueue.pop();
 						catchBallAction(player, accuratePass);
 					}
 				};
 				taskQueue.addFirst(task);
-				taskQueue.add(task);
 				Runnable task2 = new Runnable() { // for if choose not to reroll
 					@Override
 					public void run() {
 						System.out.println("in no reroll");
 						scatterBall(player.getTile(), 1);
-						if(inPassOrHandOff == true) {
-							Tile scatteredTo = ballLocationCheck();
-							if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
-								turnover(); // only a turnover if is not caught by player on same team before comes to rest	
-							}
-						}
 					}
 				};
 				taskQueue.add(task2);
@@ -1462,6 +1462,7 @@ public class GameService {
 			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "CATCH", needed, rolled, "failed",
 					player.getLocation(), player.getLocation(), rerollOptions, player.getTeam(), end, false);
 			if (rerollOptions.isEmpty()) {
+				awaitingReroll = new String[] { "N", "CATCH", "" + player.getId() };
 				scatterBall(player.getTile(), 1);
 				if (phase != "kick") {
 					Tile scatteredTo = ballLocationCheck();
@@ -1557,14 +1558,17 @@ public class GameService {
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		thrower.setHasBall(false);
 		if (roll == 1 || roll + modifier <= 1) { // on a natural 1 or 1 after modifiers
-			runnableLocation = new int[][] { thrower.getLocation(), target.getLocation() };
 			System.out.println(thrower.getName() + " fumbled the ball!");
-			List<String> options = determineRerollOptions("THROW", thrower.getId(),
+			rerollOptions = determineRerollOptions("THROW", thrower.getId(),
 					new int[][] { thrower.getLocation(), target.getLocation() });
+			if(reroll == true) {
+				rerollOptions.clear();
+			}
 			String finalRoll = "N";
-			if (options.isEmpty()) {
+			if (rerollOptions.isEmpty()) {
 				finalRoll = "Y";
 			} else {
+				runnableLocation = new int[][] { thrower.getLocation(), target.getLocation() };
 				awaitingReroll = new String[] { "Y", "THROW", "" + thrower.getId() };
 				Runnable task = new Runnable() {
 					@Override
@@ -1584,8 +1588,8 @@ public class GameService {
 				taskQueue.add(task2);
 			}
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "failed",
-					thrower.getLocation(), target.getLocation(), options, thrower.getTeam(), finalRoll, reroll);
-			if (options.isEmpty()) {
+					thrower.getLocation(), target.getLocation(), rerollOptions, thrower.getTeam(), finalRoll, reroll);
+			if (rerollOptions.isEmpty()) {
 				scatterBall(thrower.getTile(), 1);
 				turnover();
 			}
@@ -1633,6 +1637,7 @@ public class GameService {
 				catchBallAction(target.getPlayer(), true);
 			} else {
 				target.setContainsBall(true);
+                turnover();
 			}
 		} else {
 			System.out.println(thrower.getName() + " threw the ball badly");
@@ -1642,14 +1647,8 @@ public class GameService {
 				taskQueue.pop().run(); // send intercept failure if happened
 			}
 			scatterBall(target, 3);
-			Tile scatteredTo = ballLocationCheck();
-			if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
-				turnover(); // only a turnover if is not caught by player on same team before comes to rest
-				return;
-			}
 		}
 		thrower.getTeamIG().setPassed(true);
-		inPassOrHandOff = false;
 		endOfAction(thrower);
 	}
 
@@ -1951,9 +1950,6 @@ public class GameService {
 		}
 		if (p.getStatus() == "stunned") {
 			throw new IllegalArgumentException("A stunned player cannot act");
-		}
-		if (awaitingReroll != null && awaitingReroll[0] == "Y") {
-			throw new IllegalArgumentException("We're in a reroll situation");
 		}
 	}
 
@@ -2302,17 +2298,29 @@ public class GameService {
 	}
 
 	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
+		System.out.println("in determine rerolls");
 		List<String> results = new ArrayList<>();
-		if (action != "BLOCK" && awaitingReroll != null && location[0].equals(runnableLocation[0])
-				&& location[1].equals(runnableLocation[1]) && playerId == Integer.parseInt(awaitingReroll[2])
+		if (action != "BLOCK" && awaitingReroll != null && Arrays.equals(location[0], runnableLocation[0])
+				&& Arrays.equals(location[1], runnableLocation[1]) && playerId == Integer.parseInt(awaitingReroll[2])
 				&& action == awaitingReroll[1]) { // means in a
 													// reroll -
 													// can't reroll
 													// something
 													// more than
 													// once
+			System.out.println("the same");
 			return results;
 		}
+
+			System.out.println("1: " + awaitingReroll != null);
+			if(awaitingReroll != null) {
+			//System.out.println("2: " + awaitingReroll[0] == "Y");
+			System.out.println("3: " + Arrays.equals(location[0], runnableLocation[0]));
+			System.out.println("4: " + Arrays.equals(location[1], runnableLocation[1]));
+			System.out.println("5: " + (playerId == Integer.parseInt(awaitingReroll[2])));
+			System.out.println("6: " + action == awaitingReroll[1]);
+			}
+			
 		PlayerInGame p = getPlayerById(playerId);
 		if (p.getTeamIG() == activeTeam && !activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
 			results.add("Team Reroll");
@@ -2354,7 +2362,6 @@ public class GameService {
 				p.useSkill(rerollChoice.replace(" Skill", ""));
 				System.out.println("In skill reroll");
 			}
-			awaitingReroll = null;
 			taskQueue.pop().run();
 			if (rollType == "INTERCEPT" || rollType == "THROW" || rollType == "CATCH") {
 				return;
@@ -2390,7 +2397,7 @@ public class GameService {
 			knockDown(p);
 		} else if (rollType == "PICKUPBALL") {
 			ballToScatter = pitch[runnableLocation[1][0]][runnableLocation[1][1]];
-		} else if (rollType == "BLOCK" || rollType == "THROW") {
+		} else if (rollType == "BLOCK" || rollType == "THROW" || rollType == "CATCH") {
 			System.out.println("don't reroll");
 			taskQueue.pop();
 			taskQueue.pop().run();
