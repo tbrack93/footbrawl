@@ -1349,7 +1349,7 @@ function showNewTurn(message){
 		 populateReserves(1);
 	}
 	if(team2Reserves == null || team2FullDetails.reserves.length != team2Reserves.length){
-		team1Reserves = message.team2FullDetails.reserves;
+		team2Reserves = message.team2FullDetails.reserves;
 		populateReserves(2);
 	}
 	activePlayer = null;
@@ -2140,9 +2140,60 @@ function populateReserves(team){
 	target.innerHTML = "";
 	if(details != null && details.length >0){
 	  for(var i = 0; i < details.length; i++){
-		target.innerHTML += "<img height='35px'" + "id='" + details[i].id +"player' class ='reserve' src=" + details[i].imgUrl + "/>"; 
+		var img = document.createElement("img");
+		img.src = details[i].imgUrl;
+		img.height = "35";
+		img.id =  team+"player"+details[i].id;
+		img.className = "reserve";
+		img.setAttribute('onclick','showReservePlayer(this)');
+	    target.appendChild(img);
 	  }
 	} else{
-		target.innerHTML += "None";
+		target.innerHTML += "<p>None</p>";
 	}
+}
+
+function showReservePlayer(element){
+	var id = element.id;
+	var team;
+	if(id.charAt(0) == team1.id){
+		team = team1Reserves;
+	} else{
+		team = team2Reserves;
+	}
+	var playerId = id.slice(-1);
+	console.log(playerId);
+	var player;
+	for(var i = 0; i < team.length; i++){
+		if(team[i].id == playerId){
+			player = team[i];
+		}
+	}
+	console.log(player.name);
+    showPlayerDetails(player); 
+}
+
+function showPlayerDetails(player){
+	var team = 1;
+	if(player.team != team1.id){
+		team = 2;
+	}
+	document.getElementById("player"+team+"Name").innerHTML = player.name;
+	document.getElementById("player"+team+"Type").innerHTML = player.type;
+	document.getElementById("player"+team+"MA").innerHTML = player.ma;
+	document.getElementById("player"+team+"ST").innerHTML = player.st;
+	document.getElementById("player"+team+"AG").innerHTML = player.ag;
+	document.getElementById("player"+team+"AV").innerHTML = player.av;
+	document.getElementById("player"+team+"AG").innerHTML = player.ag;
+	document.getElementById("player"+team+"Img").src = player.imgUrl;
+	document.getElementById("player"+team+"Skills").innerHTML ="";
+	var skills = player.skills;
+	for(var i = 0; i < skills.length; i++){
+		var text = skills[i].name;
+		if(i != skills.length -1){
+			text+=", ";
+		}
+		document.getElementById("player"+team+"Skills").innerHTML += text;
+	}
+	
 }

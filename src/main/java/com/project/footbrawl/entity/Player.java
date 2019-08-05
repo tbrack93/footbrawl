@@ -9,6 +9,7 @@ public class Player {
 	
 	private int id;
 	private String name;
+	private String type;
 	private int MA;
 	private int ST;
 	private int AG;
@@ -115,6 +116,14 @@ public class Player {
 	
 	public String toString() {
 		return Integer.toString(id);
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 }

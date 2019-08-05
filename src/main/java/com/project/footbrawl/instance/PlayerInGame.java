@@ -9,6 +9,7 @@ import com.project.footbrawl.entity.Skill;
 
 public class PlayerInGame{
 	
+	// can probably not send a few more fields
 	@JsonIgnore
 	private Player player;
 	private int remainingMA;
@@ -19,6 +20,7 @@ public class PlayerInGame{
 	private String status;
 	@JsonIgnore
 	private int stunnedCounter;
+	@JsonIgnore
 	private List<String> skillsUsedThisTurn;
 	@JsonIgnore
 	private Tile tile;
@@ -226,5 +228,10 @@ public class PlayerInGame{
 	public void useSkill(String skill) {
 		skillsUsedThisTurn.add(skill);
 	}
+	
+	public String getType(){
+		return player.getType();
+	}
+	
 	
 }
