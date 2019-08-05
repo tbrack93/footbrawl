@@ -27,7 +27,7 @@ public class GameLobbyService {
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
-		p.setMA(0);
+		p.setMA(4);
 		p.setAG(3);
 		p.setAV(6);
 		p.setTeam(1);
@@ -116,7 +116,7 @@ public class GameLobbyService {
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
 		gs.team2.setTurn(3);
-		//team1Players.get(0).setStatus("prone");
+		team1Players.get(0).setStatus("prone");
 		//team1Players.get(1).setStatus("stunned");
 		activeGames.put(gs.getGameId(), gs);
 	}

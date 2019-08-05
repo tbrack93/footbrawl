@@ -387,4 +387,14 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setOpponentName(targetName);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	public void sendStandUpAction(int gameId, int player, String playerName, String end) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("STANDUP");
+		message.setPlayer(player);
+		message.setPlayerName(playerName);
+		message.setEnd(end);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 }

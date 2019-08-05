@@ -4,6 +4,8 @@
 <title>Game</title>
 <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
 	rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Cinzel&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Cormorant+Garamond&display=swap" rel="stylesheet">
 <link th:href="@{/main.css}" rel="stylesheet">
 <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
@@ -72,7 +74,7 @@
 				
 			   <div id="actionsMain">
 			     <div id="actionsTitle">Actions</div> 
-			     <img src="/images/stand_up.png" class="mx-auto actionImg" title="Stand Up" height="25" width="25" id="standUp" style="display:none">
+			     <img onclick="requestStandUp()" src="/images/stand_up.png" class="mx-auto actionImg" title="Stand Up" height="25" width="25" id="standUp" style="display:none">
 			     <img onclick="requestMovement()" src="/images/move.png" class="mx-auto actionImg" title="Move" height="25" width="25" id="move" style="display:none">
 			     <img onclick="startBlock()" src="/images/block.png" class="mx-auto actionImg" title="Block" height="30" width="30" id="block" style="display:none">
 			     <img onclick="startBlitz()" src="/images/blitz.png" class="mx-auto actionImg" title="Blitz" height="25" width="25" id="blitz" style="display:none">
@@ -105,10 +107,10 @@
                </canvas>
 
 				<div id=rolls>
-					<div class="col-sm-2">
+					<div class="col-sm-3">
 						<p>Latest Rolls & Results:</p>
 					</div>
-					<div class="col-sm-10">
+					<div class="col-sm-9">
 						<p id=newRolls></p>
 					</div>
 				</div>

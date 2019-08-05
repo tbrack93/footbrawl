@@ -484,7 +484,9 @@ function decodeMessage(message){
 	      } else{ 	
 		    showMoved(message, "normal");
 	      }
-	  } else if(message.action == "ROLL"){
+	  } else if(message.action == "STANDUP"){
+		 showStandUp(message); 
+	  }  else if(message.action == "ROLL"){
 		  activePlayer = getPlayerById(message.player);
 		  if(animating == true){
 			  var task = function(m){
@@ -2072,4 +2074,22 @@ function showHandOff(message){
      animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
      animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL"); 
      }
+}
+
+function requestStandUp(){
+	closeActions();
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "STANDUP", "player": activePlayer.id}));
+}
+
+function showStandUp(message){
+	var p = getPlayerById(message.player);
+	p.status = "standing";
+	var newRolls = document.getElementById("newRolls");
+	newRolls.innerHTML =  message.playerName + " stood up </br>" + newRolls.innerHTML;
+	if(message.end == "Y"){
+		drawPlayer(p);
+		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
+	}
 }

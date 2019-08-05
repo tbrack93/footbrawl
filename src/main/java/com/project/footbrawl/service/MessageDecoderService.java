@@ -62,7 +62,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).carryOutThrow(message.getPlayer(), message.getLocation(), message.getTarget(), team);
 			} else if(action.equals("HANDOFF")){
 				lobby.getGameService(gameId).carryOutHandOff(message.getPlayer(), message.getTarget(), message.getOpponent(), team);
-				
+			} else if(action.equals("STANDUP")){
+				lobby.getGameService(gameId).carryOutStandUp(message.getPlayer());
 			}
 		}
 		
