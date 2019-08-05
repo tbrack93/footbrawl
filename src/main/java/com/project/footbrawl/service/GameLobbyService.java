@@ -64,7 +64,7 @@ public class GameLobbyService {
 		p3.setSkills(skills);
 		skills.remove(0);
 		skills.add(sideStep);
-		skills.add(block);
+		//skills.add(block);
 		p2.setSkills(skills);
 		Player p4 = new Player();
 		p4.setName("Sarah");
@@ -142,8 +142,6 @@ public class GameLobbyService {
 		gs.team1.addToReserves(new PlayerInGame(p));
 		gs.team1.addToReserves(new PlayerInGame(p));
 		gs.team2.addToReserves(new PlayerInGame(p2));
-		
-		
 		gs.team2.setTurn(3);
 		team1Players.get(0).setStatus("prone");
 		//team1Players.get(1).setStatus("stunned");
