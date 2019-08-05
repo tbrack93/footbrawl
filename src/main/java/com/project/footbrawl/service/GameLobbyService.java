@@ -32,6 +32,7 @@ public class GameLobbyService {
 		p.setAV(6);
 		p.setTeam(1);
 		p.setST(8);
+		p.setType("Blitzer");
 		Player p2 = new Player();
 		p2.setName("Bobby");
 		p2.setAG(2);
@@ -39,6 +40,7 @@ public class GameLobbyService {
 		p2.setAV(6);
 		p2.setTeam(2);
 		p2.setST(3);
+		p.setType("Lineman");
 		Player p3 = new Player();
 		p3.setName("Sam");
 		p3.setMA(3);
@@ -46,6 +48,7 @@ public class GameLobbyService {
 		p3.setST(3);
 		p3.setAV(2);
 		p3.setAV(6);
+		p.setType("Blitzer");
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		Skill sideStep = new Skill("Side Step", "Who do you think you're pushing?", "block");
@@ -67,6 +70,7 @@ public class GameLobbyService {
 		p4.setST(3);
 		p4.setAV(6);
 		p4.setSkills(skills);
+		p.setType("Lineman");
 		Player p5 = new Player();
 		p5.setName("Bob");
 		p5.setMA(10);
@@ -74,11 +78,13 @@ public class GameLobbyService {
 		p5.setTeam(1);
 		p5.setST(3);
 		p5.setSkills(skills);
+		p.setType("Blitzer");
 		Player p6 = new Player();
 		p6.setName("Job");
 		p6.setMA(3);
 		p6.setAG(2);
 		p6.setTeam(2);
+		p.setType("Blitzer");
 		p6.setST(3);
 		p.setImgUrl("/images/human_blitzer.png");
 		p2.setImgUrl("/images/orc_lineman.png");
