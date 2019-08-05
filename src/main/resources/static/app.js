@@ -784,6 +784,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
 				                         "location": activePlayer.location, "routeMACost": 0}));
+			      actionChoice = "move";
 			  }
 		    } 
 			console.log("tasks in queue: " + taskQueue.length);
@@ -1586,7 +1587,6 @@ function showBlockEnd(message){
 	document.getElementById("closeModal").style.display = "block";
 	//document.getElementById("modalText").innerHTML = "";
 	inModal = false;
-	inBlock = false;
 	inPush = false;
 	followUp = false;
 	drawPlayers();
@@ -1751,6 +1751,7 @@ function closeModal(){
 	document.getElementById("modalText").innerHTML = "";
 	document.getElementById("modalOptions").innerHTML = "";
 	document.getElementById("closeModal").style.display = "none";
+	inBlock = false;
 }
 
 function closeActions(){
