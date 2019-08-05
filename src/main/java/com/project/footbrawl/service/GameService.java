@@ -1369,6 +1369,7 @@ public class GameService {
 		}
 		player.setStatus("standing");
 		player.setRemainingMA(player.getRemainingMA() - 3);
+		player.setActedThisTurn(true);
 		System.out.println(player.getName() + " stood up");
 		String end = "Y";
 		if(inMovement == true) {
@@ -2334,15 +2335,6 @@ public class GameService {
 			System.out.println("the same");
 			return results;
 		}
-
-			System.out.println("1: " + awaitingReroll != null);
-			if(awaitingReroll != null) {
-			//System.out.println("2: " + awaitingReroll[0] == "Y");
-			System.out.println("3: " + Arrays.equals(location[0], runnableLocation[0]));
-			System.out.println("4: " + Arrays.equals(location[1], runnableLocation[1]));
-			System.out.println("5: " + (playerId == Integer.parseInt(awaitingReroll[2])));
-			System.out.println("6: " + action == awaitingReroll[1]);
-			}
 			
 		PlayerInGame p = getPlayerById(playerId);
 		if (p.getTeamIG() == activeTeam && !activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
