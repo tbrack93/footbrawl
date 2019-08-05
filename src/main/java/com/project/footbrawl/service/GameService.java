@@ -34,7 +34,7 @@ public class GameService {
 
 	private static List<Integer> diceRolls = new ArrayList<>(
 			Arrays.asList(new Integer[] { 6, 6, 6, 6, 1, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = false;
+	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -458,7 +458,8 @@ public class GameService {
 		awaitingReroll = null;
 		inPassOrHandOff = false;
 		activePlayer = null;
-		activeTeam.endTurn();
+		team1.endTurn();
+		team2.endTurn();
 		blitz = null;
 		activeTeam = (activeTeam == team1 ? team2 : team1);
 		if (activeTeam.getTurn() == 8) {
@@ -2540,7 +2541,7 @@ public class GameService {
 		if (player.getStatus() == "prone") {
 			actions.add("standUp");
 		}
-		if (!activeTeam.hasBlitzed() && player.getActedThisTurn() == false) {
+		if (!activeTeam.hasBlitzed() && player.getActedThisTurn() == false && player.getRemainingMA() > -3) {
 			actions.add("blitz");
 		}
 		if (player.getRemainingMA() > -3) {
@@ -2557,6 +2558,9 @@ public class GameService {
 		addTackleZones(player);
 		if (player.getTile().getTackleZones() != 0 && player.getActedThisTurn() == false) {
 			actions.add("block");
+		}
+		if(actions.isEmpty()) {
+			actions.add("None");
 		}
 		return actions;
 	}

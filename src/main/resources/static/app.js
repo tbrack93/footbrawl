@@ -1496,7 +1496,7 @@ function showBlockResult(message){
 	drawPlayer(getPlayerById(message.player));
 	showBlockAssists(message);
 	document.getElementById("modalTitle").innerHTML = message.playerName + " blocks " + message.opponentName;
-	//document.getElementById("modalText").innerHTML = "";
+	document.getElementById("modalText").innerHTML = "";
 	document.getElementById("modalOptions").innerHTML = "";
 	var modalMain = document.getElementById("modalImages");
 	modalMain.innerHTML = "Results: <br><br>"; 
