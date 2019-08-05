@@ -514,15 +514,12 @@ public class GameService {
 						System.out.println("active player is: " + activePlayer.getName());
 					}
 				}
-				System.out.println("resetting");
 				resetTiles();
-				System.out.println("reset");
 				p.setRemainingMA(originalMA - maUsed);
 				Tile position = pitch[location[0]][location[1]];
 				int cost = 0;
-				if (p.getStatus().equals("prone") && maUsed == 0) {
-					position.setCostToReach(3);
-					cost = 3;
+				if (p.getStatus().equals("prone")) {
+					p.setRemainingMA(p.getRemainingMA() -3);
 				}
 				searchNeighbours(p, position, cost);
 				for (int i = 0; i < 26; i++) {
@@ -563,8 +560,8 @@ public class GameService {
 					}
 					searchNeighbours(p, t, cost + 1);
 				}
-			} else if (t.getLocation() == location.getLocation()) {
-				t.setCostToReach(p.getStatus().equals("prone") ? 3 : 0);
+//			} else if (t.getLocation() == location.getLocation()) {
+//				t.setCostToReach(p.getStatus().equals("prone") ? 3 : 0);
 			}
 		}
 	}
@@ -1351,8 +1348,12 @@ public class GameService {
 		}
 		sender.sendInjuryRoll(game.getId(), p.getId(), p.getName(), rolls, p.getStatus(), p.getLocation(), outcome);
 	}
+	
+	public void carryOutStandUp(int playerId) {
+		standUpAction(getPlayerById(playerId), false);
+	}
 
-	public boolean standUpAction(PlayerInGame player) {
+	public boolean standUpAction(PlayerInGame player, boolean inMovement) {
 		if (player.getStatus() != "prone") {
 			throw new IllegalArgumentException("Can't stand up a player that isn't prone");
 		}
@@ -1369,6 +1370,11 @@ public class GameService {
 		player.setStatus("standing");
 		player.setRemainingMA(player.getRemainingMA() - 3);
 		System.out.println(player.getName() + " stood up");
+		String end = "Y";
+		if(inMovement == true) {
+			end = "N";
+		}
+		sender.sendStandUpAction(game.getId(), player.getId(), player.getName(), end);
 		return true;
 	}
 
@@ -2186,7 +2192,7 @@ public class GameService {
 		checkRouteValid(p, route);
 		p.setActedThisTurn(true);
 		if (p.getStatus().equals("prone")) {
-			if (!standUpAction(p)) {
+			if (!standUpAction(p, true)) {
 				return movedSoFar;
 			}
 		}
