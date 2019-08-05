@@ -20,7 +20,6 @@ canvas {
 }
 
 .row {
-	width:100%;
 }
 
 #backgroundCanvas {
@@ -94,6 +93,15 @@ hr {
 
 .teamInfo{
 	font-family: 'Cinzel', serif;
+	padding-left:
+}
+
+.leftHr{
+	margin-left:15px;
+}
+
+.rightHr{
+	margin-right:15px;
 }
 
 #gameStatus{
@@ -136,6 +144,7 @@ hr {
 #actionsMain{
 	 background-color: rgba(0, 0, 255, .4);
 	 border-radius: 10px;
+	 padding-bottom: 4px;
 }
 
 #cancel {
@@ -157,7 +166,6 @@ text-align:center;
 
 #team1Reserves{
 	margin-left:10px;
-	background-color:transparent;
 }
 
 #team1Player{
@@ -165,6 +173,17 @@ text-align:center;
 	padding-left:3px;
 	padding-top:6px;
 	background-color: #3B4581;
+	border-radius: 5px;
+	color: #CFD1CE;
+	width:90%
+}
+
+#team2Player{
+	margin-right:0px;
+	padding-right:0px;
+	padding-top:6px;
+	padding-left:0;
+	background-color: #800C00;
 	border-radius: 5px;
 	color: #CFD1CE;
 	width:90%
@@ -181,16 +200,50 @@ text-align:center;
 #player1Img{
 	padding-top:8px;
 	padding-bottom: 5px;
+	margin-right: 10px;
 }
+
+#player2Img{
+	padding-top:8px;
+	padding-bottom: 5px;
+	margin-left: 10px;
+}
+
 
 #team1Player p{
 	margin: 0 0 2px;
+}
+
+#team2Player p{
+	margin: 2px 0 0;
 }
 
 #team1Player h4{
 	margin: 0 0 2px;
 }
 
+#team2Player h4{
+	margin: 0 0 2px;
+}
+
 .playerRow{
 	
+}
+
+#cancelPlayer1{
+	margin-left: 95%;
+	margin-top: -25px;
+	margin-bottom:0;
+	cursor: pointer;
+}
+
+#cancelPlayer2{
+	margin-left: 95%;
+	margin-top: -25px;
+	margin-bottom:0;
+	cursor: pointer;
+}
+
+#team2Info{
+	padding-right:10px;
 }

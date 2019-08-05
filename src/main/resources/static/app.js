@@ -2195,5 +2195,13 @@ function showPlayerDetails(player){
 		}
 		document.getElementById("player"+team+"Skills").innerHTML += text;
 	}
-	
+	document.getElementById("team"+team+"Player").style.display="block";
+}
+
+function closePlayer1(){
+	document.getElementById("team1Player").style.display="none";
+}
+
+function closePlayer2(){
+	document.getElementById("team2Player").style.display="none";
 }
