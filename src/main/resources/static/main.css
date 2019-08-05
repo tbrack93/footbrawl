@@ -149,7 +149,14 @@ a{
 
 .reserves{
 	display:flex;
+}
+
+#team1Reserves{
 	margin-left:10px;
+}
+
+#team2Reserves{
+	margin-right:10px;
 }
 
 .reserve {

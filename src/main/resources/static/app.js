@@ -1346,15 +1346,11 @@ function showNewTurn(message){
 	});
 	if(team1Reserves == null || team1FullDetails.reserves.length != team1Reserves.length){
 		team1Reserves = message.team1FullDetails.reserves;
-		if(team1Reserves != null && team1Reserves.length >0){
-		  populateReserves(1);
-		}
+		 populateReserves(1);
 	}
 	if(team2Reserves == null || team2FullDetails.reserves.length != team2Reserves.length){
 		team1Reserves = message.team2FullDetails.reserves;
-		if(team2Reserves != null && team2Reserves.length >0){
-			  populateReserves(2);
-		}
+		populateReserves(2);
 	}
 	activePlayer = null;
 	var teamName = message.teamName + "'s Turn";
@@ -2116,17 +2112,18 @@ function showStandUp(message){
 
 function showReserves(team){
 	var id = "team1Reserves";
+	var title = "reserves1Title";
 	if(team != 1){
 		id = "team2Reserves";
+		title = "reserves2Title"
 	}
 	var element = document.getElementById(id);
-
 	if(element.style.display == "none"){
 			element.style.display = "block";
-			document.getElementById("reservesTitle").innerHTML = "Reserves -";
+			document.getElementById(title).innerHTML = "Reserves -";
 	} else{
 		element.style.display = "none";
-		document.getElementById("reservesTitle").innerHTML = "Reserves +";
+		document.getElementById(title).innerHTML = "Reserves +";
 	}
 }
 
@@ -2140,10 +2137,12 @@ function populateReserves(team){
 		target = document.getElementById("team2Reserves");
 		details = team2Reserves;
 	}
+	target.innerHTML = "";
 	if(details != null && details.length >0){
 	  for(var i = 0; i < details.length; i++){
 		target.innerHTML += "<img height='35px'" + "id='" + details[i].id +"player' class ='reserve' src=" + details[i].imgUrl + "/>"; 
 	  }
+	} else{
+		target.innerHTML += "None";
 	}
-	
 }
