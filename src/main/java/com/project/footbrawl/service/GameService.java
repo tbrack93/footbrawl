@@ -1569,6 +1569,13 @@ public class GameService {
 
 	public void passBallAction(PlayerInGame thrower, Tile target, boolean reroll) {
 		taskQueue.clear();
+		if(activePlayer == null) {
+			activePlayer = thrower;
+		} else if (activePlayer.getActedThisTurn() == true) { 	  
+          endOfAction(activePlayer);
+          activePlayer = thrower;
+		}
+		activePlayer = thrower;
 		int[] details = calculateThrow(thrower, thrower.getTile(), target);
 		int needed = details[0];
 		int modifier = details[1];
@@ -1678,6 +1685,12 @@ public class GameService {
 	public void handOffBallAction(PlayerInGame player, Tile target, PlayerInGame targetPlayer) {
 		actionCheck(player);
 		inPassOrHandOff = true;
+		if(activePlayer == null) {
+			activePlayer = player;
+		} else if (activePlayer.getActedThisTurn() == true) { 	  
+          endOfAction(activePlayer);
+          activePlayer = player;
+		}
 		if (!player.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
@@ -2455,6 +2468,12 @@ public class GameService {
 
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
 		PlayerInGame attacker = getPlayerById(player);
+		if(activePlayer == null) {
+			activePlayer = attacker;
+		} else if (activePlayer.getActedThisTurn() == true) { 	  
+          endOfAction(activePlayer);
+          activePlayer = attacker;
+		}
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] details = blockAction(attacker, defender, followUp);
 		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);

@@ -788,7 +788,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			  }
 		    } 
 			console.log("tasks in queue: " + taskQueue.length);
-			var timeout = 0;
+			var timeout = 100;
 			if(type == "BALL"){ 
 				timeout = 100;
 			}
@@ -1760,6 +1760,7 @@ function closeActions(){
 	 document.getElementById("actionsTitle").innerHTML = "Actions";
 	resetActions();
 	actionChoice = null;
+	inThrow = false;
 }
 
 function resetActions(){
@@ -1930,6 +1931,8 @@ function showThrowModal(message){
 }
 
 function cancelThrow(player){
+	inThrow = false;
+	actionChoice = null;
 	document.getElementById("modal").style.display = "none";
 	document.getElementById("modalImages").innerHTML = "";
     animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -1971,6 +1974,7 @@ function showIntercept(message){
        if(p != null){
    	   console.log(p.name);
    	   p.hasBall = false;
+   	   drawPlayer(p);
        }
        drawPlayers();
        var targetX = message.target[0] * squareH + squareH/3;
