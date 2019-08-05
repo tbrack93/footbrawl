@@ -48,7 +48,7 @@
 				<p id="team1Turn">Current Turn:</p>
 				<p id="team1Rerolls">Team Rerolls:</p>
 				<p id="team1Blitzed"></p>
-				<hr>
+				<hr class="leftHr">
 				<a onclick="showReserves(1)" >
 				  <h4 id="reserves1Title">Reserves +</h4>
 				 </a>
@@ -56,7 +56,9 @@
 				
 				</div>
 				<br>
-				<div id="team1Player"> 
+				<div id="team1Player" style="display:none"> 
+				<img onclick="closePlayer1()" src="/images/cancel.png" class="float-right" title="cancel" height="20" width="20" id="cancelPlayer1">
+				
 				  <div class="col-sm-12">
 				    <h4 id="player1Name" style="color:white"> Name</h4>
 				    <p id="player1Type">Type</p>
@@ -69,7 +71,7 @@
 				      <p id="player1ST" style="color:white"></p>
 				   </div>
 				   <div class="col-sm-8">
-				    <img th:src="@{/images/human_blitzer.png}" height="90px" id="player1Img" style="vertical-align: middle"/>
+				    <img src="" height="90px" width="90px" id="player1Img" style="vertical-align: middle"/>
 				   </div>
 				    </div> 
 				    <div class="row playerRow">
@@ -150,18 +152,51 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-sm-2 teamInfo text-center">
+			<div class="col-sm-2 teamInfo text-center" id="team2Info">
 				<h4 id="team2Name"></h4>
 
 				<p id="team2Turn">Current Turn:</p>
 				<p id="team2Rerolls">Team Rerolls:</p>
 				<p id="team2Blitzed">Not Blitzed This Turn</p>
-				<hr>
+				<hr class="rightHr">
 				<a onclick="showReserves(2)" >
 				  <h4 id="reserves2Title">Reserves +</h4>
 				 </a>
 				<div id="team2Reserves" class="reserves" style="display:none">
 				
+				</div>
+				<br>
+				<div id="team2Player" style="display:none"> 
+				<img onclick="closePlayer2()" src="/images/cancel.png" title="cancel" height="20" width="20" id="cancelPlayer2">
+				
+				  <div class="col-sm-12">
+				    <h4 id="player2Name" style="color:white"> Name</h4>
+				    <p id="player2Type">Type</p>
+				  </div>
+				  <div class="row playerRow">
+				  <div class="col-sm-8">
+				    <img src="" height="90px" width="90px" id="player2Img" style="vertical-align: middle"/>
+				   </div>
+				  <div class="col-sm-4 text-center">
+				     <p>MA</p> 
+				     <p id="player2MA" style="color:white"></p>
+				     <p>ST</p>
+				      <p id="player2ST" style="color:white"></p>
+				   </div>
+				    </div> 
+				    <div class="row playerRow">
+				    <div class="col-sm-8 text-right">
+				     Skills:
+				     <p id="player2Skills" style="color:white; font-family: 'Cormorant Garamond', serif;" ></p>
+				     </div>
+				    <div class="col-sm-4 text-center">
+				     <p>AG</p>
+				     <p id="player2AG" style="color:white"></p>
+				     <p>AV</p>
+				     <p id="player2AV" style="color:white"></p>
+				     </div>
+				     
+				  </div>
 				</div>
 			</div>
 		</div>

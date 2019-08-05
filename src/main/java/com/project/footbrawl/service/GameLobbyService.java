@@ -40,7 +40,7 @@ public class GameLobbyService {
 		p2.setAV(6);
 		p2.setTeam(2);
 		p2.setST(3);
-		p.setType("Lineman");
+		p2.setType("Lineman");
 		Player p3 = new Player();
 		p3.setName("Sam");
 		p3.setMA(3);
@@ -48,7 +48,7 @@ public class GameLobbyService {
 		p3.setST(3);
 		p3.setAV(2);
 		p3.setAV(6);
-		p.setType("Blitzer");
+		p3.setType("Blitzer");
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		Skill sideStep = new Skill("Side Step", "Who do you think you're pushing?", "block");
@@ -62,6 +62,10 @@ public class GameLobbyService {
 		//skills.add(sideStep);
 		p.setSkills(skills);
 		p3.setSkills(skills);
+		skills.remove(0);
+		skills.add(sideStep);
+		skills.add(block);
+		p2.setSkills(skills);
 		Player p4 = new Player();
 		p4.setName("Sarah");
 		p4.setMA(10);
@@ -70,7 +74,7 @@ public class GameLobbyService {
 		p4.setST(3);
 		p4.setAV(6);
 		p4.setSkills(skills);
-		p.setType("Lineman");
+		p4.setType("Lineman");
 		Player p5 = new Player();
 		p5.setName("Bob");
 		p5.setMA(10);
@@ -78,7 +82,7 @@ public class GameLobbyService {
 		p5.setTeam(1);
 		p5.setST(3);
 		p5.setSkills(skills);
-		p.setType("Blitzer");
+		p5.setType("Blitzer");
 		Player p6 = new Player();
 		p6.setName("Job");
 		p6.setMA(3);
@@ -137,6 +141,8 @@ public class GameLobbyService {
 		gs.team1.addToReserves(new PlayerInGame(p));
 		gs.team1.addToReserves(new PlayerInGame(p));
 		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team2.addToReserves(new PlayerInGame(p2));
+		
 		
 		gs.team2.setTurn(3);
 		team1Players.get(0).setStatus("prone");
