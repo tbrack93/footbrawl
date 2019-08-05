@@ -115,6 +115,23 @@ public class GameLobbyService {
 	    //gs.pitch[4][3].addBall();
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		gs.team1.addToReserves(new PlayerInGame(p));
+		
 		gs.team2.setTurn(3);
 		team1Players.get(0).setStatus("prone");
 		//team1Players.get(1).setStatus("stunned");

@@ -11,6 +11,8 @@ var modal;
 var canvasLeft;
 var canvasTop;
 var players;
+var team1Reserves;
+var team2Reserves;
 var lastSquareClicked;
 var timeSinceClick;
 var debounceInterval = 200;
@@ -1342,6 +1344,18 @@ function showNewTurn(message){
 	team2.playersOnPitch.forEach(player =>{
 		players.push(player);
 	});
+	if(team1Reserves == null || team1FullDetails.reserves.length != team1Reserves.length){
+		team1Reserves = message.team1FullDetails.reserves;
+		if(team1Reserves != null && team1Reserves.length >0){
+		  populateReserves(1);
+		}
+	}
+	if(team2Reserves == null || team2FullDetails.reserves.length != team2Reserves.length){
+		team1Reserves = message.team2FullDetails.reserves;
+		if(team2Reserves != null && team2Reserves.length >0){
+			  populateReserves(2);
+		}
+	}
 	activePlayer = null;
 	var teamName = message.teamName + "'s Turn";
 	yourTurn = false;
@@ -2098,4 +2112,38 @@ function showStandUp(message){
 		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
 	}
+}
+
+function showReserves(team){
+	var id = "team1Reserves";
+	if(team != 1){
+		id = "team2Reserves";
+	}
+	var element = document.getElementById(id);
+
+	if(element.style.display == "none"){
+			element.style.display = "block";
+			document.getElementById("reservesTitle").innerHTML = "Reserves -";
+	} else{
+		element.style.display = "none";
+		document.getElementById("reservesTitle").innerHTML = "Reserves +";
+	}
+}
+
+function populateReserves(team){
+	var target;
+	var details;
+	if(team == 1){
+		target = document.getElementById("team1Reserves");
+		details = team1Reserves;
+	} else{
+		target = document.getElementById("team2Reserves");
+		details = team2Reserves;
+	}
+	if(details != null && details.length >0){
+	  for(var i = 0; i < details.length; i++){
+		target.innerHTML += "<img height='35px'" + "id='" + details[i].id +"player' class ='reserve' src=" + details[i].imgUrl + "/>"; 
+	  }
+	}
+	
 }

@@ -69,7 +69,6 @@ z-index: 30;
 }
 
 
-
 #rolls {
 	font-size: 16px;
 }
@@ -141,4 +140,18 @@ hr {
 
 #cancel {
 	padding:0px;
+}
+
+a{
+	text-decoration: none !important;
+	cursor: pointer;
+}
+
+.reserves{
+	display:flex;
+	margin-left:10px;
+}
+
+.reserve {
+	float:left;
 }

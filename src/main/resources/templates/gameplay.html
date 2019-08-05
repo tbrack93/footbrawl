@@ -24,12 +24,12 @@
 
 	<div class="container-fluid">
 		<div class="row">
-		<br>
+		
 			<div class="col-sm-2"></div>
 		   <div class="col-sm-8 text-center" id="gameStatus">
 		   	<div class="col-sm-4"></div>
 		   	 <div class="col-sm-4">
-		   <h4 id="activeTeam"> Active Team</h4>
+		   <h3 id="activeTeam"> Active Team</h3>
 		   
 		   <h4 id="score">0 - 0</h4>
 		   </div>
@@ -48,7 +48,13 @@
 				<p id="team1Turn">Current Turn:</p>
 				<p id="team1Rerolls">Team Rerolls:</p>
 				<p id="team1Blitzed"></p>
-
+				<hr>
+				<a onclick="showReserves(1)" >
+				  <h4 id="reservesTitle">Reserves +</h4>
+				 </a>
+				<div id="team1Reserves" class="reserves" style="display:none">
+				
+				</div>
 			</div>
 			<div class="col-sm-8">
 				<br>
