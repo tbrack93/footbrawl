@@ -596,6 +596,7 @@ function actOnClick(click){
 						                 "location": activePlayer.location, "target": square, "opponent": player.id}));
 				}
 				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
+					showPlayerOnPitch(player);
 					if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
 						if(actionChoice != null && actionChoice == "block"){
 		
@@ -615,6 +616,7 @@ function actOnClick(click){
 				
 				}
 				if(player.team != team && actionChoice == null|| player.team == team && yourTurn == false){
+					showPlayerOnPitch(player);
 					closeActions();
 					stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 						                 JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
@@ -628,6 +630,7 @@ function actOnClick(click){
 			     inRoute = false;
 			     waypoints.length = 0;
 			     route.length = 0;
+			     showPlayerOnPitch(player);  
 			     if(player.team == team){
 			       stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 			                 JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": player.id}));
@@ -1328,6 +1331,8 @@ function showNewTurn(message){
 	inModal = false;
 	inBlock = false;
 	inPickup = false;
+	closePlayer1();
+	closePlayer2();
 	document.getElementById("team1Blitzed").innerHTML = "Not Blitzed This Turn";
 	document.getElementById("team2Blitzed").innerHTML = "Not Blitzed This Turn";
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
@@ -1762,6 +1767,11 @@ function closeModal(){
 	document.getElementById("modalOptions").innerHTML = "";
 	document.getElementById("closeModal").style.display = "none";
 	inBlock = false;
+	if(team == team1.id){
+		closePlayer2();
+	} else{
+		closePlayer1();
+	}
 }
 
 function closeActions(){
@@ -2151,6 +2161,10 @@ function populateReserves(team){
 	} else{
 		target.innerHTML += "<p>None</p>";
 	}
+}
+
+function showPlayerOnPitch(player){
+	showPlayerDetails(player);
 }
 
 function showReservePlayer(element){

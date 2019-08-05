@@ -20,7 +20,6 @@ public class PlayerInGame{
 	private String status;
 	@JsonIgnore
 	private int stunnedCounter;
-	@JsonIgnore
 	private List<String> skillsUsedThisTurn;
 	@JsonIgnore
 	private Tile tile;
