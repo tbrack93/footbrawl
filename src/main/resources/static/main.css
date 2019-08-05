@@ -1,5 +1,8 @@
 body{
 	font-family: 'Cormorant Garamond', serif;
+	background: url(/images/parchment.jpg);
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
 }
 
 

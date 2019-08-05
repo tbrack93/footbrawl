@@ -17,6 +17,8 @@ public class PlayerInGame{
 	private boolean hasTackleZones;
 	private boolean hasBall;
 	private String status;
+	@JsonIgnore
+	private int stunnedCounter;
 	private List<String> skillsUsedThisTurn;
 	@JsonIgnore
 	private Tile tile;
@@ -48,11 +50,18 @@ public class PlayerInGame{
 	public void newTurn() {
 		actedThisTurn = false;
 		actionOver = false;
+		remainingMA = player.getMA();
+		skillsUsedThisTurn = new ArrayList<>();
+		if(status.equals("stunned")){
+			stunnedCounter++;
+		}
 	}
 	
 	public void endTurn() {
 		if(status.equals("stunned")) {
-			status = "prone";
+			if(stunnedCounter >= 1) {
+				setStatus("prone");
+			}
 		}
 		remainingMA = player.getMA(); // here so users can see opponent players' full movement range in their turn
 		//actionOver = true;
@@ -89,6 +98,9 @@ public class PlayerInGame{
 
 	public void setStatus(String status) {
 		hasTackleZones = status.equals("standing");
+		if(status == "stunned") {
+			stunnedCounter = 0;
+		}
 		this.status = status;
 	}
 	
