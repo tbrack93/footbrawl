@@ -1495,7 +1495,7 @@ function showBlockResult(message){
 	drawPlayer(getPlayerById(message.player));
 	showBlockAssists(message);
 	document.getElementById("modalTitle").innerHTML = message.playerName + " blocks " + message.opponentName;
-	document.getElementById("modalText").innerHTML = "";
+	//document.getElementById("modalText").innerHTML = "";
 	document.getElementById("modalOptions").innerHTML = "";
 	var modalMain = document.getElementById("modalImages");
 	modalMain.innerHTML = "Results: <br><br>"; 
@@ -1575,15 +1575,16 @@ function showSkillUsed(message){
 		showSideStepSkill(message);
 	} else if(message.description == "Dodge In Block"){
 		showDodgeInBlock(message);
-	} else if(message.description == "Catch")P
+	} else if(message.description == "Catch"){
 	    showCatchSkill(message);
+	}
 }
 
 
 function showBlockEnd(message){
-	document.getElementById("modalImages").innerHTML = "";
+	//document.getElementById("modalImages").innerHTML = "";
 	document.getElementById("closeModal").style.display = "block";
-	document.getElementById("modalText").innerHTML = "";
+	//document.getElementById("modalText").innerHTML = "";
 	inModal = false;
 	inBlock = false;
 	inPush = false;
@@ -1613,7 +1614,7 @@ function removePlayer(player){
 
 function requestPushChoice(message){
 	if(inPush == true){
-		document.getElementById("modalText").innerHTML = "";
+		//document.getElementById("modalText").innerHTML = "";
 	}
 	console.log("In request push choice");
 	var sContext = squares.getContext("2d");
