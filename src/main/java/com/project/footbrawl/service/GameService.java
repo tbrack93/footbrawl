@@ -309,10 +309,12 @@ public class GameService {
 	public boolean checkValidPlacement(PlayerInGame player, Tile target) {
 		TeamInGame team = player.getTeamIG();
 		if (team == team1 && target.getLocation()[0] > 12 || team == team2 && target.getLocation()[0] < 13) {
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must be placed in your half of the pitch");
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
 		if (!target.containsPlayer()) {
 			if (team.getPlayersOnPitch().size() >= 11) {
+				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 11 players on the pitch");
 				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
 			}
 			if (target.getLocation()[1] >= 0 && target.getLocation()[1] <= 3) {
@@ -323,6 +325,7 @@ public class GameService {
 					}
 				}
 				if (wideZone1 >= 2) {
+					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
 					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 				}
 			} else if (target.getLocation()[1] >= 10 && target.getLocation()[1] <= 14) {
@@ -333,6 +336,7 @@ public class GameService {
 					}
 				}
 				if (wideZone2 >= 2) {
+					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
 					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 				}
 			}

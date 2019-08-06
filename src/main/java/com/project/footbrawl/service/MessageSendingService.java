@@ -410,4 +410,12 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
         message.setDescription(""+team);
         controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	public void sendInvalidMessage(int gameId, int team, String action, String description) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INVALID");
+		message.setAction(action);
+		message.setDescription(description);
+		controller.sendMessageToUser(gameId, team, message);
+	}
 }

@@ -552,6 +552,8 @@ function decodeMessage(message){
 	  } else if(message.action == "HANDOFF"){
 		  showHandOff(message);
 	  }
+   } else if(message.type == "INVALID"){
+	   showInvalid(message);
    }
 }
 
@@ -2361,4 +2363,22 @@ function moveToReserves(){
 	closePlayer1();
 	closePlayer2();
 	activePlayer = null;
+}
+
+function showInvalid(message){
+	if(message.action =="PLACEMENT"){
+		closePlayer1();
+		closePlayer2();
+		activePlayer = null;
+	}
+	var errors = document.getElementById("errors");
+	errors.innerHTML = message.description;
+	errors.style.visibility = "visible";
+	errors.style.transition = "opacity 3s ease-in";
+	errors.style.opacity = 0;
+	 setTimeout(function(){	 // resetting for future transition  
+		errors.style.visibility = "hidden";
+		errors.style.transition = "";
+		errors.style.opacity = "1"; 
+		   }, 3100);
 }

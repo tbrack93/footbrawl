@@ -247,3 +247,19 @@ text-align:center;
 #team2Info{
 	padding-right:10px;
 }
+
+#errors{
+	color: red;
+	font-family: 'Cormorant Garamond', serif;
+	font-size: 16px;
+	opacity: 1;
+	visibility: hidden;
+}
+
+#endTurn{
+	margin-top:12px;
+}
+
+.fade{
+	transition: opacity 3s;
+}
