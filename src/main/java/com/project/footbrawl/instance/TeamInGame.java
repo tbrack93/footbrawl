@@ -78,6 +78,7 @@ public class TeamInGame {
 	
 	public void addPlayerOnPitch(PlayerInGame player) {
 		playersOnPitch.add(player);
+		reserves.remove(player);
 	}
 	
 	public void removePlayerFromPitch(PlayerInGame player) {

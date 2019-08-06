@@ -42,6 +42,7 @@ var lastRollLocation;
 var pushOptions;
 var followUp;
 var actionChoice;
+var phase;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
 var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
@@ -56,6 +57,7 @@ window.onload = init;
 document.addEventListener("keydown", escCheck);
 
 function init() {
+	phase = "";
 	setDraggable();
 	inPush = false;
 	players = new Array();
@@ -164,6 +166,7 @@ function drawPlayerBorders(){
 }
 
 function drawPlayer(player) {
+	console.log("drawing");
 	  var img = new Image();
 	  if(player.hasBall == true){
 		  console.log("has ball");
@@ -472,6 +475,9 @@ function decodeMessage(message){
 		} 
 		}
 	} else if(message.type == "ACTION"){
+		if(message.action == "SETUPUPDATE"){
+			updateSetup(message);
+		}
 		if(actionChoice != "blitz"){
 			actionChoice = null;
 		}
@@ -563,6 +569,10 @@ function showMovement(message){
 }
 
 function actOnClick(click){
+	if(phase == "yourSetup"){
+		actOnsetupClick(click);
+		return;
+	}
 	if(inPush == true){
 		console.log("in push");
 		validatePush(click);
@@ -1349,11 +1359,11 @@ function showNewTurn(message){
 	team2.playersOnPitch.forEach(player =>{
 		players.push(player);
 	});
-	if(team1Reserves == null || team1FullDetails.reserves.length != team1Reserves.length){
+	if(team1Reserves == null || message.team1FullDetails.reserves.length != team1Reserves.length){
 		team1Reserves = message.team1FullDetails.reserves;
 		 populateReserves(1);
 	}
-	if(team2Reserves == null || team2FullDetails.reserves.length != team2Reserves.length){
+	if(team2Reserves == null || message.team2FullDetails.reserves.length != team2Reserves.length){
 		team2Reserves = message.team2FullDetails.reserves;
 		populateReserves(2);
 	}
@@ -1807,7 +1817,7 @@ function showPossibleActions(message){
 		 document.getElementById("actionsTitle").innerHTML = "No Possible Actions";
 	 }
 	 actions = document.getElementById("actions"); // have to get updated height & width based on number of images shown
-	 actions.style.left = ""+ ((message.location[0] * squareH) - actions.offsetWidth/6)  + "px";
+	 actions.style.left = ""+ ((message.location[0] * squareH) - actions.offsetWidth/3)  + "px";
 	 actions.style.top = "" + (((14- message.location[1]) * squareH) - actions.offsetHeight) + "px";
 }
 
@@ -2184,6 +2194,9 @@ function showReservePlayer(element){
 		}
 	}
 	console.log(player.name);
+	if(phase == "yourSetup"){
+		activePlayer = player;
+	}
     showPlayerDetails(player); 
 }
 
@@ -2218,4 +2231,42 @@ function closePlayer1(){
 
 function closePlayer2(){
 	document.getElementById("team2Player").style.display="none";
+}
+
+function actOnsetupClick(click){
+	if(activePlayer != null){
+		var square = determineSquare(click);
+		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                JSON.stringify({"type": "ACTION", "action": "PLACEMENT", "player": activePlayer.id,
+	                 "target": square}));
+	}
+    activePlayer = null;
+}
+
+function updateSetup(message){
+	  var squareH = canvas.height/15;
+	  console.log("updating setup");
+	if(message.description == "1"){
+	  team1Reserves = message.team1FullDetails.reserves;
+	  populateReserves(1);
+	  canvas.getContext("2d").clearRect(0, 0, 13 * squareH, 8*squareH);
+	  console.log(message.team1FullDetails.playersOnPitch.length);
+	  for(var i = 0; i < message.team1FullDetails.playersOnPitch.length; i++){
+          var player = message.team1FullDetails.playersOnPitch[i];
+		  if(getPlayerById(player.id) == null){
+			  players.push(player);
+		  }
+		  drawPlayer(player);
+	  }
+	} else{
+	  team2Reserves = message.team2FullDetails.reserves;
+	  populateReserves(2);
+	  canvas.getContext("2d").clearRect(13 * squareH, 8 * squareH, 26 * squareH, 16*squareH);
+	  for(var i = 0; i<message.team2FullDetails.playersOnPitch.length; i++){
+		  var player = message.team2FullDetails.playersOnPitch[i];
+		  if(getPlayerById(player.id) == null){
+			  players.push(player);
+		  }
+	  }
+	}
 }

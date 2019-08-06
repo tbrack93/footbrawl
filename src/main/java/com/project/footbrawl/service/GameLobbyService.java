@@ -120,8 +120,8 @@ public class GameLobbyService {
 		gs.pitch[4][4].addPlayer(team1Players.get(1));
 		gs.pitch[4][5].addPlayer(team1Players.get(2));
 		gs.pitch[0][0].addPlayer(team2Players.get(2));
-		team1Players.get(2).setHasBall(true);
-		//team2Players.get(0).setHasBall(true);
+		//team1Players.get(2).setHasBall(true);
+		team2Players.get(0).setHasBall(true);
 	    //gs.pitch[4][3].addBall();
 		gs.setActiveTeam(gs.team1);
 		gs.team1.setTurn(4);
