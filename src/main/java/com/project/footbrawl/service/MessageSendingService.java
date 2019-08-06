@@ -43,8 +43,8 @@ public class MessageSendingService {
 		message.setAction("TEAMS");
 		message.setTeam1Name(team1.getName());
 		message.setTeam2Name(team2.getName());
-		message.setTeam1(team1.getPlayersOnPitch());
-		message.setTeam2(team2.getPlayersOnPitch());
+		message.setTeam1(new ArrayList<>(team1.getPlayersOnPitch()));
+		message.setTeam2(new ArrayList<>(team2.getPlayersOnPitch()));
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
 

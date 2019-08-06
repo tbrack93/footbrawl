@@ -218,7 +218,7 @@ public class GameService {
 
 	public void playerPlacement(PlayerInGame player, int[] position) {
 		if (player.getTeamIG() != activeTeam) {
-			throw new IllegalArgumentException("Not your setup phase");
+			throw new IllegalArgumentException("Not your setup phase/ player");
 		}
 		Tile target = pitch[position[0]][position[1]];
 		if (checkValidPlacement(player, target)) {
@@ -231,11 +231,10 @@ public class GameService {
 					player.getTeamIG().addToReserves(tempP); // otherwise put existing player back in reserves
 				}
 				target.addPlayer(player);
-			}
-			if(player.getTile() != null) {
+			} else if(player.getTile() != null) {
 				Tile tempT = player.getTile();
-				target.addPlayer(player);
 				tempT.removePlayer();
+				target.addPlayer(player);
 			} else {
 			  target.addPlayer(player);
 			}
@@ -251,6 +250,7 @@ public class GameService {
 		}
 		player.getTile().removePlayer();
 		player.getTeamIG().addToReserves(player);
+		sender.sendSetupUpdate(game.getId(), activeTeam, activeTeam == team1 ? 1 : 2);
 	}
 
 	public void endTeamSetup(TeamInGame team) {
@@ -1935,7 +1935,7 @@ public class GameService {
 	public void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = player.getTeamIG() == team1 ? team2.getPlayersOnPitch() : team1.getPlayersOnPitch();
+		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch()) : new ArrayList<>(team1.getPlayersOnPitch());
 		for (PlayerInGame p : opponents) {
 			if (p.isHasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
@@ -2734,7 +2734,10 @@ public class GameService {
 	}
 
 	public void carryOutPlacement(Integer player, int[] location) {
-		System.out.println("in carryout");
 		playerPlacement(getPlayerById(player), location);
+	}
+
+	public void benchPlayer(Integer player) {
+		removePlayerFromPitch(getPlayerById(player));
 	}
 }

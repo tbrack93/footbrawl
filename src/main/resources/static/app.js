@@ -13,6 +13,8 @@ var canvasTop;
 var players;
 var team1Reserves;
 var team2Reserves;
+var team1PlayersOnPitch;
+var team2PlayersOnPitch;
 var lastSquareClicked;
 var timeSinceClick;
 var debounceInterval = 200;
@@ -57,7 +59,7 @@ window.onload = init;
 document.addEventListener("keydown", escCheck);
 
 function init() {
-	phase = "";
+	phase = "yourSetup";
 	setDraggable();
 	inPush = false;
 	players = new Array();
@@ -1791,6 +1793,14 @@ function closeActions(){
 	resetActions();
 	actionChoice = null;
 	inThrow = false;
+	if(phase == "yourSetup" && actionChoice == null){
+		activePlayer = null;
+		if(team == team1.id){
+			closePlayer1();
+		} else{
+			closePlayer2();
+		}
+	}
 }
 
 function resetActions(){
@@ -2178,24 +2188,40 @@ function showPlayerOnPitch(player){
 }
 
 function showReservePlayer(element){
+	document.getElementById("actions").style.display = "none";
 	var id = element.id;
-	var team;
-	if(id.charAt(0) == team1.id){
-		team = team1Reserves;
+	var localTeam;
+	var teamNumber = id.charAt(0);
+	if(teamNumber == team1.id){
+		localTeam = team1Reserves;
 	} else{
-		team = team2Reserves;
+		localTeam = team2Reserves;
 	}
 	var playerId = id.slice(-1);
 	console.log(playerId);
 	var player;
-	for(var i = 0; i < team.length; i++){
-		if(team[i].id == playerId){
-			player = team[i];
+	for(var i = 0; i < localTeam.length; i++){
+		if(localTeam[i].id == playerId){
+			player = localTeam[i];
 		}
 	}
 	console.log(player.name);
-	if(phase == "yourSetup"){
+	if(phase == "yourSetup" && teamNumber == team){
+		actionChoice = "place";
 		activePlayer = player;
+		var possible = squares.getContext("2d");
+		possible.save();
+		possible.clearRect(0, 0, canvas.width, canvas.height);
+		var squareH = canvas.height/15;
+		possible.globalAlpha = 0.3;
+		if(team == team1.id){
+			possible.fillStyle = "blue";
+			possible.fillRect(0, 0, 13 * squareH, 16*squareH);
+		}else {
+			possible.fillStyle = "red";
+			possible.fillRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+		}
+		possible.restore();
 	}
     showPlayerDetails(player); 
 }
@@ -2227,46 +2253,112 @@ function showPlayerDetails(player){
 
 function closePlayer1(){
 	document.getElementById("team1Player").style.display="none";
+	if(phase == "yourSetup"){
+		squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+		if(team == 1){
+			activePlayer = null;
+		}
+	}
 }
 
 function closePlayer2(){
 	document.getElementById("team2Player").style.display="none";
+	if(phase == "yourSetup"){
+		squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+		if(team == 2){
+			activePlayer = null;
+		}
+	}
 }
 
 function actOnsetupClick(click){
-	if(activePlayer != null){
-		var square = determineSquare(click);
+	var square = determineSquare(click);
+	if(activePlayer != null && actionChoice == "place"){
 		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
                 JSON.stringify({"type": "ACTION", "action": "PLACEMENT", "player": activePlayer.id,
 	                 "target": square}));
-	}
-    activePlayer = null;
+		  activePlayer = null;
+		  actionChoice = null;
+	}else{
+		for(var i = 0 ; i < players.length; i++){
+			var player = players[i];
+			 if(player.location[0] == square[0] && player.location[1] == square[1]) {
+				showPlayerDetails(player);
+				activePlayer = player;
+				showSetupActions(player)
+				return;
+			 }
+		}			
+	}			 
+}
+		
+function showSetupActions(player){
+	 resetActions();
+	 var actions = document.getElementById("actions");
+	 canvas = document.getElementById("canvas");
+	 actions.style.display = "block";
+	 var squareH = canvas.clientHeight/15;
+	 document.getElementById("actionsTitle").innerHTML = "Actions";
+     document.getElementById("place").style.display = "inline";
+     document.getElementById("remove").style.display = "inline";
+	 actions = document.getElementById("actions"); // have to get updated height & width based on number of images shown
+	 actions.style.left = ""+ ((player.location[0] * squareH) - actions.offsetWidth/3)  + "px";
+	 actions.style.top = "" + (((14- player.location[1]) * squareH) - actions.offsetHeight) + "px";
 }
 
 function updateSetup(message){
+	 squares.getContext("2d").clearRect(0,0, canvas.width, canvas.height);
 	  var squareH = canvas.height/15;
 	  console.log("updating setup");
 	if(message.description == "1"){
 	  team1Reserves = message.team1FullDetails.reserves;
 	  populateReserves(1);
-	  canvas.getContext("2d").clearRect(0, 0, 13 * squareH, 8*squareH);
-	  console.log(message.team1FullDetails.playersOnPitch.length);
-	  for(var i = 0; i < message.team1FullDetails.playersOnPitch.length; i++){
-          var player = message.team1FullDetails.playersOnPitch[i];
-		  if(getPlayerById(player.id) == null){
-			  players.push(player);
-		  }
-		  drawPlayer(player);
+	  canvas.getContext("2d").clearRect(0, 0, 13 * squareH, 16*squareH);
+	  selection.getContext("2d").clearRect(0, 0, 13 * squareH, 16*squareH);
+	  closePlayer1();
+	  team1PlayersOnPitch = message.team1FullDetails.playersOnPitch;
+	  players.length = 0;
+	  for(var i = 0; i < team1PlayersOnPitch.length; i++){
+		  drawPlayer(team1PlayersOnPitch[i]);
 	  }
 	} else{
 	  team2Reserves = message.team2FullDetails.reserves;
 	  populateReserves(2);
-	  canvas.getContext("2d").clearRect(13 * squareH, 8 * squareH, 26 * squareH, 16*squareH);
-	  for(var i = 0; i<message.team2FullDetails.playersOnPitch.length; i++){
-		  var player = message.team2FullDetails.playersOnPitch[i];
-		  if(getPlayerById(player.id) == null){
-			  players.push(player);
-		  }
+	  canvas.getContext("2d").clearRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+	  selection.getContext("2d").clearRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+	  closePlayer2();
+	  team2PlayersOnPitch = message.team1FullDetails.playersOnPitch;
+	  players.length = 0;
+	  for(var i = 0; i < team2PlayersOnPitch.length; i++){
+		  drawPlayer(team2PlayersOnPitch[i]);
 	  }
 	}
+	players = team1PlayersOnPitch.concat(team2PlayersOnPitch);
+}
+
+function placePlayer(){
+	actionChoice = "place";
+	var squareH = canvas.height/15;
+	document.getElementById("actions").style.display = "none";
+	var possible = squares.getContext("2d");
+	possible.save();
+	possible.globalAlpha = 0.3;
+	if(team == team1.id){
+		possible.fillStyle = "blue";
+		possible.fillRect(0, 0, 13 * squareH, 16*squareH);
+	}else {
+		possible.fillStyle = "red";
+		possible.fillRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+	}
+	possible.restore();
+}
+
+function moveToReserves(){
+	actionChoice = "bench";
+	document.getElementById("actions").style.display = "none";
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "BENCH", "player": activePlayer.id}));
+	closePlayer1();
+	closePlayer2();
+	activePlayer = null;
 }

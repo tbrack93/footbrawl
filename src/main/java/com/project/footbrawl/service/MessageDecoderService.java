@@ -66,6 +66,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).carryOutStandUp(message.getPlayer());
 			} else if(action.equals("PLACEMENT")) {
 				lobby.getGameService(gameId).carryOutPlacement(message.getPlayer(), message.getTarget());
+			} else if(action.equals("BENCH")) {
+				lobby.getGameService(gameId).benchPlayer(message.getPlayer());
 			}
 		}
 		
