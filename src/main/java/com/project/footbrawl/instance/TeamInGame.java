@@ -1,7 +1,9 @@
 package com.project.footbrawl.instance;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -16,7 +18,7 @@ public class TeamInGame {
 	@JsonIgnore
 	private List<PlayerInGame> allPlayers;
 	private List<PlayerInGame> reserves;
-	private List<PlayerInGame> playersOnPitch;
+	private Set<PlayerInGame> playersOnPitch;
 	private List<PlayerInGame> dugout; // KO'd
 	private List<PlayerInGame> injured; // injured & dead
 	private List<PlayerInGame> dungeon; // sent off for fouling
@@ -36,14 +38,14 @@ public class TeamInGame {
 		remainingTeamRerolls = team.getTeamRerolls();
 		allPlayers = new ArrayList<>();
 		reserves = new ArrayList<>();
-		playersOnPitch = new ArrayList<>();
+		playersOnPitch = new HashSet<>();
 		injured = new ArrayList<>();
 		dugout = new ArrayList<>();
 		dungeon = new ArrayList<>();
 	    for(Player p : team.getPlayers()) {
 	    	PlayerInGame pg = new PlayerInGame(p, this);
 	    	allPlayers.add(pg);
-	    	playersOnPitch.add(pg); // should start as reserves, but on pitch for testing
+	    	reserves.add(pg); // should start as reserves, but on pitch for testing
 	    }
 	}
 
@@ -65,19 +67,23 @@ public class TeamInGame {
 	
 	public void addToReserves(PlayerInGame player){
 		reserves.add(player);
-		if(player.getTile() != null) player.getTile().removePlayer();
+		if(player.getTile() != null) { 
+			player.getTile().removePlayer();
+		}
+		playersOnPitch.remove(player);
 	}
 
-	public List<PlayerInGame> getPlayersOnPitch() {
+	public Set<PlayerInGame> getPlayersOnPitch() {
 		return playersOnPitch;
 	}
 
-	public void setPlayersOnPitch(List<PlayerInGame> playersOnPitch) {
+	public void setPlayersOnPitch(Set<PlayerInGame> playersOnPitch) {
 		this.playersOnPitch = playersOnPitch;
 	}
 	
 	public void addPlayerOnPitch(PlayerInGame player) {
 		playersOnPitch.add(player);
+		reserves.remove(player);
 	}
 	
 	public void removePlayerFromPitch(PlayerInGame player) {
