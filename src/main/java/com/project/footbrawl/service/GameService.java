@@ -212,8 +212,7 @@ public class GameService {
 	}
 
 	public void getTeamSetup(TeamInGame team) {
-		// placeholder
-		// ask team to setup
+		sender.sendSetupRequest(game.getId(), team.getId());
 	}
 
 	public void playerPlacement(PlayerInGame player, int[] position) {
@@ -263,7 +262,6 @@ public class GameService {
 				receivingSetupDone = true;
 				getKickChoice(activeTeam);
 			}
-
 		}
 	}
 
@@ -274,6 +272,7 @@ public class GameService {
 
 	public boolean checkTeamSetupValid(TeamInGame team) {
 		if (team.getPlayersOnPitch().size() < 11 && !team.getReserves().isEmpty()) {
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must place 11 players on pitch, or as many as you can");
 			throw new IllegalArgumentException("Must place 11 players on pitch, or as many as you can");
 		}
 		int wideZone1 = 0;
@@ -282,19 +281,20 @@ public class GameService {
 		for (PlayerInGame p : team.getPlayersOnPitch()) {
 			if (p.getTile().getLocation()[1] >= 0 && p.getTile().getLocation()[1] <= 3) {
 				wideZone1++;
-			} else if (p.getTile().getLocation()[1] >= 10 && p.getTile().getLocation()[1] <= 14) {
+			} else if (p.getTile().getLocation()[1] >= 11 && p.getTile().getLocation()[1] <= 14) {
 				wideZone2++;
 			} else if (team == team1 && p.getTile().getLocation()[0] == 12
 					|| team == team2 && p.getTile().getLocation()[0] == 13) {
 				scrimmage++;
 			}
 		}
-		if (wideZone1 >= 2 || wideZone2 >= 2) {
+		if (wideZone1 > 2 || wideZone2 > 2) {
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
 			throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 		}
 		if (scrimmage < 3 && team.getPlayersOnPitch().size() + team.getReserves().size() >= 3) {
-			throw new IllegalArgumentException(
-					"Must have at least 3 players on line of scrimmage, or as many as you can");
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must have at least 3 players on line of scrimmage, or as many as you can");
+			throw new IllegalArgumentException("Must have at least 3 players on line of scrimmage, or as many as you can");
 		}
 		return true;
 	}
@@ -313,14 +313,14 @@ public class GameService {
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
 		if (!target.containsPlayer()) {
-			if (team.getPlayersOnPitch().size() >= 11) {
+			if (team.getPlayersOnPitch().size() >= 12) {
 				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 11 players on the pitch");
 				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
 			}
 			if (target.getLocation()[1] >= 0 && target.getLocation()[1] <= 3) {
 				int wideZone1 = 0;
 				for (PlayerInGame p : team.getPlayersOnPitch()) {
-					if (p.getTile().getLocation()[1] >= 0 && p.getTile().getLocation()[1] <= 3) {
+					if (p.getTile().getLocation()[1] >= 0 && p.getTile().getLocation()[1] <= 3 && p != player) {
 						wideZone1++;
 					}
 				}
@@ -328,10 +328,10 @@ public class GameService {
 					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
 					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 				}
-			} else if (target.getLocation()[1] >= 10 && target.getLocation()[1] <= 14) {
+			} else if (target.getLocation()[1] >= 11 && target.getLocation()[1] <= 14) {
 				int wideZone2 = 0;
 				for (PlayerInGame p : team.getPlayersOnPitch()) {
-					if (p.getTile().getLocation()[1] >= 10 && p.getTile().getLocation()[1] <= 14) {
+					if (p.getTile().getLocation()[1] >= 11 && p.getTile().getLocation()[1] <= 14 && p != player) {
 						wideZone2++;
 					}
 				}
@@ -2743,5 +2743,12 @@ public class GameService {
 
 	public void benchPlayer(Integer player) {
 		removePlayerFromPitch(getPlayerById(player));
+	}
+
+	public void endSetup(int team) {
+		if(team != activeTeam.getId()) {
+			throw new IllegalArgumentException("Not yours to end");
+		}
+		endTeamSetup(activeTeam);
 	}
 }

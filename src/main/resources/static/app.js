@@ -483,7 +483,9 @@ function decodeMessage(message){
 		if(actionChoice != "blitz"){
 			actionChoice = null;
 		}
-	    if(message.action == "ROUTE"){
+		if(message.action == "TEAMSETUP"){
+			requestSetup(message);
+		} else if(message.action == "ROUTE"){
 	      activePlayer = getPlayerById(message.player);
 	      if(animating == true){
 	    	  var task = function(m){
@@ -2193,13 +2195,14 @@ function showReservePlayer(element){
 	document.getElementById("actions").style.display = "none";
 	var id = element.id;
 	var localTeam;
-	var teamNumber = id.charAt(0);
+	var details = id.split("player");
+	var teamNumber = details[0];
 	if(teamNumber == team1.id){
 		localTeam = team1Reserves;
 	} else{
 		localTeam = team2Reserves;
 	}
-	var playerId = id.slice(-1);
+	var playerId = details[1];
 	console.log(playerId);
 	var player;
 	for(var i = 0; i < localTeam.length; i++){
@@ -2381,4 +2384,19 @@ function showInvalid(message){
 		errors.style.transition = "";
 		errors.style.opacity = "1"; 
 		   }, 3100);
+}
+
+function submitSetup(){
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "ENDSETUP"}));
+}
+
+function requestSetup(message){
+	if(message.userToChoose == team){
+		phase = "yourSetup";
+		alert("Please setup your team");
+	} else {
+		phase = "opponentSetup";
+		alert("Opponent to setup team");
+	}
 }

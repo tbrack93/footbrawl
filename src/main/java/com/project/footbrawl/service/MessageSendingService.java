@@ -397,6 +397,14 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setEnd(end);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+	
+	public void sendSetupRequest(int gameId, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("TEAMSETUP");
+		message.setUserToChoose(teamId);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 
 	public void sendSetupUpdate(int gameId, TeamInGame teamDetails, int team) {
 		MessageToClient message = new MessageToClient();
@@ -418,4 +426,6 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setDescription(description);
 		controller.sendMessageToUser(gameId, team, message);
 	}
+
+	
 }
