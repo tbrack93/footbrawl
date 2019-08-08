@@ -116,6 +116,7 @@ public class GameService {
 			}
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
+		phase = "setup"; // will need to be more dynamic 
 	}
 
 	public int getGameId() {
@@ -212,7 +213,7 @@ public class GameService {
 	}
 
 	public void getTeamSetup(TeamInGame team) {
-		sender.sendSetupRequest(game.getId(), team.getId());
+		sender.sendSetupRequest(game.getId(), team.getName(), team.getId());
 	}
 
 	public void playerPlacement(PlayerInGame player, int[] position) {
@@ -266,8 +267,9 @@ public class GameService {
 	}
 
 	public void getKickChoice(TeamInGame kicking) {
-		// placeholder
-		// ask relevant user where they want to kick ball to
+		phase="kick";
+		System.out.println("requesting kick request");
+		sender.sendKickRequest(game.getId(), kicking.getId(), kicking.getName());
 	}
 
 	public boolean checkTeamSetupValid(TeamInGame team) {
@@ -378,6 +380,7 @@ public class GameService {
 		phase = "kick";
 		Tile goal = pitch[target[0]][target[1]];
 		if (activeTeam == team2 && goal.getLocation()[0] > 12 || activeTeam == team1 && goal.getLocation()[0] < 13) {
+			sender.sendInvalidMessage(game.getId(), activeTeam.getId(), "KICK", "Must kick to opponent's half of the pitch");
 			throw new IllegalArgumentException("Must kick to opponent's half of the pitch");
 		}
 		int value = diceRoller(1, 8)[0];
@@ -504,7 +507,7 @@ public class GameService {
 		activeTeam.newTurn();// reset players on pitch (able to move/ act)
 		taskQueue.clear();
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
-				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation());
+				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation(), phase);
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
@@ -2070,7 +2073,7 @@ public class GameService {
 			ball = null;
 		}
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
-				game.getTeam1Score(), game.getTeam2Score(), ball);
+				game.getTeam1Score(), game.getTeam2Score(), ball, phase); 
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {

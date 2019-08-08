@@ -12,7 +12,6 @@ import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
 import com.project.footbrawl.entity.Team;
-import com.project.footbrawl.instance.PlayerInGame;
 
 @Service
 public class GameLobbyService {

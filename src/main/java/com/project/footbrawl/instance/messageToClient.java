@@ -35,6 +35,7 @@ public class MessageToClient extends Message {
 	private int[] ballLocation;
 	private boolean isReroll;
 	private List<String> possibleActions;
+	private String phase;
 	
 	public MessageToClient() {
         route = null;
@@ -283,6 +284,14 @@ public class MessageToClient extends Message {
 
 	public void setSecondaryRollNeeded(Integer secondaryRollNeeded) {
 		this.secondaryRollNeeded = secondaryRollNeeded;
+	}
+
+	public String getPhase() {
+		return phase;
+	}
+
+	public void setPhase(String phase) {
+		this.phase = phase;
 	}
 	
 }

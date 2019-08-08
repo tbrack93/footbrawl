@@ -5,16 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.controller.GameMessageController;
 import com.project.footbrawl.instance.MessageToClient;
-import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
-import com.project.footbrawl.instance.Tile;
 import com.project.footbrawl.instance.jsonTile;
 
 @Service
@@ -27,16 +22,6 @@ public class MessageSendingService {
 
 	}
 
-	public void sendMovementInfoMessage(int gameId, int teamId, int playerId, List<jsonTile> squares) {
-		System.out.println("creating message");
-		MessageToClient message = new MessageToClient();
-		message.setType("INFO");
-		message.setAction("MOVEMENT");
-		message.setPlayer(playerId);
-		message.setSquares(squares);
-		controller.sendMessageToUser(gameId, teamId, message);
-	}
-
 	public void sendTeamsInfo(int gameId, int teamId, TeamInGame team1, TeamInGame team2) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
@@ -47,7 +32,57 @@ public class MessageSendingService {
 		message.setTeam2(new ArrayList<>(team2.getPlayersOnPitch()));
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
+	
+	public void sendSetupRequest(int gameId, String teamName, int teamId) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("TEAMSETUP");
+		message.setTeamName(teamName);
+		message.setUserToChoose(teamId);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 
+	public void sendSetupUpdate(int gameId, TeamInGame teamDetails, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("SETUPUPDATE");
+        if(team == 1) {
+        	message.setTeam1FullDetails(teamDetails);
+        } else {
+        	message.setTeam2FullDetails(teamDetails);
+        }
+        message.setDescription(""+team);
+        controller.sendMessageToBothUsers(gameId, message);
+	}
+	
+	public void sendKickRequest(int gameId, int userToChoose, String teamName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("KICKOFF");
+        message.setUserToChoose(userToChoose);
+        message.setTeamName(teamName);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
+	public void sendPossibleActions(int gameId, Integer player, int[] location, List<String> actions, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("ACTIONS");
+		message.setLocation(location);
+		message.setPossibleActions(actions);
+		controller.sendMessageToUser(gameId, team, message);
+	}
+
+	public void sendMovementInfoMessage(int gameId, int teamId, int playerId, List<jsonTile> squares) {
+		System.out.println("creating message");
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("MOVEMENT");
+		message.setPlayer(playerId);
+		message.setSquares(squares);
+		controller.sendMessageToUser(gameId, teamId, message);
+	}
+	
 	public void sendRoute(int gameId, int teamId, int playerId, List<jsonTile> route, int routeMACost) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
@@ -169,7 +204,7 @@ public class MessageSendingService {
 	}
 
 	public void sendGameStatus(int gameId, int teamId, String teamName, TeamInGame team1, TeamInGame team2,
-			int team1Score, int team2Score, int[] ballLocation) {
+			int team1Score, int team2Score, int[] ballLocation, String phase) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("NEWTURN");
@@ -182,6 +217,7 @@ public class MessageSendingService {
 		message.setTeam1Score(team1Score);
 		message.setTeam2Score(team2Score);
 		message.setBallLocation(ballLocation);
+		message.setPhase(phase);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 	
@@ -329,15 +365,6 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
-	public void sendPossibleActions(int gameId, Integer player, int[] location, List<String> actions, int team) {
-		MessageToClient message = new MessageToClient();
-		message.setType("INFO");
-		message.setAction("ACTIONS");
-		message.setLocation(location);
-		message.setPossibleActions(actions);
-		controller.sendMessageToUser(gameId, team, message);
-	}
-
 	public void sendThrowDetails(int gameId, Integer player, int[] location, int[] target, String targetName, int rollNeeded, int catchRoll, List<jsonTile> interceptLocations,
 			int team) {
 		MessageToClient message = new MessageToClient();
@@ -396,27 +423,6 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setPlayerName(playerName);
 		message.setEnd(end);
 		controller.sendMessageToBothUsers(gameId, message);
-	}
-	
-	public void sendSetupRequest(int gameId, int teamId) {
-		MessageToClient message = new MessageToClient();
-		message.setType("ACTION");
-		message.setAction("TEAMSETUP");
-		message.setUserToChoose(teamId);
-		controller.sendMessageToBothUsers(gameId, message);
-	}
-
-	public void sendSetupUpdate(int gameId, TeamInGame teamDetails, int team) {
-		MessageToClient message = new MessageToClient();
-		message.setType("ACTION");
-		message.setAction("SETUPUPDATE");
-        if(team == 1) {
-        	message.setTeam1FullDetails(teamDetails);
-        } else {
-        	message.setTeam2FullDetails(teamDetails);
-        }
-        message.setDescription(""+team);
-        controller.sendMessageToBothUsers(gameId, message);
 	}
 
 	public void sendInvalidMessage(int gameId, int team, String action, String description) {
