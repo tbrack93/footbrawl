@@ -55,6 +55,8 @@ public class GameService {
 	TeamInGame team1;
 	TeamInGame team2;
 	Tile[][] pitch;
+	private boolean team1Joined;
+	private boolean team2Joined;
 	private boolean waitingForPlayers;
 	private boolean kickingSetupDone;
 	private boolean receivingSetupDone;
@@ -116,11 +118,28 @@ public class GameService {
 			}
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
-		phase = "setup"; // will need to be more dynamic 
+		waitingForPlayers = true;
+		phase = "pre-game";
 	}
 
 	public int getGameId() {
 		return game.getId();
+	}
+
+	public void joinGame(int team) {
+		sender.sendTeamsInfo(game.getId(), team, team1, team2, phase);
+		if (phase == "pre-game") {
+			if (team == team1.getId()) {
+				team1Joined = true;
+			} else if (team == team2.getId()) {
+				team2Joined = true;
+			}
+			if (team1Joined == true && team2Joined == true) {
+				startGame();
+			} else {
+				sender.sendWaitingForOpponent(game.getId(), team);
+			}
+		}
 	}
 
 	public List<Tile> getNeighbours(Tile t) {
@@ -152,29 +171,32 @@ public class GameService {
 	}
 
 	public void coinToss() {
-		TeamInGame winner;
-		TeamInGame loser;
 		if (diceRoller(1, 2)[0] == 1) {
-			winner = team1;
-			loser = team2;
+			activeTeam = team1;
 		} else {
-			winner = team2;
-			loser = team1;
+			activeTeam = team2;
 		}
-		System.out.println(winner.getName() + " won the coin toss!");
-		TeamInGame kicking = chooseKickOff(winner) ? winner : loser;
-		lastKickOff = kicking;
-		kickOff(kicking);
+		System.out.println(activeTeam.getName() + " won the coin toss!");
+		sender.sendCoinTossWinner(game.getId(), activeTeam.getId(), activeTeam.getName());
+		// TeamInGame kicking = chooseKickOff(winner) ? winner : loser;
 	}
 
-	public boolean chooseKickOff(TeamInGame chooser) {
-		// placeholder
-		// ask relevant user if they want to kick (true) or receive (false) to start
-		return true;
+	public void chooseKickOff(int team, String choice) {
+		if (team != activeTeam.getId()) {
+			throw new IllegalArgumentException("Not their choice");
+		}
+		sender.sendKickOffChoice(game.getId(), team, activeTeam.getName(), choice);
+		if (choice.contains("Kick")) {
+			lastKickOff = activeTeam;
+		} else {
+			lastKickOff = activeTeam.getId() == team1.getId() ? team2 : team1;
+		}
+		activeTeam = lastKickOff;
+		kickOff(activeTeam);
 	}
 
 	public void kickOff(TeamInGame kicking) {
-		if (!(half == 1 && game.getTeam1Score() == 0 && game.getTeam2Score() == 0)) { // no KO's if first kickoff
+		if (half != 0) { // no KO's if first kickoff
 			checkKOs();
 		}
 		team1.newKickOff();
@@ -231,19 +253,19 @@ public class GameService {
 					player.getTeamIG().addToReserves(tempP); // otherwise put existing player back in reserves
 				}
 				target.addPlayer(player);
-			} else if(player.getTile() != null) {
+			} else if (player.getTile() != null) {
 				Tile tempT = player.getTile();
 				tempT.removePlayer();
 				target.addPlayer(player);
 			} else {
-			  target.addPlayer(player);
+				target.addPlayer(player);
 			}
 			System.out.println(player.getName() + " placed at " + position[0] + " " + position[1]);
 			player.getTeamIG().addPlayerOnPitch(player);
 			sender.sendSetupUpdate(game.getId(), activeTeam, activeTeam == team1 ? 1 : 2);
 		}
 	}
-	
+
 	public void removePlayerFromPitch(PlayerInGame player) {
 		if (player.getTeamIG() != activeTeam) {
 			throw new IllegalArgumentException("Not your setup phase/ player");
@@ -261,20 +283,21 @@ public class GameService {
 				getTeamSetup(activeTeam);
 			} else {
 				receivingSetupDone = true;
-				getKickChoice(activeTeam);
+				getKickTarget(activeTeam);
 			}
 		}
 	}
 
-	public void getKickChoice(TeamInGame kicking) {
-		phase="kick";
+	public void getKickTarget(TeamInGame kicking) {
+		phase = "kick";
 		System.out.println("requesting kick request");
 		sender.sendKickRequest(game.getId(), kicking.getId(), kicking.getName());
 	}
 
 	public boolean checkTeamSetupValid(TeamInGame team) {
 		if (team.getPlayersOnPitch().size() < 11 && !team.getReserves().isEmpty()) {
-			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must place 11 players on pitch, or as many as you can");
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+					"Must place 11 players on pitch, or as many as you can");
 			throw new IllegalArgumentException("Must place 11 players on pitch, or as many as you can");
 		}
 		int wideZone1 = 0;
@@ -291,12 +314,15 @@ public class GameService {
 			}
 		}
 		if (wideZone1 > 2 || wideZone2 > 2) {
-			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+					"Cannot have more than 2 players in a widezone");
 			throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 		}
 		if (scrimmage < 3 && team.getPlayersOnPitch().size() + team.getReserves().size() >= 3) {
-			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must have at least 3 players on line of scrimmage, or as many as you can");
-			throw new IllegalArgumentException("Must have at least 3 players on line of scrimmage, or as many as you can");
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+					"Must have at least 3 players on line of scrimmage, or as many as you can");
+			throw new IllegalArgumentException(
+					"Must have at least 3 players on line of scrimmage, or as many as you can");
 		}
 		return true;
 	}
@@ -311,12 +337,14 @@ public class GameService {
 	public boolean checkValidPlacement(PlayerInGame player, Tile target) {
 		TeamInGame team = player.getTeamIG();
 		if (team == team1 && target.getLocation()[0] > 12 || team == team2 && target.getLocation()[0] < 13) {
-			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must be placed in your half of the pitch");
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+					"Must be placed in your half of the pitch");
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
 		if (!target.containsPlayer()) {
 			if (team.getPlayersOnPitch().size() >= 12) {
-				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 11 players on the pitch");
+				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+						"Cannot have more than 11 players on the pitch");
 				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
 			}
 			if (target.getLocation()[1] >= 0 && target.getLocation()[1] <= 3) {
@@ -327,7 +355,8 @@ public class GameService {
 					}
 				}
 				if (wideZone1 >= 2) {
-					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
+					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+							"Cannot have more than 2 players in a widezone");
 					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 				}
 			} else if (target.getLocation()[1] >= 11 && target.getLocation()[1] <= 14) {
@@ -338,7 +367,8 @@ public class GameService {
 					}
 				}
 				if (wideZone2 >= 2) {
-					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
+					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
+							"Cannot have more than 2 players in a widezone");
 					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 				}
 			}
@@ -380,7 +410,8 @@ public class GameService {
 		phase = "kick";
 		Tile goal = pitch[target[0]][target[1]];
 		if (activeTeam == team2 && goal.getLocation()[0] > 12 || activeTeam == team1 && goal.getLocation()[0] < 13) {
-			sender.sendInvalidMessage(game.getId(), activeTeam.getId(), "KICK", "Must kick to opponent's half of the pitch");
+			sender.sendInvalidMessage(game.getId(), activeTeam.getId(), "KICK",
+					"Must kick to opponent's half of the pitch");
 			throw new IllegalArgumentException("Must kick to opponent's half of the pitch");
 		}
 		PlayerInGame kicker = getKicker(); // use furthest back player
@@ -388,10 +419,11 @@ public class GameService {
 		int value = diceRoller(1, 8)[0];
 		int[] direction = ADJACENT[value - 1];
 		int distance = diceRoller(1, 6)[0];
-		int[] position = new int[] {target[0] + direction[0] * distance, target[1] + direction[1] * distance};
+		int[] position = new int[] { target[0] + direction[0] * distance, target[1] + direction[1] * distance };
 		sender.sendBallScatterResult(game.getId(), target, position);
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			goal = pitch[position[0]][position[1]];
+			goal.setContainsBall(true);
 			System.out.println("Ball flew to: " + position[0] + " " + position[1]);
 			if (activeTeam == team2 && goal.getLocation()[0] > 12
 					|| activeTeam == team1 && goal.getLocation()[0] < 13) {
@@ -407,30 +439,30 @@ public class GameService {
 //			} else {
 //				scatterBall(goal, 1); 
 			}
-			Tile scatteredTo = ballLocationCheck();
-			if (activeTeam == team2 && scatteredTo.getLocation()[0] > 12
-					|| activeTeam == team1 && scatteredTo.getLocation()[0] < 13) {
-				System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
-				getTouchBack(activeTeam == team1 ? team2 : team1);
-			}
+//			Tile scatteredTo = ballLocationCheck();
+//			if (activeTeam == team2 && scatteredTo.getLocation()[0] > 12
+//					|| activeTeam == team1 && scatteredTo.getLocation()[0] < 13) {
+//				System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
+//				getTouchBack(activeTeam == team1 ? team2 : team1);
+//			}
 		}
 		phase = "main game";
 		activeTeam = (activeTeam == team1 ? team2 : team1);
 		activeTeam.incrementTurn();
 		newTurn();
 	}
-	
+
 	public PlayerInGame getKicker() {
 		List<PlayerInGame> possible = new ArrayList<>(activeTeam.getPlayersOnPitch());
 		int furthestBack = 12;
 		PlayerInGame best = possible.get(0);
-		for(PlayerInGame p: possible) {
+		for (PlayerInGame p : possible) {
 			int[] placement = p.getLocation();
-			if(placement[0] >= 4 && placement[0] <= 10) { // not in widezone
-				if(activeTeam.getId() == team1.getId() && placement[1] < furthestBack){
+			if (placement[0] >= 4 && placement[0] <= 10) { // not in widezone
+				if (activeTeam.getId() == team1.getId() && placement[1] < furthestBack) {
 					furthestBack = placement[1];
 					best = p;
-				} else if(activeTeam.getId() == team2.getId() && placement[1] > furthestBack){
+				} else if (activeTeam.getId() == team2.getId() && placement[1] > furthestBack) {
 					furthestBack = placement[1];
 					best = p;
 				}
@@ -567,7 +599,7 @@ public class GameService {
 				Tile position = pitch[location[0]][location[1]];
 				int cost = 0;
 				if (p.getStatus().equals("prone")) {
-					p.setRemainingMA(p.getRemainingMA() -3);
+					p.setRemainingMA(p.getRemainingMA() - 3);
 				}
 				searchNeighbours(p, position, cost);
 				for (int i = 0; i < 26; i++) {
@@ -1242,8 +1274,7 @@ public class GameService {
 					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, target, "PUSH");
 					if (p.isHasBall()) {
 						System.out.println("checking for touchdown");
-						if ((target[0] == 0 && p.getTeamIG() == team2)
-								|| target[1] == 25 && p.getTeamIG() == team1) {
+						if ((target[0] == 0 && p.getTeamIG() == team2) || target[1] == 25 && p.getTeamIG() == team1) {
 							touchdown(p);
 						}
 					}
@@ -1417,7 +1448,7 @@ public class GameService {
 		}
 		sender.sendInjuryRoll(game.getId(), p.getId(), p.getName(), rolls, p.getStatus(), p.getLocation(), outcome);
 	}
-	
+
 	public void carryOutStandUp(int playerId) {
 		standUpAction(getPlayerById(playerId), false);
 	}
@@ -1441,7 +1472,7 @@ public class GameService {
 		player.setActedThisTurn(true);
 		System.out.println(player.getName() + " stood up");
 		String end = "Y";
-		if(inMovement == true) {
+		if (inMovement == true) {
 			end = "N";
 		}
 		sender.sendStandUpAction(game.getId(), player.getId(), player.getName(), end);
@@ -1478,7 +1509,7 @@ public class GameService {
 				}
 			} else {
 				target.setContainsBall(true); // will need a message to inform front end of this ball movement
-				if(inPassOrHandOff) {
+				if (inPassOrHandOff) {
 					inPassOrHandOff = false;
 					turnover();
 				}
@@ -1503,20 +1534,22 @@ public class GameService {
 					player.getLocation(), player.getLocation(), null, player.getTeam(), "Y", false);
 			player.setHasBall(true);
 			inPassOrHandOff = false;
-			if((player.getLocation()[0] == 0 && player.getTeamIG() == team2)
+			if ((player.getLocation()[0] == 0 && player.getTeamIG() == team2)
 					|| (player.getLocation()[0] == 25 && player.getTeamIG() == team1)) {
 				touchdown(player);
 				return;
-			} 
+			}
 			if (phase == "main game" && player.getTeamIG() != activeTeam) {
 				turnover();
 				return;
 			}
 		} else {
 			System.out.println(player.getName() + " failed to catch the ball!");
-			rerollOptions = determineRerollOptions("CATCH", player.getId(), new int[][] {player.getLocation(), player.getLocation()});
-            if(awaitingReroll != null && player.getId() == Integer.parseInt(awaitingReroll[2]) && runnableLocation[0] == player.getLocation()) {
-	 		  rerollOptions.clear();	
+			rerollOptions = determineRerollOptions("CATCH", player.getId(),
+					new int[][] { player.getLocation(), player.getLocation() });
+			if (awaitingReroll != null && player.getId() == Integer.parseInt(awaitingReroll[2])
+					&& runnableLocation[0] == player.getLocation()) {
+				rerollOptions.clear();
 			}
 			String end = "Y";
 			if (!rerollOptions.isEmpty()) {
@@ -1581,27 +1614,29 @@ public class GameService {
 			List<String> options = determineRerollOptions("CATCH", player.getId(),
 					new int[][] { source, player.getLocation() });
 			runnableLocation = new int[][] { source, player.getLocation() };
-			awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId()};
+			awaitingReroll = new String[] { "Y", "CATCH", "" + player.getId() };
 			if (options.isEmpty()) {
 				taskQueue.pop(); // get rid of intercepted throw result;
 				Runnable task = new Runnable() {
 					@Override
 					public void run() {
-							sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
-									source, player.getLocation(), null, player.getTeam(), "Y", reroll);
+						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed,
+								rolled, "failed", source, player.getLocation(), null, player.getTeam(), "Y", reroll);
 					}
 				};
 				taskQueue.add(task);
 				taskQueue.pop().run();
-			} 
-			if(!options.isEmpty()) { // will automatically use reroll if available, as no reason not to (can only be a skill)
+			}
+			if (!options.isEmpty()) { // will automatically use reroll if available, as no reason not to (can only be
+										// a skill)
 				Runnable task2 = new Runnable() {
 					@Override
 					public void run() {
-					sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled, "failed",
-							source, player.getLocation(), null, player.getTeam(), "N", reroll);
-					sender.sendSkillUsed(game.getId(), player.getId(), player.getName(), player.getTeam(), options.get(0));
-					taskQueue.pop().run();
+						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed,
+								rolled, "failed", source, player.getLocation(), null, player.getTeam(), "N", reroll);
+						sender.sendSkillUsed(game.getId(), player.getId(), player.getName(), player.getTeam(),
+								options.get(0));
+						taskQueue.pop().run();
 					}
 				};
 				taskQueue.add(task2);
@@ -1637,11 +1672,11 @@ public class GameService {
 
 	public void passBallAction(PlayerInGame thrower, Tile target, boolean reroll) {
 		taskQueue.clear();
-		if(activePlayer == null) {
+		if (activePlayer == null) {
 			activePlayer = thrower;
-		} else if (activePlayer.getActedThisTurn() == true) { 	  
-          endOfAction(activePlayer);
-          activePlayer = thrower;
+		} else if (activePlayer.getActedThisTurn() == true) {
+			endOfAction(activePlayer);
+			activePlayer = thrower;
 		}
 		activePlayer = thrower;
 		int[] details = calculateThrow(thrower, thrower.getTile(), target);
@@ -1659,7 +1694,7 @@ public class GameService {
 			System.out.println(thrower.getName() + " fumbled the ball!");
 			rerollOptions = determineRerollOptions("THROW", thrower.getId(),
 					new int[][] { thrower.getLocation(), target.getLocation() });
-			if(reroll == true) {
+			if (reroll == true) {
 				rerollOptions.clear();
 			}
 			String finalRoll = "N";
@@ -1697,8 +1732,9 @@ public class GameService {
 				Runnable task2 = new Runnable() {
 					@Override
 					public void run() {
-						sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "intercepted",
-								thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), "N", reroll);
+						sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled,
+								"intercepted", thrower.getLocation(), target.getLocation(), null, thrower.getTeam(),
+								"N", reroll);
 					}
 				};
 				taskQueue.add(task2);
@@ -1728,20 +1764,20 @@ public class GameService {
 			}
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "success",
 					thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), end, false);
-			if(taskQueue.size()>0) {
+			if (taskQueue.size() > 0) {
 				taskQueue.pop().run(); // send intercept failure if happened
 			}
 			if (target.containsPlayer()) {
 				catchBallAction(target.getPlayer(), true);
 			} else {
 				target.setContainsBall(true);
-                turnover();
+				turnover();
 			}
 		} else {
 			System.out.println(thrower.getName() + " threw the ball badly");
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "badly",
 					thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), "N", false);
-			if(taskQueue.size()>0) {
+			if (taskQueue.size() > 0) {
 				taskQueue.pop().run(); // send intercept failure if happened
 			}
 			scatterBall(target, 3);
@@ -1753,11 +1789,11 @@ public class GameService {
 	public void handOffBallAction(PlayerInGame player, Tile target, PlayerInGame targetPlayer) {
 		actionCheck(player);
 		inPassOrHandOff = true;
-		if(activePlayer == null) {
+		if (activePlayer == null) {
 			activePlayer = player;
-		} else if (activePlayer.getActedThisTurn() == true) { 	  
-          endOfAction(activePlayer);
-          activePlayer = player;
+		} else if (activePlayer.getActedThisTurn() == true) {
+			endOfAction(activePlayer);
+			activePlayer = player;
 		}
 		if (!player.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
@@ -1769,7 +1805,8 @@ public class GameService {
 			throw new IllegalArgumentException("Can only hand off ball once per turn");
 		}
 		player.getTeamIG().setHandedOff(true);
-		sender.sendHandOffAction(game.getId(), player.getId(), player.getLocation(), player.getName(), target.getLocation(), targetPlayer.getId(), targetPlayer.getName());
+		sender.sendHandOffAction(game.getId(), player.getId(), player.getLocation(), player.getName(),
+				target.getLocation(), targetPlayer.getId(), targetPlayer.getName());
 		System.out.println(player.getName() + " hands off the ball to " + target.getPlayer().getName());
 		player.setHasBall(false);
 		catchBallAction(target.getPlayer(), true);
@@ -1890,7 +1927,7 @@ public class GameService {
 	public void ballOffPitch(Tile origin) {
 		System.out.println("Ball went off pitch from " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
 		// determine which side/ orientation
-		if(phase == "kick") {
+		if (phase == "kick") {
 			getTouchBack(activeTeam);
 			return;
 		}
@@ -1969,7 +2006,8 @@ public class GameService {
 	public void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
-		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch()) : new ArrayList<>(team1.getPlayersOnPitch());
+		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch())
+				: new ArrayList<>(team1.getPlayersOnPitch());
 		for (PlayerInGame p : opponents) {
 			if (p.isHasTackleZones()) {
 				for (Tile t : p.getTile().getNeighbours()) {
@@ -2100,7 +2138,7 @@ public class GameService {
 			ball = null;
 		}
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
-				game.getTeam1Score(), game.getTeam2Score(), ball, phase); 
+				game.getTeam1Score(), game.getTeam2Score(), ball, phase);
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
@@ -2234,8 +2272,7 @@ public class GameService {
 				} else {
 					if (p.isHasBall()) {
 						System.out.println("checking for touchdown");
-						if ((target[0] == 0 && p.getTeamIG() == team2)
-								|| target[1] == 25 && p.getTeamIG() == team1) {
+						if ((target[0] == 0 && p.getTeamIG() == team2) || target[1] == 25 && p.getTeamIG() == team1) {
 							touchdown(p);
 						}
 					}
@@ -2429,9 +2466,10 @@ public class GameService {
 			System.out.println("the same");
 			return results;
 		}
-			
+
 		PlayerInGame p = getPlayerById(playerId);
-		if (phase == "main game" && p.getTeamIG() == activeTeam && !activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
+		if (phase == "main game" && p.getTeamIG() == activeTeam && !activeTeam.hasRerolled()
+				&& activeTeam.getRemainingTeamRerolls() > 0) {
 			results.add("Team Reroll");
 		}
 		if (action == "DODGE") {
@@ -2556,11 +2594,11 @@ public class GameService {
 
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
 		PlayerInGame attacker = getPlayerById(player);
-		if(activePlayer == null) {
+		if (activePlayer == null) {
 			activePlayer = attacker;
-		} else if (activePlayer.getActedThisTurn() == true) { 	  
-          endOfAction(activePlayer);
-          activePlayer = attacker;
+		} else if (activePlayer.getActedThisTurn() == true) {
+			endOfAction(activePlayer);
+			activePlayer = attacker;
 		}
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] details = blockAction(attacker, defender, followUp);
@@ -2606,7 +2644,7 @@ public class GameService {
 		// System.out.println("rolled: " + rolled.get(0));
 		// System.out.println("rolled: " + rolled.get(1));
 		System.out.println("chosen: " + rolled.get(diceChoice));
-		blockChoiceAction(rolled.get(diceChoice) - 1, getPlayerById(player), getPlayerById(opponent), followUp); 
+		blockChoiceAction(rolled.get(diceChoice) - 1, getPlayerById(player), getPlayerById(opponent), followUp);
 		// blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent),
 		// followUp); // need to sort out follow up
 
@@ -2661,7 +2699,7 @@ public class GameService {
 		if (player.getTile().getTackleZones() != 0 && player.getActedThisTurn() == false) {
 			actions.add("block");
 		}
-		if(actions.isEmpty()) {
+		if (actions.isEmpty()) {
 			actions.add("None");
 		}
 		return actions;
@@ -2752,7 +2790,7 @@ public class GameService {
 			return;
 		} else if (interceptors.size() == 1) {
 			interceptor = interceptors.get(0);
-		} 
+		}
 		passBallAction(getPlayerById(player), goal, false);
 	}
 
@@ -2776,7 +2814,7 @@ public class GameService {
 	}
 
 	public void endSetup(int team) {
-		if(team != activeTeam.getId()) {
+		if (team != activeTeam.getId()) {
 			throw new IllegalArgumentException("Not yours to end");
 		}
 		endTeamSetup(activeTeam);

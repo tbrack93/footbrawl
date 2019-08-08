@@ -29,7 +29,7 @@
 		   <div class="col-sm-8 text-center" id="gameStatus">
 		   	<div class="col-sm-2"></div>
 		   	 <div class="col-sm-8">
-		   <h3 id="activeTeam"> Active Team</h3>
+		   <h3 id="activeTeam"> Game Starting</h3>
 		   
 		   <h4 id="score">0 - 0</h4>
 		   <div id = "errors">Test</div>
@@ -37,7 +37,7 @@
 		   	<div class="col-sm-2">
 		   	<br>
 		   	  <button id="endTurn" class="btn btn-warning" onclick="endTurn()" style="display:none"> End Turn</button>
-		   	  	  <button id="submitSetup" class="btn btn-warning" onclick="submitSetup()"> End Setup</button>
+		   	  	  <button id="submitSetup" class="btn btn-warning" onclick="submitSetup()" style="display:none"> End Setup</button>
 		   	</div>
 		   </div>
 		   
@@ -47,11 +47,11 @@
 		<div class="row">
 			<div class="col-sm-2 teamInfo text-center">
 				<h4 id="team1Name"></h4>
-				<p id="team1Turn">Current Turn:</p>
+				<p id="team1Turn" style="visibility:hidden">Current Turn:</p>
 				<p id="team1Rerolls">Team Rerolls:</p>
-				<p id="team1Blitzed"></p>
+				<p id="team1Blitzed" style="visibility:hidden">Not Blitzed This Turn</p>
 				<hr class="leftHr">
-				<a onclick="showReserves(1)" >
+				<a id = "reserves1" onclick="showReserves(1)" >
 				  <h4 id="reserves1Title">Reserves +</h4>
 				 </a>
 				<div id="team1Reserves" class="reserves" style="display:none">
@@ -160,11 +160,11 @@
 			<div class="col-sm-2 teamInfo text-center" id="team2Info">
 				<h4 id="team2Name"></h4>
 
-				<p id="team2Turn">Current Turn:</p>
+				<p id="team2Turn" style="visibility:hidden">Current Turn:</p>
 				<p id="team2Rerolls">Team Rerolls:</p>
-				<p id="team2Blitzed">Not Blitzed This Turn</p>
+				<p id="team2Blitzed" style="visibility:hidden">Not Blitzed This Turn</p>
 				<hr class="rightHr">
-				<a onclick="showReserves(2)" >
+				<a id = "reserves2" onclick="showReserves(2)" >
 				  <h4 id="reserves2Title">Reserves +</h4>
 				 </a>
 				<div id="team2Reserves" class="reserves" style="display:none">

@@ -59,7 +59,6 @@ window.onload = init;
 document.addEventListener("keydown", escCheck);
 
 function init() {
-	phase = "yourSetup";
 	setDraggable();
 	inPush = false;
 	players = new Array();
@@ -118,10 +117,36 @@ function init() {
 		    	decodeMessage(JSON.parse(message.body));
 		    });
 		    stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-		    JSON.stringify({"type": "INFO", action: "TEAMS"}));
+		    JSON.stringify({"type": "ACTION", action: "JOINGAME"}));
 		});
 		
 	}
+
+function populateTeamData(message){
+	phase = message.phase;
+	document.getElementById("team1Name").innerHTML = message.team1Name;
+	document.getElementById("team2Name").innerHTML = message.team2Name;
+	team1 = message.team1FullDetails;
+	team2 = message.team2FullDetails;
+	team1Reserves = message.team1FullDetails.reserves;
+	populateReserves(1);
+	team2Reserves = message.team2FullDetails.reserves;
+	populateReserves(2);
+	team1PlayersOnPitch = new Array();
+	team2PlayersOnPitch = new Array();
+	if(team1.playersOnPitch != null){
+		team1PlayersOnPitch = team1.playersOnPitch;
+	}
+	if(team2.playersOnPitch != null){
+		team2PlayersOnPitch = team2.playersOnPitch;
+	}
+	players = team1PlayersOnPitch.concat(team2PlayersOnPitch);
+	if(players.length > 0){
+		drawPlayers();
+	}
+	document.getElementById("team1Rerolls").innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
+	document.getElementById("team2Rerolls").innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
+}
 
 function drawBoard() {
 	var backgroundCtx = background.getContext("2d");
@@ -373,9 +398,15 @@ function decodeMessage(message){
 	console.log("Decoding message");
 	if(message.type == "INFO"){
 		console.log("in info");
-		if(message.action == "ACTIONS"){
+		if(message.action == "WAITING"){
+			showWaiting(message);
+		} else if(message.action == "TEAMS"){
+			populateTeamData(message);
+	    }else if(message.action == "KICKOFFCHOICE"){
+			showKickOffChoice(message);
+		} else if(message.action == "ACTIONS"){
 			showPossibleActions(message);
-		}
+		} 
 		else if(message.action == "MOVEMENT"){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
@@ -477,6 +508,10 @@ function decodeMessage(message){
 		} 
 		}
 	} else if(message.type == "ACTION"){
+		if(message.action == "COINTOSS"){
+			requestKickChoice(message);
+			return;
+		}
 		if(message.action == "SETUPUPDATE"){
 			updateSetup(message);
 			return;
@@ -1363,6 +1398,7 @@ function showNewTurn(message){
 	inModal = false;
 	inBlock = false;
 	inPickup = false;
+	phase = message.phase;
 	closePlayer1();
 	closePlayer2();
 	document.getElementById("team1Blitzed").innerHTML = "Not Blitzed This Turn";
@@ -1401,10 +1437,7 @@ function showNewTurn(message){
 	} else {
 		document.getElementById("endTurn").classList.add("disabled");
 	}
-	document.getElementById("team1Name").innerHTML = message.team1Name;
-	document.getElementById("team2Name").innerHTML = message.team2Name;
 	document.getElementById("activeTeam").innerHTML = teamName;
-	turnover = false;
 	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
 	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
@@ -1415,6 +1448,7 @@ function showNewTurn(message){
     if(message.alert == true){
 		alert(teamName);
 	}
+    turnover = false;
 }
 
 function endTurn(){
@@ -2412,17 +2446,35 @@ function submitSetup(){
 function requestSetup(message){
 	if(message.userToChoose == team){
 		phase = "yourSetup";
-		alert("Please setup your team");
+		document.getElementById("modalTitle").innerHTML = "Your Setup";
+		document.getElementById("modalOptions").innerHTML = "Please setup your team<br><br>";
 		document.getElementById("activeTeam").innerHTML = "Your Setup";
+		if(team == 1){
+			document.getElementById("reserves1").click();
+		} else{
+			document.getElementById("reserves2").click();
+		}
+		document.getElementById("submitSetup").style.display = "block";
 	} else {
 		phase = "opponentSetup";
-		alert("Opponent to setup team");
 		if(message.teamName.substr(-1) == "s"){
 			document.getElementById("activeTeam").innerHTML = message.teamName + "' Setup";
+			document.getElementById("modalTitle").innerHTML = message.teamName +"' Setup";
 		} else {
 		document.getElementById("activeTeam").innerHTML = message.teamName + "'s Setup";
+		document.getElementById("modalTitle").innerHTML = message.teamName +"'s Setup";
+		}
+		document.getElementById("modalOptions").innerHTML = "Opponent to setup their team<br><br>";
+		document.getElementById("submitSetup").style.display = "none";
+		if(team == 1){
+			document.getElementById("reserves2").click();
+		} else{
+			document.getElementById("reserves1").click();
 		}
 	}
+	document.getElementById("modal").style.display = "block";
+	document.getElementById("closeModal").style.display = "block";
+	centreModal();
 }
 
 function requestKickOff(message){
@@ -2494,6 +2546,7 @@ function actOnKickOffClick(click){
         };
      modalOptions.appendChild(button2);
      infoModal.style.display = "block";
+     centreModal();
 }
 
 function cancelKick(){
@@ -2531,4 +2584,58 @@ function showKick(message){
       var route = [message.target];
       animateMovement(route, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "Y", "BALL"); 
     }
+}
+
+function requestKickChoice(message){
+	phase = "pre-game";
+	document.getElementById("newRolls").innerHTML =  message.teamName + "won the coint toss</br>" + newRolls.innerHTML;
+	document.getElementById("modalTitle").innerHTML = "Coin Toss";
+	var chooser = message.teamName;
+	var modalOptions = document.getElementById("modalOptions");
+	if(message.userToChoose == team){
+		chooser = "You";
+		var button = document.createElement("BUTTON");
+        button.innerHTML = "Receive";
+        button.onclick = function() {
+        	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                    JSON.stringify({"type": "ACTION", "action": "KICKCHOICE", "description": "Receive"}));
+        }
+        var button2 = document.createElement("BUTTON");
+        button2.innerHTML = "Kick";
+        button2.onclick = function() {
+        	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                    JSON.stringify({"type": "ACTION", "action": "KICKCHOICE", "description": "Kick"}));
+        }
+        modalOptions.innerHTML = "Please choose whether to kick or to receive: <br> <br>"
+        modalOptions.appendChild(button);
+        modalOptions.appendChild(button2);
+	} else {
+		document.getElementById("modalOptions").innerHTML = "Waiting for opponent to choose whether to kick or receive.";
+	}
+	document.getElementById("modalText").innerHTML = chooser + " won the coin toss";
+	document.getElementById("modal").style.display = "block";
+	centreModal();
+}
+
+function showWaiting(message){
+	document.getElementById("modalTitle").innerHTML = "Starting Game";
+	document.getElementById("modalText").innerHTML = "Waiting for opponent to join";
+	document.getElementById("modal").style.display = "block";
+	centreModal();
+}
+
+function centreModal(){
+	var infoModal = document.getElementById("modal");
+	var squareH = canvas.clientHeight/15;
+	infoModal.style.top = "" + ((squareH * 7) - (infoModal.clientHeight /2)) + "px";
+	infoModal.style.left = "" + ((squareH * 13) - (infoModal.clientWidth /2)) + "px";
+}
+
+function showKickOffChoice(message){
+	var chooser = message.teamName;
+	if(message.userToChoose == team){
+		chooser = "You";
+	}
+	document.getElementById("modalText").innerHTML = chooser + " chose to " + message.description;
+	document.getElementById("newRolls").innerHTML =  chooser + " chose to " + message.description + "</br>" + newRolls.innerHTML;
 }

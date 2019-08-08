@@ -22,14 +22,15 @@ public class MessageSendingService {
 
 	}
 
-	public void sendTeamsInfo(int gameId, int teamId, TeamInGame team1, TeamInGame team2) {
+	public void sendTeamsInfo(int gameId, int teamId, TeamInGame team1, TeamInGame team2, String phase) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("TEAMS");
 		message.setTeam1Name(team1.getName());
 		message.setTeam2Name(team2.getName());
-		message.setTeam1(new ArrayList<>(team1.getPlayersOnPitch()));
-		message.setTeam2(new ArrayList<>(team2.getPlayersOnPitch()));
+		message.setTeam1FullDetails(team1);
+		message.setTeam2FullDetails(team2);
+		message.setPhase(phase);
 		controller.sendMessageToUser(gameId, teamId, message);
 	}
 	
@@ -441,6 +442,32 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setPlayerName(playerName);
 		message.setLocation(location);
 		message.setTarget(target);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendCoinTossWinner(int gameId, int teamId, String teamName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("COINTOSS");
+        message.setUserToChoose(teamId);
+        message.setTeamName(teamName);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendWaitingForOpponent(int game, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("WAITING");
+		controller.sendMessageToUser(game, team, message);
+	}
+
+	public void sendKickOffChoice(int gameId, int team, String teamName, String choice) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("KICKOFFCHOICE");
+		message.setUserToChoose(team);
+		message.setTeamName(teamName);
+		message.setDescription(choice);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
