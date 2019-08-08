@@ -21,6 +21,8 @@ public class Game {
 		this.id = ++idCounter; // will be done by database
 		this.team1 = team1;
 		this.team2 = team2;
+		team1Score = 0;
+		team2Score = 0;
 	}
 	
 	public int getId() {

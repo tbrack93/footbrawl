@@ -189,8 +189,8 @@ public class GameLobbyService {
 		Game g = new Game();
 		g.setTeam1(team1);
 		g.setTeam2(team2);
-		g.setTeam1Score(1);
-		g.setTeam2Score(0);
+	//	g.setTeam1Score(1);
+	//	g.setTeam2Score(0);
 		gs.setGame(g);
 //		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 //		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
@@ -203,8 +203,8 @@ public class GameLobbyService {
 		//team1Players.get(2).setHasBall(true);
 		//team2Players.get(0).setHasBall(true);
 	 //   gs.pitch[4][3].addBall();
-		gs.setActiveTeam(gs.team2);
-		gs.team1.setTurn(4);
+	//	gs.setActiveTeam(gs.team2);
+		//gs.team1.setTurn(4);
 //		gs.team1.addToReserves(new PlayerInGame(p));
 //		gs.team1.addToReserves(new PlayerInGame(p));
 //		gs.team1.addToReserves(new PlayerInGame(p));
@@ -222,7 +222,7 @@ public class GameLobbyService {
 //		gs.team1.addToReserves(new PlayerInGame(p));
 //		gs.team1.addToReserves(new PlayerInGame(p));
 //		gs.team2.addToReserves(new PlayerInGame(p2));
-		gs.team2.setTurn(3);
+		//gs.team2.setTurn(3);
 	//	team1Players.get(0).setStatus("prone");
 		//team1Players.get(1).setStatus("stunned");
 		activeGames.put(gs.getGameId(), gs);

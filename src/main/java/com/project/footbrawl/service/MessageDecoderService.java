@@ -72,6 +72,10 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).endSetup(team);
 			} else if(action.equals("KICK")) {
 				lobby.getGameService(gameId).kickBall(message.getTarget());
+			} else if(action.equals("KICKCHOICE")){
+				lobby.getGameService(gameId).chooseKickOff(team, message.getDescription());
+			} else if(action.equals("JOINGAME")) {
+				lobby.getGameService(gameId).joinGame(team);
 			}
 		}
 		
