@@ -139,6 +139,9 @@ public class GameService {
 			} else {
 				sender.sendWaitingForOpponent(game.getId(), team);
 			}
+		} else if(phase == "main game"){
+			sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
+					game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation(), phase);		
 		}
 	}
 
@@ -421,7 +424,7 @@ public class GameService {
 		int distance = diceRoller(1, 6)[0];
 		int[] position = new int[] { target[0] + direction[0] * distance, target[1] + direction[1] * distance };
 		sender.sendBallScatterResult(game.getId(), target, position);
-		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
+		if (position[0] >= 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			goal = pitch[position[0]][position[1]];
 			goal.setContainsBall(true);
 			System.out.println("Ball flew to: " + position[0] + " " + position[1]);
@@ -824,7 +827,8 @@ public class GameService {
 		blitz = new Runnable() {
 			@Override
 			public void run() {
-				if (attacker.getStatus().equals("standing")) { // only if movement was successful
+				if (attacker.getStatus().equals("standing")) {
+					attacker.setActionOver(false);// only if movement was successful
 					carryOutBlock(attacker.getId(), defender.getId(), route.get(route.size() - 1), followUp, false,
 							attacker.getTeam());
 				}
@@ -1672,12 +1676,6 @@ public class GameService {
 
 	public void passBallAction(PlayerInGame thrower, Tile target, boolean reroll) {
 		taskQueue.clear();
-		if (activePlayer == null) {
-			activePlayer = thrower;
-		} else if (activePlayer.getActedThisTurn() == true) {
-			endOfAction(activePlayer);
-			activePlayer = thrower;
-		}
 		activePlayer = thrower;
 		int[] details = calculateThrow(thrower, thrower.getTile(), target);
 		int needed = details[0];
@@ -2634,9 +2632,6 @@ public class GameService {
 	}
 
 	public void carryOutBlockChoice(int diceChoice, int player, int opponent, boolean followUp, int team) {
-		if (blitz == null) {
-			getPlayerById(player).setActionOver(true);
-		}
 		getPlayerById(player).setActedThisTurn(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
@@ -2662,7 +2657,9 @@ public class GameService {
 
 	public void sendBlockSuccess(PlayerInGame attacker, PlayerInGame defender) {
 		if (blitz != null && activePlayer.getStatus() == "standing") {
-			// activePlayer.setActionOver(false);
+			 activePlayer.setActionOver(false);
+		} else {
+			activePlayer.setActionOver(true);
 		}
 		sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId(), blitz != null);
 		blitz = null;
@@ -2684,7 +2681,7 @@ public class GameService {
 		if (!activeTeam.hasBlitzed() && player.getActedThisTurn() == false && player.getRemainingMA() > -3) {
 			actions.add("blitz");
 		}
-		if (player.getRemainingMA() > -3) {
+		if (player.getRemainingMA() > -2) {
 			actions.add("move");
 		}
 		if (player.isHasBall()) {
