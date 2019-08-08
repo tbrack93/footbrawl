@@ -61,6 +61,7 @@ document.addEventListener("keydown", escCheck);
 function init() {
 	setDraggable();
 	inPush = false;
+	turnover = false;
 	players = new Array();
 	waypoints = new Array();
 	route = new Array();
@@ -490,7 +491,6 @@ function decodeMessage(message){
 		    	  var t = animateWrapFunction(task, this, [message]);
 		    	  taskQueue.push(t);
 		      } else{ 	
-		    	  message.alert = true;
 		    	  showNewTurn(message); 
 		      }
 		} else if(message.action == "TOUCHDOWN"){
@@ -1376,6 +1376,7 @@ function showInjuryRoll(message){
 }
 
 function showTurnover(message){
+	turnover = true;
     document.getElementById("modal").style.display = "block"; 
     modal.style.display = "block";
 	var existing = document.getElementById("modalOptions").innerHTML;
@@ -1394,20 +1395,33 @@ function showTurnover(message){
 }
 
 function showNewTurn(message){
-	turnover = false;
 	inModal = false;
 	inBlock = false;
 	inPickup = false;
 	phase = message.phase;
 	closePlayer1();
 	closePlayer2();
+	if(message.team1FullDetails.turn == 0 && message.team2FullDetails.turn == 1 ||
+	   message.team1FullDetails.turn == 1 && message.team2FullDetails.turn == 0){
+		document.getElementById("endTurn").style.display = "block";
+		document.getElementById("team1Turn").style.visibility = "visible";
+		document.getElementById("team2Turn").style.visibility = "visible";
+		document.getElementById("team1Blitzed").style.visibility = "visible";
+		document.getElementById("team2Blitzed").style.visibility = "visible";
+		if(document.getElementById("team2Reserves").style.display == "block"){
+			document.getElementById("reserves1").click();
+		}
+		if(document.getElementById("team2Reserves").style.display == "block"){
+		  document.getElementById("reserves2").click();
+	    }
+		document.getElementById("modalTitle").innerHTML = "Game Begins!";
+	}
 	document.getElementById("team1Blitzed").innerHTML = "Not Blitzed This Turn";
 	document.getElementById("team2Blitzed").innerHTML = "Not Blitzed This Turn";
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
-	newRolls.innerHTML =  message.teamName + "'s turn." + "</br>" + newRolls.innerHTML;
 	team1 = message.team1FullDetails;
 	team2 = message.team2FullDetails;
 	players.length = 0;
@@ -1430,6 +1444,7 @@ function showNewTurn(message){
 	teamName = message.teamName + "'s Turn";
 	}
 	yourTurn = false;
+	newRolls.innerHTML = teamName + "</br>" + newRolls.innerHTML;
 	if(message.userToChoose == team){
 		teamName = "Your turn";
 		yourTurn = true;
@@ -1445,10 +1460,13 @@ function showNewTurn(message){
 	document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 	drawPlayers();
     drawBall();
-    if(message.alert == true){
-		alert(teamName);
-	}
-    turnover = false;
+    if(turnover == false){
+    	document.getElementById("modalOptions").innerHTML = "";
+    	document.getElementById("modalText").innerHTML = teamName;
+    }
+      document.getElementById("closeModal").style.display = "block";
+      document.getElementById("modal").style.display = "block";
+      turnover = false;
 }
 
 function endTurn(){
@@ -2479,6 +2497,7 @@ function requestSetup(message){
 
 function requestKickOff(message){
 	phase = "kickOff";
+	document.getElementById("submitSetup").style.display = "none";
 	console.log("requesting kickoff");
 	var infoModal = document.getElementById("modal");
 	document.getElementById("activeTeam").innerHTML = "Kick Off";
@@ -2551,6 +2570,7 @@ function actOnKickOffClick(click){
 
 function cancelKick(){
 	var possible = squares.getContext("2d");
+	squares.clearRect(0, 0, canvas.width, canvas.height);
 	possible.save();
 	possible.globalAlpha = 0.3;
 	possible.fillStyle = "blue";
