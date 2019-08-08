@@ -479,11 +479,17 @@ function decodeMessage(message){
 	} else if(message.type == "ACTION"){
 		if(message.action == "SETUPUPDATE"){
 			updateSetup(message);
+			return;
+		} else if(message.action == "KICKOFF"){
+			requestKickOff(message);
+			return;
 		}
 		if(actionChoice != "blitz"){
 			actionChoice = null;
 		}
-	    if(message.action == "ROUTE"){
+		if(message.action == "TEAMSETUP"){
+			requestSetup(message);
+		} else if(message.action == "ROUTE"){
 	      activePlayer = getPlayerById(message.player);
 	      if(animating == true){
 	    	  var task = function(m){
@@ -575,6 +581,10 @@ function showMovement(message){
 function actOnClick(click){
 	if(phase == "yourSetup"){
 		actOnsetupClick(click);
+		return;
+	}
+	if(phase == "kickOff"){
+		actOnKickOffClick(click);
 		return;
 	}
 	if(inPush == true){
@@ -1357,12 +1367,9 @@ function showNewTurn(message){
 	team1 = message.team1FullDetails;
 	team2 = message.team2FullDetails;
 	players.length = 0;
-	team1.playersOnPitch.forEach(player =>{
-		players.push(player);
-	});
-	team2.playersOnPitch.forEach(player =>{
-		players.push(player);
-	});
+	team1PlayersOnPitch = team1.playersOnPitch;
+	team2PlayersOnPitch = team2.playersOnPitch;
+	players = team1PlayersOnPitch.concat(team2PlayersOnPitch);
 	if(team1Reserves == null || message.team1FullDetails.reserves.length != team1Reserves.length){
 		team1Reserves = message.team1FullDetails.reserves;
 		 populateReserves(1);
@@ -1372,7 +1379,13 @@ function showNewTurn(message){
 		populateReserves(2);
 	}
 	activePlayer = null;
-	var teamName = message.teamName + "'s Turn";
+	var teamName = "";
+	if(message.teamName.substr(-1) == "s"){
+		teamName = message.teamName + "' Turn";
+	} else {
+	teamName = message.teamName + "'s Turn";
+	}
+	
 	yourTurn = false;
 	if(message.userToChoose == team){
 		teamName = "Your turn";
@@ -2193,13 +2206,14 @@ function showReservePlayer(element){
 	document.getElementById("actions").style.display = "none";
 	var id = element.id;
 	var localTeam;
-	var teamNumber = id.charAt(0);
+	var details = id.split("player");
+	var teamNumber = details[0];
 	if(teamNumber == team1.id){
 		localTeam = team1Reserves;
 	} else{
 		localTeam = team2Reserves;
 	}
-	var playerId = id.slice(-1);
+	var playerId = details[1];
 	console.log(playerId);
 	var player;
 	for(var i = 0; i < localTeam.length; i++){
@@ -2216,12 +2230,11 @@ function showReservePlayer(element){
 		possible.clearRect(0, 0, canvas.width, canvas.height);
 		var squareH = canvas.height/15;
 		possible.globalAlpha = 0.3;
+		possible.fillStyle = "blue";
 		if(team == team1.id){
-			possible.fillStyle = "blue";
 			possible.fillRect(0, 0, 13 * squareH, 16*squareH);
 		}else {
-			possible.fillStyle = "red";
-			possible.fillRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+			possible.fillRect(13 * squareH, 0 * squareH, 26 * squareH, 16*squareH);
 		}
 		possible.restore();
 	}
@@ -2286,8 +2299,10 @@ function actOnsetupClick(click){
 			var player = players[i];
 			 if(player.location[0] == square[0] && player.location[1] == square[1]) {
 				showPlayerDetails(player);
-				activePlayer = player;
-				showSetupActions(player)
+				if(player.team == team){
+				  activePlayer = player;
+				  showSetupActions(player)
+				}
 				return;
 			 }
 		}			
@@ -2326,10 +2341,10 @@ function updateSetup(message){
 	} else{
 	  team2Reserves = message.team2FullDetails.reserves;
 	  populateReserves(2);
-	  canvas.getContext("2d").clearRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
-	  selection.getContext("2d").clearRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+	  canvas.getContext("2d").clearRect(13 * squareH, 0 * squareH, 26 * squareH, 16*squareH);
+	  selection.getContext("2d").clearRect(13 * squareH, 0 * squareH, 26 * squareH, 16*squareH);
 	  closePlayer2();
-	  team2PlayersOnPitch = message.team1FullDetails.playersOnPitch;
+	  team2PlayersOnPitch = message.team2FullDetails.playersOnPitch;
 	  players.length = 0;
 	  for(var i = 0; i < team2PlayersOnPitch.length; i++){
 		  drawPlayer(team2PlayersOnPitch[i]);
@@ -2345,12 +2360,11 @@ function placePlayer(){
 	var possible = squares.getContext("2d");
 	possible.save();
 	possible.globalAlpha = 0.3;
+	possible.fillStyle = "blue";
 	if(team == team1.id){
-		possible.fillStyle = "blue";
 		possible.fillRect(0, 0, 13 * squareH, 16*squareH);
 	}else {
-		possible.fillStyle = "red";
-		possible.fillRect(13 * squareH, 16 * squareH, 26 * squareH, 16*squareH);
+		possible.fillRect(13 * squareH, 0 * squareH, 26 * squareH, 16*squareH);
 	}
 	possible.restore();
 }
@@ -2381,4 +2395,111 @@ function showInvalid(message){
 		errors.style.transition = "";
 		errors.style.opacity = "1"; 
 		   }, 3100);
+}
+
+function submitSetup(){
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "ENDSETUP"}));
+}
+
+function requestSetup(message){
+	if(message.userToChoose == team){
+		phase = "yourSetup";
+		alert("Please setup your team");
+		document.getElementById("activeTeam").innerHTML = "Your Setup";
+	} else {
+		phase = "opponentSetup";
+		alert("Opponent to setup team");
+		if(message.teamName.substr(-1) == "s"){
+			document.getElementById("activeTeam").innerHTML = message.teamName + "' Setup";
+		} else {
+		document.getElementById("activeTeam").innerHTML = message.teamName + "'s Setup";
+		}
+	}
+}
+
+function requestKickOff(message){
+	phase = "kickOff";
+	console.log("requesting kickoff");
+	var infoModal = document.getElementById("modal");
+	document.getElementById("activeTeam").innerHTML = "Kick Off";
+	if(message.userToChoose == team){
+		yourTurn = true;
+		document.getElementById("modalTitle").innerHTML = "Your Kick Off";
+		document.getElementById("modalText").innerHTML = "Please select a square to kick to. <br><br>The ball will scatter up to 6 squares from this point.";
+		infoModal.style.display = "block";
+		document.getElementById("closeModal").style.display = "block";
+		var possible = squares.getContext("2d");
+		possible.save();
+		possible.globalAlpha = 0.3;
+		possible.fillStyle = "blue";
+		var squareH = canvas.height / 15;
+		if(team == team1.id){
+			possible.fillRect(13 * squareH, 0, 26 * squareH, 16*squareH);
+		}else {
+			possible.fillRect(0, 0, 13 * squareH, 16*squareH);
+		}
+		possible.restore();
+	} else{
+		yourTurn = false;
+		var teamName = message.teamName;
+		if(teamName.substr(-1) == "s"){
+			teamName = teamName + "' Kick Off";
+		} else{
+			teamName += "'s Kick Off";
+		}
+		document.getElementById("modalTitle").innerHTML = teamName;
+		document.getElementById("modalText").innerHTML = "Awaiting opponent's choice where to kick. <br><br>The ball will scatter up to 6 squares from the target";
+		infoModal.style.display = "block";
+	}
+	squareH = canvas.clientHeight/15;
+	infoModal.style.top = "" + ((squareH * 7) - (infoModal.clientHeight /2)) + "px";
+	infoModal.style.left = "" + ((squareH * 13) - (infoModal.clientWidth /2)) + "px";
+}
+
+function actOnKickOffClick(click){
+	if(yourTurn == false){
+		return;
+	}
+	var possible = squares.getContext("2d");
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	var squareH = canvas.height / 15;
+	possible.save();
+	possible.fillStyle = "white";
+	possible.globalAlpha = 0.6;
+	var square = determineSquare(click);
+	squares.getContext("2d").fillRect(square[0]*squareH+3, (14-square[1])*squareH+3 , squareH-5, squareH-5);
+	possible.restore;
+	var infoModal = document.getElementById("modal");
+	document.getElementById("modalTitle").innerHTML = "Confirm Kick Off";
+	document.getElementById("modalText").innerHTML = "Kick ball to " + square + "? <br><br> The ball will scatter up to 6 squares from this point.";
+	var button = document.createElement("BUTTON")
+    button.innerHTML = "Cancel";
+	var modalOptions = document.getElementById("modalOptions");
+	modalOptions.innerHTML = "";
+    button.onclick = function() {cancelKick()};
+    modalOptions.appendChild(button);
+    var button2 = document.createElement("BUTTON")
+    button2.innerHTML = "Kick";
+   	button2.onclick = function() {
+       	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                JSON.stringify({"type": "ACTION", "action": "KICK", "target": square}));
+        };
+     modalOptions.appendChild(button2);
+     infoModal.style.display = "block";
+}
+
+function cancelKick(){
+	var possible = squares.getContext("2d");
+	possible.save();
+	possible.globalAlpha = 0.3;
+	possible.fillStyle = "blue";
+	var squareH = canvas.height / 15;
+	if(team == team1.id){
+		possible.fillRect(13 * squareH, 0, 26 * squareH, 16*squareH);
+	}else {
+		possible.fillRect(0, 0, 13 * squareH, 16*squareH);
+	}
+	possible.restore();
+	document.getElementById("modal").style.display = "none";
 }

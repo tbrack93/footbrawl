@@ -116,6 +116,7 @@ public class GameService {
 			}
 		}
 		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
+		phase = "setup"; // will need to be more dynamic 
 	}
 
 	public int getGameId() {
@@ -212,8 +213,7 @@ public class GameService {
 	}
 
 	public void getTeamSetup(TeamInGame team) {
-		// placeholder
-		// ask team to setup
+		sender.sendSetupRequest(game.getId(), team.getName(), team.getId());
 	}
 
 	public void playerPlacement(PlayerInGame player, int[] position) {
@@ -263,17 +263,18 @@ public class GameService {
 				receivingSetupDone = true;
 				getKickChoice(activeTeam);
 			}
-
 		}
 	}
 
 	public void getKickChoice(TeamInGame kicking) {
-		// placeholder
-		// ask relevant user where they want to kick ball to
+		phase="kick";
+		System.out.println("requesting kick request");
+		sender.sendKickRequest(game.getId(), kicking.getId(), kicking.getName());
 	}
 
 	public boolean checkTeamSetupValid(TeamInGame team) {
 		if (team.getPlayersOnPitch().size() < 11 && !team.getReserves().isEmpty()) {
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must place 11 players on pitch, or as many as you can");
 			throw new IllegalArgumentException("Must place 11 players on pitch, or as many as you can");
 		}
 		int wideZone1 = 0;
@@ -282,19 +283,20 @@ public class GameService {
 		for (PlayerInGame p : team.getPlayersOnPitch()) {
 			if (p.getTile().getLocation()[1] >= 0 && p.getTile().getLocation()[1] <= 3) {
 				wideZone1++;
-			} else if (p.getTile().getLocation()[1] >= 10 && p.getTile().getLocation()[1] <= 14) {
+			} else if (p.getTile().getLocation()[1] >= 11 && p.getTile().getLocation()[1] <= 14) {
 				wideZone2++;
 			} else if (team == team1 && p.getTile().getLocation()[0] == 12
 					|| team == team2 && p.getTile().getLocation()[0] == 13) {
 				scrimmage++;
 			}
 		}
-		if (wideZone1 >= 2 || wideZone2 >= 2) {
+		if (wideZone1 > 2 || wideZone2 > 2) {
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
 			throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 		}
 		if (scrimmage < 3 && team.getPlayersOnPitch().size() + team.getReserves().size() >= 3) {
-			throw new IllegalArgumentException(
-					"Must have at least 3 players on line of scrimmage, or as many as you can");
+			sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Must have at least 3 players on line of scrimmage, or as many as you can");
+			throw new IllegalArgumentException("Must have at least 3 players on line of scrimmage, or as many as you can");
 		}
 		return true;
 	}
@@ -313,14 +315,14 @@ public class GameService {
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
 		if (!target.containsPlayer()) {
-			if (team.getPlayersOnPitch().size() >= 11) {
+			if (team.getPlayersOnPitch().size() >= 12) {
 				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 11 players on the pitch");
 				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
 			}
 			if (target.getLocation()[1] >= 0 && target.getLocation()[1] <= 3) {
 				int wideZone1 = 0;
 				for (PlayerInGame p : team.getPlayersOnPitch()) {
-					if (p.getTile().getLocation()[1] >= 0 && p.getTile().getLocation()[1] <= 3) {
+					if (p.getTile().getLocation()[1] >= 0 && p.getTile().getLocation()[1] <= 3 && p != player) {
 						wideZone1++;
 					}
 				}
@@ -328,10 +330,10 @@ public class GameService {
 					sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT", "Cannot have more than 2 players in a widezone");
 					throw new IllegalArgumentException("Cannot have more than 2 players in a widezone");
 				}
-			} else if (target.getLocation()[1] >= 10 && target.getLocation()[1] <= 14) {
+			} else if (target.getLocation()[1] >= 11 && target.getLocation()[1] <= 14) {
 				int wideZone2 = 0;
 				for (PlayerInGame p : team.getPlayersOnPitch()) {
-					if (p.getTile().getLocation()[1] >= 10 && p.getTile().getLocation()[1] <= 14) {
+					if (p.getTile().getLocation()[1] >= 11 && p.getTile().getLocation()[1] <= 14 && p != player) {
 						wideZone2++;
 					}
 				}
@@ -378,6 +380,7 @@ public class GameService {
 		phase = "kick";
 		Tile goal = pitch[target[0]][target[1]];
 		if (activeTeam == team2 && goal.getLocation()[0] > 12 || activeTeam == team1 && goal.getLocation()[0] < 13) {
+			sender.sendInvalidMessage(game.getId(), activeTeam.getId(), "KICK", "Must kick to opponent's half of the pitch");
 			throw new IllegalArgumentException("Must kick to opponent's half of the pitch");
 		}
 		int value = diceRoller(1, 8)[0];
@@ -504,7 +507,7 @@ public class GameService {
 		activeTeam.newTurn();// reset players on pitch (able to move/ act)
 		taskQueue.clear();
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
-				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation());
+				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation(), phase);
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
@@ -2070,7 +2073,7 @@ public class GameService {
 			ball = null;
 		}
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
-				game.getTeam1Score(), game.getTeam2Score(), ball);
+				game.getTeam1Score(), game.getTeam2Score(), ball, phase); 
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
@@ -2743,5 +2746,12 @@ public class GameService {
 
 	public void benchPlayer(Integer player) {
 		removePlayerFromPitch(getPlayerById(player));
+	}
+
+	public void endSetup(int team) {
+		if(team != activeTeam.getId()) {
+			throw new IllegalArgumentException("Not yours to end");
+		}
+		endTeamSetup(activeTeam);
 	}
 }
