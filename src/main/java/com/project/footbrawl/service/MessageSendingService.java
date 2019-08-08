@@ -433,5 +433,15 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToUser(gameId, team, message);
 	}
 
-	
+	public void sendKickTarget(int gameId, int playerId, String playerName, int[] location, int[] target) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("KICKTARGET");
+		message.setPlayer(playerId);
+		message.setPlayerName(playerName);
+		message.setLocation(location);
+		message.setTarget(target);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
 }

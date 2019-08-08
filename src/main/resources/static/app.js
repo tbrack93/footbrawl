@@ -83,7 +83,7 @@ function init() {
 	modal.height = modal.width * (15/26);
 	canvasTop = canvas.offsetTop;
 	rolls = document.getElementById("rolls");
-	rolls.style.paddingTop = "" + (canvas.clientHeight + 10) +"px";
+	rolls.style.paddingTop = "" + (canvas.clientHeight) +"px";
 	drawBoard();
 	timeSinceClick = new Date();
 // var player = {id: 1, team: 1, name:"John", location: [0, 1]};
@@ -482,6 +482,9 @@ function decodeMessage(message){
 			return;
 		} else if(message.action == "KICKOFF"){
 			requestKickOff(message);
+			return;
+		} else if(message.action == "KICKTARGET"){
+			showKick(message);
 			return;
 		}
 		if(actionChoice != "blitz"){
@@ -1045,8 +1048,13 @@ function showBallScatter(message){
 	animating = true;
 	 // modal.style.display = "none";
 	  // document.getElementById("modal").style.display = "none";
+	if(message.target[0] < 0 || message.target[0]>=25 || message.target[1] <0 || message.target[1]>=15){
+		newRolls.innerHTML = "Ball scattered off pitch!";
+		document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered off pitch!</p>";
+	} else{
 	  newRolls.innerHTML =  "Ball scattered to " + message.target + "</br>" + newRolls.innerHTML;
 	  document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered to " + message.target + "</p>";
+	} 
 	  var ballImg = new Image();
 	  ballImg.src = "/images/ball.png";
       ballImg.onload = function() { 
@@ -1063,7 +1071,7 @@ function showBallScatter(message){
       drawPlayers();
       var targetX = message.target[0] * squareH + squareH/3;
       var targetY = (14 - message.target[1]) * squareH + squareH/3;
-      var speed = 25;
+      var speed = 20;
       xIncrement = (targetX - startingX) / speed;
       yIncrement = (targetY - startingY) / speed;
       var scatterRoute = [message.target];
@@ -1385,7 +1393,6 @@ function showNewTurn(message){
 	} else {
 	teamName = message.teamName + "'s Turn";
 	}
-	
 	yourTurn = false;
 	if(message.userToChoose == team){
 		teamName = "Your turn";
@@ -1398,9 +1405,6 @@ function showNewTurn(message){
 	document.getElementById("team2Name").innerHTML = message.team2Name;
 	document.getElementById("activeTeam").innerHTML = teamName;
 	turnover = false;
-	if(message.alert == true){
-		alert(teamName);
-	}
 	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
 	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
@@ -1408,6 +1412,9 @@ function showNewTurn(message){
 	document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 	drawPlayers();
     drawBall();
+    if(message.alert == true){
+		alert(teamName);
+	}
 }
 
 function endTurn(){
@@ -2502,4 +2509,26 @@ function cancelKick(){
 	}
 	possible.restore();
 	document.getElementById("modal").style.display = "none";
+}
+
+function showKick(message){
+	phase = "kick";
+	animating = true;
+	document.getElementById("modal").style.display = "none";
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("newRolls").innerHTML =  message.playerName + " kicked the ball to " + message.target + "</br>" + newRolls.innerHTML;
+	var ballImg = new Image();
+	ballImg.src = "/images/ball.png";
+    ballImg.onload = function() { 
+      var squareH = canvas.height / 15;
+      var startingX = message.location[0] * squareH + squareH/3;
+      var startingY = (14 - message.location[1]) * squareH + squareH/3;
+      var targetX = message.target[0] * squareH + squareH/3;
+      var targetY = (14 - message.target[1]) * squareH + squareH/3;
+      var speed = 15;
+      xIncrement = (targetX - startingX) / speed;
+      yIncrement = (targetY - startingY) / speed;
+      var route = [message.target];
+      animateMovement(route, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "Y", "BALL"); 
+    }
 }
