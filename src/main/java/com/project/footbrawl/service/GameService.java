@@ -34,7 +34,7 @@ public class GameService {
 
 	private static List<Integer> diceRolls = new ArrayList<>(
 			Arrays.asList(new Integer[] { 6, 6, 6, 6, 1, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = true;
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -383,9 +383,13 @@ public class GameService {
 			sender.sendInvalidMessage(game.getId(), activeTeam.getId(), "KICK", "Must kick to opponent's half of the pitch");
 			throw new IllegalArgumentException("Must kick to opponent's half of the pitch");
 		}
+		PlayerInGame kicker = getKicker(); // use furthest back player
+		sender.sendKickTarget(game.getId(), kicker.getId(), kicker.getName(), kicker.getLocation(), target);
 		int value = diceRoller(1, 8)[0];
 		int[] direction = ADJACENT[value - 1];
-		int[] position = new int[] { goal.getLocation()[0] + direction[0], goal.getLocation()[1] + direction[1] };
+		int distance = diceRoller(1, 6)[0];
+		int[] position = new int[] {target[0] + direction[0] * distance, target[1] + direction[1] * distance};
+		sender.sendBallScatterResult(game.getId(), target, position);
 		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			goal = pitch[position[0]][position[1]];
 			System.out.println("Ball flew to: " + position[0] + " " + position[1]);
@@ -400,8 +404,8 @@ public class GameService {
 				} else {
 					scatterBall(goal, 1); // if player can't catch, will scatter again
 				}
-			} else {
-				scatterBall(goal, 1); // will need a message to inform front end of this ball movement
+//			} else {
+//				scatterBall(goal, 1); 
 			}
 			Tile scatteredTo = ballLocationCheck();
 			if (activeTeam == team2 && scatteredTo.getLocation()[0] > 12
@@ -414,6 +418,25 @@ public class GameService {
 		activeTeam = (activeTeam == team1 ? team2 : team1);
 		activeTeam.incrementTurn();
 		newTurn();
+	}
+	
+	public PlayerInGame getKicker() {
+		List<PlayerInGame> possible = new ArrayList<>(activeTeam.getPlayersOnPitch());
+		int furthestBack = 12;
+		PlayerInGame best = possible.get(0);
+		for(PlayerInGame p: possible) {
+			int[] placement = p.getLocation();
+			if(placement[0] >= 4 && placement[0] <= 10) { // not in widezone
+				if(activeTeam.getId() == team1.getId() && placement[1] < furthestBack){
+					furthestBack = placement[1];
+					best = p;
+				} else if(activeTeam.getId() == team2.getId() && placement[1] > furthestBack){
+					furthestBack = placement[1];
+					best = p;
+				}
+			}
+		}
+		return best;
 	}
 
 	public void getTouchBack(TeamInGame team) {
@@ -1485,7 +1508,7 @@ public class GameService {
 				touchdown(player);
 				return;
 			} 
-			if (player.getTeamIG() != activeTeam) {
+			if (phase == "main game" && player.getTeamIG() != activeTeam) {
 				turnover();
 				return;
 			}
@@ -1867,6 +1890,10 @@ public class GameService {
 	public void ballOffPitch(Tile origin) {
 		System.out.println("Ball went off pitch from " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
 		// determine which side/ orientation
+		if(phase == "kick") {
+			getTouchBack(activeTeam);
+			return;
+		}
 		int[] position = origin.getLocation();
 		int[] direction = new int[2];
 		int[][] corner = null;
@@ -2404,7 +2431,7 @@ public class GameService {
 		}
 			
 		PlayerInGame p = getPlayerById(playerId);
-		if (p.getTeamIG() == activeTeam && !activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
+		if (phase == "main game" && p.getTeamIG() == activeTeam && !activeTeam.hasRerolled() && activeTeam.getRemainingTeamRerolls() > 0) {
 			results.add("Team Reroll");
 		}
 		if (action == "DODGE") {
