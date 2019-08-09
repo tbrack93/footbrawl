@@ -56,7 +56,7 @@ public class Tile {
 		if(player != null) {
 			player.setTile(null);
 		}
-		this.player = null;
+	    player = null;
 		empty = containsBall;
 	}
 	
@@ -110,6 +110,9 @@ public class Tile {
 		moveTo = false;
 		costToReach = 99;
 		tacklers.clear();
+		if(player != null && player.getTile() != this) {
+			removePlayer();
+		}
 	}
 
 	public void addTackler(PlayerInGame p) {

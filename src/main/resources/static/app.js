@@ -631,6 +631,7 @@ function actOnClick(click){
 	}
 	if(phase == "touchBack"){
 		actOnTouchBackClick(click);
+		return;
 	}
 	if(inPush == true){
 		console.log("in push");
@@ -1481,6 +1482,7 @@ function showNewTurn(message){
     	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     }
     turnover = false;
+    taskQueue.length = 0;
 }
 
 function endTurn(){
@@ -2724,7 +2726,7 @@ function actOnTouchBackClick(click){
 		 }
 	}
 	showPlayerDetails(option);
-	document.getElementById("modalOptions").innerHTML = "Give ball to " + option.name + "? <br>";
+	document.getElementById("modalOptions").innerHTML = "Give ball to " + option.name + "? <br><br>";
 	var button = document.createElement("BUTTON");
     button.innerHTML = "Cancel";
     button.onclick = function() {cancelTouchBack()};
