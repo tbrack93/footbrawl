@@ -798,7 +798,7 @@ function showMoved(message, type){
 		  var startingY = (14 - route[0].position[1]) * squareH;
 		  var targetX = route[1].position[0] * squareH;
 		  var targetY = (14 - route[1].position[1]) * squareH;
-		  var speed = 10;
+		  var speed = 7;
 		  if(type == "dodge"){
 				speed = 5;
 		   }
@@ -870,8 +870,8 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 		counter++;
 	    targetX = route[counter].position[0] * squareH;
 	    targetY = (14 - route[counter].position[1]) * squareH;
-		xIncrement = (targetX - newX) / 10;
-	    yIncrement = (targetY - newY) / 10;
+		xIncrement = (targetX - newX) / 7;
+	    yIncrement = (targetY - newY) / 7;
 	}
 	requestAnimationFrame(function() { animateMovement(route, counter, img, newX, newY, targetX, targetY, squareH, end, type); });	
 }
@@ -1849,6 +1849,7 @@ function closeModal(){
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	document.getElementById("modal").style.display = "none";
 	document.getElementById("modalOptions").innerHTML = "";
+	document.getElementById("modalImages").innerHTML = "";
 	document.getElementById("modalText").innerHTML = "";
 	document.getElementById("modalOptions").innerHTML = "";
 	document.getElementById("closeModal").style.display = "none";
@@ -1886,6 +1887,7 @@ function resetActions(){
 
 function showPossibleActions(message){
 	 resetActions();
+	 inThrow = false;
 	 document.getElementById("squaresCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.width);
 	 console.log("show actions");
 	 var actions = document.getElementById("actions");

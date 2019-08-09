@@ -844,8 +844,13 @@ public class GameService {
 			throw new IllegalArgumentException("Can only attempt blitz once per turn");
 		}
 		Tile target = pitch[goal[0]][goal[1]];
-		if (target.containsPlayer() == false || target.getPlayer().getTeam() == attacker.getTeam()
-				|| !Arrays.equals(target.getLocation(), goal)) {
+		if (target.containsPlayer() == false) {
+			throw new IllegalArgumentException("No player in that square");
+		}
+		if(target.containsPlayer() && target.getPlayer().getTeam() == attacker.getTeam()) {
+			throw new IllegalArgumentException("Can't attack player on your team");
+		}
+		if(!Arrays.equals(target.getLocation(), goal)){
 			throw new IllegalArgumentException("Invalid target");
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
@@ -2090,7 +2095,7 @@ public class GameService {
 		if (p.getTeamIG() != activeTeam) {
 			throw new IllegalArgumentException("Not that player's turn");
 		}
-		if (p.getActionOver() == true) {
+		if (p.getActionOver() == true && blitz == null) {
 			System.out.println(p.getName());
 			throw new IllegalArgumentException("That player's action has finished for this turn");
 		}
@@ -2245,7 +2250,7 @@ public class GameService {
 			}
 		}
 		String finalRoll = "N";
-		if (Arrays.equals(runnableLocation[1], route.get(route.size() - 1))
+		if ((Arrays.equals(runnableLocation[1], route.get(route.size() - 1)) || Arrays.equals(runnableLocation[0], route.get(route.size() - 1)))
 				&& (awaitingReroll == null || awaitingReroll[0] == "N") && actionsNeeded == 0 && blitz == null) {
 			finalRoll = "Y";
 		}
