@@ -107,6 +107,7 @@ public class GameService {
 		rolled = new ArrayList<>();
 		runnableResults = new LinkedBlockingQueue<>();
 		actionsNeeded = 0;
+		half = 0;
 		activePlayer = null;
 		ballToScatter = null;
 		rerollOptions = new ArrayList<>();
@@ -204,6 +205,12 @@ public class GameService {
 		}
 		team1.newKickOff();
 		team2.newKickOff();
+		for(Tile[] array: pitch) {
+			for(Tile t : array) {
+				//t.removePlayer();
+				//t.removeBall();
+			}
+		}
 		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
 			TeamInGame emptyTeam;
 			TeamInGame otherTeam;
@@ -229,6 +236,8 @@ public class GameService {
 			}
 		}
 		activeTeam = kicking;
+		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
+				game.getTeam1Score(), game.getTeam2Score(), null, phase);
 		getTeamSetup(kicking);
 		// team setup, starts with kicking team
 		// choose target to kick to. Must be in opponent's half
@@ -432,6 +441,7 @@ public class GameService {
 					|| activeTeam == team1 && goal.getLocation()[0] < 13) {
 				System.out.println("Ball landed on kicking team's side, so receivers are given the ball");
 				getTouchBack(activeTeam == team1 ? team2 : team1);
+				return;
 			}
 			if (goal.containsPlayer()) {
 				if (goal.getPlayer().isHasTackleZones()) { // will need to make this more specific to catching
@@ -439,20 +449,27 @@ public class GameService {
 				} else {
 					scatterBall(goal, 1); // if player can't catch, will scatter again
 				}
+				return;
 //			} else {
 //				scatterBall(goal, 1); 
 			}
-//			Tile scatteredTo = ballLocationCheck();
-//			if (activeTeam == team2 && scatteredTo.getLocation()[0] > 12
-//					|| activeTeam == team1 && scatteredTo.getLocation()[0] < 13) {
-//				System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
-//				getTouchBack(activeTeam == team1 ? team2 : team1);
-//			}
+		} else {
+			getTouchBack(activeTeam == team1 ? team2: team1);
+			return;
 		}
 		phase = "main game";
 		activeTeam = (activeTeam == team1 ? team2 : team1);
 		activeTeam.incrementTurn();
 		newTurn();
+	}
+	
+	public void checkForTouchBack() {
+		Tile scatteredTo = ballLocationCheck();
+		if (activeTeam == team2 && scatteredTo.getLocation()[0] > 12
+				|| activeTeam == team1 && scatteredTo.getLocation()[0] < 13) {
+			System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
+			getTouchBack(activeTeam == team1 ? team2 : team1);
+		}
 	}
 
 	public PlayerInGame getKicker() {
@@ -475,8 +492,19 @@ public class GameService {
 	}
 
 	public void getTouchBack(TeamInGame team) {
-		// placeholder
-		// for relevant user to specify which player to be given ball
+		List<jsonTile> options = new ArrayList<>();
+		List<PlayerInGame> possibles = new ArrayList<>(team.getPlayersOnPitch());
+		for(PlayerInGame p : possibles) {
+			jsonTile jt = new jsonTile();
+			jt.setPosition(p.getLocation());
+			options.add(jt);
+		}
+		String description = "Ball landed in wrong half";
+		Tile locate = ballLocationCheck();
+		if(locate == null) {
+			description = "Ball went off pitch";
+		}
+		sender.sendTouchBackRequest(game.getId(), options, team.getId(), description);
 	}
 
 	public void endOfHalf() {
@@ -1551,6 +1579,9 @@ public class GameService {
 			if (phase == "main game" && player.getTeamIG() != activeTeam) {
 				turnover();
 				return;
+			} else if(phase == "kick"){
+					checkForTouchBack();
+					return;
 			}
 		} else {
 			System.out.println(player.getName() + " failed to catch the ball!");
@@ -1594,6 +1625,8 @@ public class GameService {
 									// to
 									// rest
 					}
+				} else {
+					checkForTouchBack();
 				}
 			}
 		}

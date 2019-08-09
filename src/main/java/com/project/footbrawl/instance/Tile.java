@@ -53,7 +53,9 @@ public class Tile {
 	}
 
 	public void removePlayer() {
-		player.setTile(null);
+		if(player != null) {
+			player.setTile(null);
+		}
 		this.player = null;
 		empty = containsBall;
 	}
