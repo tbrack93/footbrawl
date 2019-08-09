@@ -471,4 +471,14 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
+	public void sendTouchBackRequest(int gameId, List<jsonTile> options, int team, String description) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("TOUCHBACKREQUEST");
+		message.setUserToChoose(team);
+		message.setSquares(options);
+		message.setDescription(description);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
 }
