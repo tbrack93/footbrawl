@@ -648,12 +648,18 @@ public class GameService {
 			}
 		}
 		p.setRemainingMA(originalMA);
+//		for(Tile[] array: pitch) {
+//			for(Tile t : array) {
+//				System.out.println(t.getCostToReach());
+//		    }
+//		}
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 	}
 
 	// breadth first search to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		if (cost == p.getRemainingMA() + 2) {
+		System.out.println(p.getRemainingMA());
+		if (cost >= p.getRemainingMA() + 2) {
 			return;
 		}
 		addTackleZones(p);
