@@ -34,7 +34,7 @@ public class GameService {
 
 	private static List<Integer> diceRolls = new ArrayList<>(
 			Arrays.asList(new Integer[] { 1, 5, 1, 1, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = true;
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -609,10 +609,10 @@ public class GameService {
 	public void newTurn() {
 		System.out.println("new turn");
 		activeTeam.newTurn();// reset players on pitch (able to move/ act)
-		// taskQueue.clear();
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
 				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation(), phase);
 		sender.sendNewTurn(game.getId(), activeTeam.getId(), activeTeam.getName());
+		taskQueue.clear();
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
@@ -1860,7 +1860,7 @@ public class GameService {
 		inPassOrHandOff = true;
 		if (activePlayer == null) {
 			activePlayer = player;
-		} else if (activePlayer.getActedThisTurn() == true) {
+		} else if (activePlayer.getActedThisTurn() == true && activePlayer != player) {
 			endOfAction(activePlayer);
 			activePlayer = player;
 		}
@@ -1878,6 +1878,7 @@ public class GameService {
 				target.getLocation(), targetPlayer.getId(), targetPlayer.getName());
 		System.out.println(player.getName() + " hands off the ball to " + target.getPlayer().getName());
 		player.setHasBall(false);
+		endOfAction(player);
 		catchBallAction(target.getPlayer(), true);
 	}
 
@@ -2670,7 +2671,7 @@ public class GameService {
 		PlayerInGame attacker = getPlayerById(player);
 		if (activePlayer == null) {
 			activePlayer = attacker;
-		} else if (activePlayer.getActedThisTurn() == true) {
+		} else if (activePlayer.getActedThisTurn() == true && attacker != activePlayer) {
 			endOfAction(activePlayer);
 			activePlayer = attacker;
 		}
@@ -2842,6 +2843,12 @@ public class GameService {
 	public void carryOutThrow(Integer player, int[] location, int[] target, int team) {
 		interceptor = null;
 		PlayerInGame thrower = getPlayerById(player);
+		if (activePlayer == null) {
+			activePlayer = thrower;
+		} else if (activePlayer.getActedThisTurn() == true && activePlayer != thrower) {
+			endOfAction(activePlayer);
+			activePlayer = thrower;
+		} 
 		actionCheck(thrower);
 		if (!thrower.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");

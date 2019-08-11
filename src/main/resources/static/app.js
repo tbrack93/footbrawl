@@ -844,6 +844,7 @@ function showMoved(message, type){
 			console.log("tripping time");
 			speed = 5; // lower is faster
 		  }
+	      animation.getContext("2d").drawImage(img, newX, newY, squareH, squareH);
 		  context.clearRect(startingX, startingY, squareH, squareH);
 		  context.clearRect(targetX, targetY, squareH, squareH);
 		  drawPlayerBorders();
@@ -859,10 +860,10 @@ function showMoved(message, type){
 
 function animateMovement(route, counter, img, startingX, startingY, targetX, targetY, squareH, end, type){
 	animationContext = animation.getContext("2d");
-	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	drawPlayerBorders();
 	var newX = startingX + xIncrement;
 	var newY = startingY + yIncrement;
+	animationContext.clearRect(startingX, startingY, squareH, squareH);
 	if(type == "BALL"){
 		animationContext.drawImage(img, newX, newY, squareH/1.5, squareH/1.5);	
 	} else{
@@ -872,9 +873,9 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 		console.log("finished route");
 		if(counter == route.length-1){
 			route.length = 0;
-			animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			if(type == "BALL"){
 				drawBall();
+			
 			}else if(type == "PUSH"){
 				drawPlayers();
 				drawBall();
@@ -889,10 +890,11 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			      actionChoice = "move";
 			  }
 		    } 
+			animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			console.log("tasks in queue: " + taskQueue.length);
 			var timeout = 100;
 			if(type == "BALL"){ 
-				timeout = 100;
+				timeout = 200;
 			}
 			animating = false;
 			 setTimeout(function(){	   
@@ -984,9 +986,11 @@ function showRoll(message){
 	}
 	if(message.rollType == "INTERCEPT"){
 		if(message.rollOutcome == "failed"){
-		     if(taskQueue.length != 0){
-		       (taskQueue.shift())();
-		      }
+			 setTimeout(function(){
+		        if(taskQueue.length != 0){
+		        (taskQueue.shift())();
+		        }
+		        }, 500);  
 		}else{
 			showIntercept(message);
 		}
@@ -1744,6 +1748,7 @@ function showBlockEnd(message){
 	document.getElementById("closeModal").style.display = "block";
 	//document.getElementById("modalText").innerHTML = "";
 	inModal = false;
+	inBlock = false;
 	inPush = false;
 	followUp = false;
 	drawPlayers();
