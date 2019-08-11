@@ -534,14 +534,30 @@ function decodeMessage(message){
 			showKick(message);
 			return;
 		} else if(message.action == "TOUCHBACKREQUEST"){
-			requestTouchBack(message);
+			if(animating == true){
+				  var task = function(m){
+					requestTouchBack(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+					requestTouchBack(message);;
+		      }
 			return;
 		}
 		if(actionChoice != "blitz"){
 			actionChoice = null;
 		}
 		if(message.action == "TEAMSETUP"){
-			requestSetup(message);
+			 if(animating == true){
+		    	  var task = function(m){
+		    		requestSetup(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    		requestSetup(message);
+		      }
 		} else if(message.action == "ROUTE"){
 	      activePlayer = getPlayerById(message.player);
 	      if(animating == true){
@@ -1450,7 +1466,7 @@ function showNewTurn(message){
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
 	document.getElementById("closeModal").style.display = "block";
     document.getElementById("modal").style.display = "block";
-    if(turnover == false){
+    if(turnover == false || turnover == null){
     	centreModal();
     	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -2690,7 +2706,7 @@ function showWaiting(message){
 
 function centreModal(){
 	var infoModal = document.getElementById("modal");
-	var squareH = canvas.clientHeight/15;
+	var squareH = document.getElementById("canvas").clientHeight/15;
 	infoModal.style.top = "" + ((squareH * 7) - (infoModal.clientHeight /2)) + "px";
 	infoModal.style.left = "" + ((squareH * 13) - (infoModal.clientWidth /2)) + "px";
 }
@@ -2708,23 +2724,12 @@ function showKickOffChoice(message){
 
 function requestTouchBack(message){
 	phase = "touchBack";
+	document.getElementById("modalCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	document.getElementById("modalTitle").innerHTML = "Touch Back";
 	document.getElementById("modalText").innerHTML = message.description + " so the ball is given to a member of the receiving team."
 	if(message.userToChoose == team){
 		yourTurn = true;
 		document.getElementById("modalOptions").innerHTML = "Please select a player to take the ball (no catch roll required).";
-		var sContext = squares.getContext("2d");
-		sContext.save();
-		var squareH = canvas.height / 15;
-		sContext.globalAlpha = 0.6;
-	    sContext.fillStyle = "white";
-	    message.squares.forEach(function(square){
-	    	console.log(square);
-	    	console.log(square.position[0] * squareH);
-	    	console.log((14 - square.position[1]) * squareH);
-	  	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
-	    });
-	    sContext.restore();
 	} else {
 		yourTurn = false;
 		document.getElementById("modalOptions").innerHTML = "Awaiting opponent's choice of player to take the ball.";
