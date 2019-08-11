@@ -879,7 +879,6 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			}else if(type == "PUSH"){
 				drawPlayers();
 				drawBall();
-				animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			} else if(end == "Y" || activePlayer.status == "prone"){
 		        drawPlayer(activePlayer);
 		        animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
@@ -890,14 +889,14 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			      actionChoice = "move";
 			  }
 		    } 
-			animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 			console.log("tasks in queue: " + taskQueue.length);
-			var timeout = 100;
+			var timeout = 200;
 			if(type == "BALL"){ 
 				timeout = 200;
 			}
 			animating = false;
 			 setTimeout(function(){	   
+				 animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 				   if(taskQueue.length != 0){
 				   (taskQueue.shift())();
 				   }
@@ -2276,7 +2275,7 @@ function showStandUp(message){
 	if(message.end == "Y"){
 		drawPlayer(p);
 		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
+	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": message.player}));
 	}
 }
 
