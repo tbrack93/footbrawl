@@ -198,16 +198,18 @@ public class GameService {
 	}
 
 	public void kickOff(TeamInGame kicking) {
+		kickingSetupDone = false;
+		receivingSetupDone = false;
 		if (half != 0) { // no KO's if first kickoff
 			checkKOs();
 		}
 		team1.newKickOff();
 		team2.newKickOff();
-		for (Tile[] array : pitch) {
-			for (Tile t : array) {
-				// t.removePlayer();
-				// t.removeBall();
-			}
+		Tile ball = ballLocationCheck();
+		if(ball.containsPlayer()) {
+			ball.getPlayer().setHasBall(false);
+		} else {
+			ball.removeBall();
 		}
 		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
 			TeamInGame emptyTeam;

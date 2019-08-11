@@ -876,12 +876,15 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			if(type == "BALL"){
 				drawBall();
 			
-			}else if(type == "PUSH"){
-				drawPlayers();
-				drawBall();
+			}else if(type == "PUSH"){ 
+				setTimeout(function(){	   
+				   drawPlayers();
+				   drawBall();
+				   }, 100);
 			} else if(end == "Y" || activePlayer.status == "prone"){
-		        drawPlayer(activePlayer);
-		        animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
+				setTimeout(function(){	   
+				    drawPlayer(activePlayer);
+					   }, 300);
 		      if(activePlayer.team == team && end == "Y"){
 			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
@@ -890,7 +893,7 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			  }
 		    } 
 			console.log("tasks in queue: " + taskQueue.length);
-			var timeout = 200;
+			var timeout = 100;
 			if(type == "BALL"){ 
 				timeout = 200;
 			}
@@ -1273,10 +1276,10 @@ function showFailedAction(message){
 		rerollRoute = [{position: message.location}, {position: message.target}]; 
 		requestReroll(message.rerollOptions);
 	}
-	drawPlayer(player);
 
 	 setTimeout(function(){
-		     document.getElementById("modal").style.display = "block";
+		 drawPlayer(player);
+		    document.getElementById("modal").style.display = "block";
 		    // modal.style.display = "block";
 		   if(taskQueue.length != 0){
 		   (taskQueue.shift())();
@@ -1753,9 +1756,9 @@ function showBlockEnd(message){
 	inBlock = false;
 	inPush = false;
 	followUp = false;
-	drawPlayers();
-	drawPlayerBorders();
-	drawBall();
+//	drawPlayers();
+	//drawPlayerBorders();
+//	drawBall();
 	if(message.description == "BLITZ"){
 		var player = getPlayerById(message.player);
 		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
