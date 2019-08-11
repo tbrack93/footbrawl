@@ -406,10 +406,11 @@ function decodeMessage(message){
 	    }else if(message.action == "KICKOFFCHOICE"){
 	    	console.log("kick off choice");
 			showKickOffChoice(message);
+		} else if(message.action == "TOUCHBACKCHOICE"){
+			showTouchBackChoice(message);
 		} else if(message.action == "ACTIONS"){
 			showPossibleActions(message);
-		} 
-		else if(message.action == "MOVEMENT"){
+		} else if(message.action == "MOVEMENT"){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
@@ -484,16 +485,26 @@ function decodeMessage(message){
 		    	  console.log("going straight to turnover");
 		    	  showTurnover(message); 
 		      }
-		} else if(message.action == "NEWTURN"){
+		} else if(message.action == "GAMESTATUS"){
 			if(animating == true || turnover == true){
 				  var task = function(m){
-					  showNewTurn(message);
+					  updateGameStatus(message);
 		    	  };
 		    	  var t = animateWrapFunction(task, this, [message]);
 		    	  taskQueue.push(t);
 		      } else{ 	
-		    	  showNewTurn(message); 
+		    	  updateGameStatus(message); 
 		      }
+		}else if(message.action == "NEWTURN"){
+				if(animating == true || turnover == true){
+					  var task = function(m){
+						  showNewTurn(message);
+			    	  };
+			    	  var t = animateWrapFunction(task, this, [message]);
+			    	  taskQueue.push(t);
+			      } else{ 	
+			    	  showNewTurn(message); 
+			      }
 		} else if(message.action == "TOUCHDOWN"){
 			if(animating == true){
 				  var task = function(m){
@@ -1136,6 +1147,7 @@ function showBallScatter(message){
       
 
 function showThrowResult(message){
+	document.getElementById("modalImages").innerHTML = "";
 	inThrow = true;
 	if(message.rollOutcome == "intercepted"){
 	  return;
@@ -1405,10 +1417,10 @@ function showTurnover(message){
 }
 
 function showNewTurn(message){
+	console.log("in new turn");
 	inModal = false;
 	inBlock = false;
 	inPickup = false;
-	phase = message.phase;
 	closePlayer1();
 	closePlayer2();
 	var teamName = "";
@@ -1432,6 +1444,25 @@ function showNewTurn(message){
     	document.getElementById("modalTitle").innerHTML = "New Turn";
     	document.getElementById("modalImages").innerHTML = "";
     }
+	activePlayer = null;
+	document.getElementById("activeTeam").innerHTML = teamName;
+	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
+	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
+	document.getElementById("closeModal").style.display = "block";
+    document.getElementById("modal").style.display = "block";
+    if(turnover == false){
+    	centreModal();
+    	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    }
+    turnover = false;
+    taskQueue.length = 0;
+}
+
+
+function updateGameStatus(message){
+	phase = message.phase;
+	closePlayer1();
+	closePlayer2();
 	if(message.team1FullDetails.turn == 0 && message.team2FullDetails.turn == 1 ||
 	   message.team1FullDetails.turn == 1 && message.team2FullDetails.turn == 0){
 		document.getElementById("endTurn").style.display = "block";
@@ -1457,6 +1488,7 @@ function showNewTurn(message){
 	players.length = 0;
 	team1PlayersOnPitch = team1.playersOnPitch;
 	team2PlayersOnPitch = team2.playersOnPitch;
+	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
 	players = team1PlayersOnPitch.concat(team2PlayersOnPitch);
 	if(team1Reserves == null || message.team1FullDetails.reserves.length != team1Reserves.length){
 		team1Reserves = message.team1FullDetails.reserves;
@@ -1466,23 +1498,15 @@ function showNewTurn(message){
 		team2Reserves = message.team2FullDetails.reserves;
 		populateReserves(2);
 	}
-	activePlayer = null;
-	document.getElementById("activeTeam").innerHTML = teamName;
-	document.getElementById("score").innerHTML = ""+ message.team1Score + " - " + message.team2Score;
-	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
-	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
 	document.getElementById('team1Rerolls').innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
 	document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 	drawPlayers();
     drawBall();
-    document.getElementById("closeModal").style.display = "block";
-    document.getElementById("modal").style.display = "block";
-    if(turnover == false){
-    	centreModal();
-    	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-    }
-    turnover = false;
-    taskQueue.length = 0;
+    setTimeout(function(){
+  	  if(taskQueue.length != 0){
+  	    (taskQueue.shift())();
+  	  }
+  	}, 500);
 }
 
 function endTurn(){
@@ -2475,6 +2499,7 @@ function showInvalid(message){
 }
 
 function submitSetup(){
+	closeActions();
 	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
             JSON.stringify({"type": "ACTION", "action": "ENDSETUP"}));
 }
@@ -2689,13 +2714,14 @@ function requestTouchBack(message){
 		yourTurn = true;
 		document.getElementById("modalOptions").innerHTML = "Please select a player to take the ball (no catch roll required).";
 		var sContext = squares.getContext("2d");
-		console.log(sContext);
 		sContext.save();
 		var squareH = canvas.height / 15;
 		sContext.globalAlpha = 0.6;
 	    sContext.fillStyle = "white";
 	    message.squares.forEach(function(square){
 	    	console.log(square);
+	    	console.log(square.position[0] * squareH);
+	    	console.log((14 - square.position[1]) * squareH);
 	  	  sContext.fillRect(square.position[0] * squareH, (14 - square.position[1]) * squareH, squareH, squareH);
 	    });
 	    sContext.restore();
@@ -2705,6 +2731,10 @@ function requestTouchBack(message){
 	}
 	document.getElementById("modal").style.display = "block";
 	centreModal();
+}
+
+function showTouchBackChoice(message){
+	document.getElementById("newRolls").innerHTML =  "Touch back: ball given to " + message.playerName + "</br>" + newRolls.innerHTML;
 }
 
 function actOnTouchBackClick(click){
