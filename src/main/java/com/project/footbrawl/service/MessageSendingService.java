@@ -208,7 +208,7 @@ public class MessageSendingService {
 			int team1Score, int team2Score, int[] ballLocation, String phase) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
-		message.setAction("NEWTURN");
+		message.setAction("GAMESTATUS");
 		message.setUserToChoose(teamId);
 		message.setTeamName(teamName);
 		message.setTeam1Name(team1.getName());
@@ -219,6 +219,15 @@ public class MessageSendingService {
 		message.setTeam2Score(team2Score);
 		message.setBallLocation(ballLocation);
 		message.setPhase(phase);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+	
+	public void sendNewTurn(int gameId, int teamId, String teamName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("NEWTURN");
+		message.setUserToChoose(teamId);
+		message.setTeamName(teamName);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 	
@@ -478,6 +487,15 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setUserToChoose(team);
 		message.setSquares(options);
 		message.setDescription(description);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendTouchBackResult(int gameId, int playerId, String playerName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("TOUCHBACKCHOICE");
+		message.setPlayer(playerId);
+		message.setPlayerName(playerName);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 

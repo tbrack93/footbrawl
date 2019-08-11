@@ -170,7 +170,6 @@ public class GameService {
 
 	public void startGame() {
 		half = 1;
-		// send both player details of teams
 		coinToss();
 	}
 
@@ -182,7 +181,6 @@ public class GameService {
 		}
 		System.out.println(activeTeam.getName() + " won the coin toss!");
 		sender.sendCoinTossWinner(game.getId(), activeTeam.getId(), activeTeam.getName());
-		// TeamInGame kicking = chooseKickOff(winner) ? winner : loser;
 	}
 
 	public void chooseKickOff(int team, String choice) {
@@ -471,6 +469,19 @@ public class GameService {
 			getTouchBack(activeTeam == team1 ? team2 : team1);
 		}
 	}
+	
+	public void actOnTouchBack(int playerId, int teamId) {
+		PlayerInGame p = getPlayerById(playerId);
+		if(p.getTeam() != teamId) {
+			throw new IllegalArgumentException("Not yours to choose");
+		}
+		p.setHasBall(true);
+		sender.sendTouchBackResult(game.getId(), playerId, p.getName());
+		phase = "main game";
+		activeTeam = (activeTeam == team1 ? team2 : team1);
+		activeTeam.incrementTurn();
+		newTurn();
+	}
 
 	public PlayerInGame getKicker() {
 		List<PlayerInGame> possible = new ArrayList<>(activeTeam.getPlayersOnPitch());
@@ -590,13 +601,18 @@ public class GameService {
 	}
 
 	public void newTurn() {
+		System.out.println("new turn");
 		activeTeam.newTurn();// reset players on pitch (able to move/ act)
-		taskQueue.clear();
+		//taskQueue.clear();
 		sender.sendGameStatus(game.getId(), activeTeam.getId(), activeTeam.getName(), team1, team2,
 				game.getTeam1Score(), game.getTeam2Score(), ballLocationCheck().getLocation(), phase);
+		sender.sendNewTurn(game.getId(), activeTeam.getId(), activeTeam.getName());
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
+		if(phase != "main game") {
+			return;
+		}
 		inTurnover = false;
 		List<jsonTile> squares = new ArrayList<>();
 		System.out.println("Determining movement options");
@@ -1181,6 +1197,7 @@ public class GameService {
 			pushAction(attacker, defender, followUp);
 		}
 		// endOfAction(attacker);
+		System.out.println(attacker.getStatus());
 		if (attacker.getStatus() != "standing") {
 			turnover();
 		} else if (result < 2) { // end will be shown within push flow
@@ -1425,6 +1442,7 @@ public class GameService {
 	}
 
 	public void touchdown(PlayerInGame p) {
+		phase = "kickOff";
 		System.out.println(p.getName() + " scored a touchdown!");
 		TeamInGame team = p.getTeamIG();
 		TeamInGame tg = null;
@@ -1437,11 +1455,11 @@ public class GameService {
 		}
 		sender.sendTouchdown(game.getId(), p.getId(), p.getName(), p.getTeamIG().getId(), p.getTeamIG().getName(),
 				game.getTeam1Score(), game.getTeam2Score());
-		// if (team1.getTurn() > 8 || team2.getTurn() > 8) {
-		// endOfHalf();
-		// } else {
+		 if (team1.getTurn() >= 8 && team2.getTurn() >= 8) {
+		    endOfHalf();
+		 } else {
 		kickOff(tg);
-		// }
+		 }
 	}
 
 	public void knockDown(PlayerInGame p) {
@@ -2289,8 +2307,9 @@ public class GameService {
 			}
 		}
 		String finalRoll = "N";
+		System.out.println("actions needed: " + actionsNeeded);
 		if ((Arrays.equals(runnableLocation[1], route.get(route.size() - 1)) || Arrays.equals(runnableLocation[0], route.get(route.size() - 1)))
-				&& (awaitingReroll == null || awaitingReroll[0] == "N") && actionsNeeded == 0 && blitz == null) {
+				&& (awaitingReroll == null || awaitingReroll[0] == "N") && actionsNeeded <= 0) {
 			finalRoll = "Y";
 		}
 		PlayerInGame p = getPlayerById(playerId);
@@ -2551,14 +2570,17 @@ public class GameService {
 				p.useSkill(rerollChoice.replace(" Skill", ""));
 				System.out.println("In skill reroll");
 			}
+			if (rollType == "BLOCK") {
+				Runnable task = taskQueue.pop(); 
+				taskQueue.pop();
+				task.run();
+				return;
+			}
 			taskQueue.pop().run();
 			if (rollType == "INTERCEPT" || rollType == "THROW" || rollType == "CATCH") {
 				return;
 			}
-			if (rollType == "BLOCK") {
-				taskQueue.pop(); // kill saved task for not rerolling
-				return;
-			}
+			
 			boolean result = false;
 			try {
 				System.out.println("waiting for result");
@@ -2737,7 +2759,7 @@ public class GameService {
 			}
 		}
 		addTackleZones(player);
-		if (player.getTile().getTackleZones() != 0 && player.getActedThisTurn() == false) {
+		if (player.getStatus() == "standing" && player.getTile().getTackleZones() != 0 && player.getActedThisTurn() == false) {
 			actions.add("block");
 		}
 		if (actions.isEmpty()) {
