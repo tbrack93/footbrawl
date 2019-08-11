@@ -844,7 +844,7 @@ function showMoved(message, type){
 			console.log("tripping time");
 			speed = 5; // lower is faster
 		  }
-	      animation.getContext("2d").drawImage(img, newX, newY, squareH, squareH);
+	      animation.getContext("2d").drawImage(img, startingX, startingY, squareH, squareH);
 		  context.clearRect(startingX, startingY, squareH, squareH);
 		  context.clearRect(targetX, targetY, squareH, squareH);
 		  drawPlayerBorders();
@@ -1554,6 +1554,9 @@ function showTouchdown(message){
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " scored a touchdown for Team " + message.teamName + "!</br>" + newRolls.innerHTML;
 	alert(message.playerName + " scored a touchdown for Team " + message.teamName + "!");
+	if(taskQueue.length >0){
+	      (taskQueue.shift())();
+	 }
 }
 
 function showBlock(message, blitz){
@@ -2714,6 +2717,7 @@ function centreModal(){
 	var squareH = document.getElementById("canvas").clientHeight/15;
 	infoModal.style.top = "" + ((squareH * 7) - (infoModal.clientHeight /2)) + "px";
 	infoModal.style.left = "" + ((squareH * 13) - (infoModal.clientWidth /2)) + "px";
+	infoModal.style.transform = "none";
 }
 
 function showKickOffChoice(message){
