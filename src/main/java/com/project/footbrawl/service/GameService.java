@@ -206,10 +206,12 @@ public class GameService {
 		team1.newKickOff();
 		team2.newKickOff();
 		Tile ball = ballLocationCheck();
-		if(ball.containsPlayer()) {
+		if(ball != null) {
+		  if(ball.containsPlayer()) {
 			ball.getPlayer().setHasBall(false);
-		} else {
+		  } else {
 			ball.removeBall();
+		  }
 		}
 		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
 			TeamInGame emptyTeam;

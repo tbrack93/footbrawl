@@ -174,7 +174,7 @@ function drawBoard() {
 }
 
 function drawPlayers(){
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	//context.clearRect(0, 0, canvas.width, canvas.height);
 	players.forEach(player => {
 		if(player.location != null){
 		  drawPlayer(player);
@@ -922,7 +922,10 @@ function escCheck (e) {
     	if(activePlayer != null && activePlayer.movement != null){
     		resetMovement();
         }
+    } else if(e.keyCode == "m"){
+    	centreModal();
     }
+    console.log(e.keyCode);
 }
 
 function resetMovement(){
@@ -1200,8 +1203,8 @@ function showThrowResult(message){
        var startingY = (14 - message.location[1]) * squareH + squareH/3;
        context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
        if(p != null){
-   	   console.log(p.name);
-   	   p.hasBall = false;
+   	     console.log(p.name);
+   	     p.hasBall = false;
        }
        drawPlayers();
        var targetX = message.target[0] * squareH + squareH/3;
@@ -2154,11 +2157,11 @@ function showIntercept(message){
        var startingY = (14 - message.location[1]) * squareH + squareH/3;
        context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
        if(p != null){
-   	   console.log(p.name);
-   	   p.hasBall = false;
-   	   drawPlayer(p);
+   	     console.log(p.name);
+   	     p.hasBall = false;
+   	     drawPlayer(p);
        }
-       drawPlayers();
+       //drawPlayers();
        var targetX = message.target[0] * squareH + squareH/3;
        var targetY = (14 - message.target[1]) * squareH + squareH/3;
        var speed = 25;
