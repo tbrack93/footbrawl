@@ -21,6 +21,14 @@ public class MessageSendingService {
 	public MessageSendingService() {
 
 	}
+	
+	public MessageSendingService(GameMessageController controller) {
+		this.controller = controller;
+	}
+	
+	public void setController(GameMessageController controller) {
+		this.controller = controller;
+	}
 
 	public void sendTeamsInfo(int gameId, int teamId, TeamInGame team1, TeamInGame team2, String phase) {
 		MessageToClient message = new MessageToClient();

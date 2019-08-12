@@ -15,13 +15,20 @@ import com.project.footbrawl.entity.Team;
 
 @Service
 public class GameLobbyService {
+
 	
 	@Autowired
 	private GameService gs;
+	
+	@Autowired
+	private GameService gs2;
+	
+	@Autowired
+	private GameService gs3;
 		
 	private Map<Integer, GameService> activeGames; // game id and gameservice
 	
-	public GameLobbyService(GameService gs) {
+	public GameLobbyService(GameService gs, GameService gs2, GameService gs3) {
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		Skill sideStep = new Skill("Side Step", "Who do you think you're pushing?", "block");
@@ -200,6 +207,14 @@ public class GameLobbyService {
 	//	g.setTeam1Score(1);
 	//	g.setTeam2Score(0);
 		gs.setGame(g);
+		Game g2 = new Game();
+		g2.setTeam1(team1);
+		g2.setTeam2(team2);
+		gs2.setGame(g2);
+		Game g3 = new Game();
+		g3.setTeam1(team1);
+		g3.setTeam2(team2);
+		gs3.setGame(g3);
 //		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
 //		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
 //		gs.pitch[5][2].addPlayer(team1Players.get(0));
@@ -234,6 +249,8 @@ public class GameLobbyService {
 	//	team1Players.get(0).setStatus("prone");
 		//team1Players.get(1).setStatus("stunned");
 		activeGames.put(gs.getGameId(), gs);
+		activeGames.put(gs2.getGameId(), gs2);
+		activeGames.put(gs3.getGameId(), gs3);
 	}
 	
 	public GameService getGameService(int id) {

@@ -20,6 +20,7 @@ var timeSinceClick;
 var debounceInterval = 200;
 var game;
 var team;
+var teamId;
 var team1;
 var team2;
 var activePlayer;
@@ -129,6 +130,9 @@ function populateTeamData(message){
 	document.getElementById("team2Name").innerHTML = message.team2Name;
 	team1 = message.team1FullDetails;
 	team2 = message.team2FullDetails;
+    if(phase = "pre-game"){
+		
+	}
 	team1Reserves = message.team1FullDetails.reserves;
 	populateReserves(1);
 	team2Reserves = message.team2FullDetails.reserves;
@@ -1723,7 +1727,7 @@ function showBlockDiceChoice(message){
 	modalMain.innerHTML += "<img height='50px' class ='dice' src='" + dice.src + "' title = '" + blockResults[message.diceChoice -1] + "'/>"; 
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.teamName + " chose " + blockResults[message.diceChoice -1]+ "</br>" + newRolls.innerHTML;
-	document.getElementById("modalOptions").innerHTML = "";
+	//document.getElementById("modalOptions").innerHTML = "";
 }
 
 function cancelBlock(player){
