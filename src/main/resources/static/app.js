@@ -46,6 +46,7 @@ var pushOptions;
 var followUp;
 var actionChoice;
 var phase;
+var interceptors;
 var blockResults = ["Attacker Down", "Both Down", "Pushed", "Pushed", "Defender Stumbles",
 "Defender Down"];
 var diceImages = ["/images/attacker_down.png", "/images/both_down.png", 
@@ -630,7 +631,9 @@ function decodeMessage(message){
 	      } else{ 	
 	    	  requestBlockDiceChoice(message);
 	      }
-	  }  else if(message.action == "PUSHCHOICE"){
+	  } else if(message.action == "INTERCEPTORCHOICE"){
+		  requestInterceptor(message);
+	  } else if(message.action == "PUSHCHOICE"){
 		  requestPushChoice(message);
 	  }  else if(message.action == "PUSHRESULT"){
 		  if(animating == true){
@@ -675,6 +678,10 @@ function actOnClick(click){
 	}
 	if(phase == "kickOff"){
 		actOnKickOffClick(click);
+		return;
+	}
+	if(phase == "intercept"){
+		actOnInterceptClick(click);
 		return;
 	}
 	if(phase == "touchBack"){
@@ -943,6 +950,7 @@ function escCheck (e) {
         }
     } else if(e.keyCode == "77"){
     	centreModal();
+    	dragEnd();
     }
     console.log(e.keyCode);
 }
@@ -2853,4 +2861,73 @@ function newGame(){
 		location.reload();
 		   }, 3000);
 
+}
+
+function requestInterceptor(message){
+	phase = "intercept";
+	interceptors = new Array();
+	for(var i = 0 ; i < players.length; i++){
+		for(var j = 0 ; j <message.squares.length ; j++){
+			if(players[i].location[0] == message.squares[j].position[0] && players[i].location[1] == message.squares[j].position[1]){
+				interceptors.push(players[i]);
+			}
+		}
+	}
+	console.log(interceptors);
+	if(message.userToChoose == team){
+		yourTurn = true;
+		document.getElementById("modalTitle").innerHTML = "Throw Action";
+		document.getElementById("modalText").innerHTML = "Opponent about to throw ball";
+		document.getElementById("modalOptions").innerHTML = "Please select a player to attempt intercept.";
+	} else {
+		yourTurn = false;
+		document.getElementById("modalOptions").innerHTML = "Awaiting opponent's choice of player to attempt intercept.";
+	}
+	var sContext = squares.getContext("2d");
+	sContext.clearRect(0, 0, squares.width, squares.height);
+	sContext.save();
+	sContext.globalAlpha = 0.3;
+	sContext.fillStyle = "white";
+	for(var i = 0; i <message.squares.length; i++){
+		var possible = message.squares[i].position;
+		var squareH = canvas.height / 15;
+	    sContext.fillRect(possible[0] * squareH, (14 - possible[1]) * squareH, squareH, squareH);
+	}
+	document.getElementById("modal").style.display = "block";
+}
+
+function actOnInterceptClick(click){
+	if(yourTurn == false){
+		return;
+	}
+	var option;
+	var square = determineSquare(click);
+	for(var i = 0 ; i < interceptors.length; i++){
+		var player = interceptors[i];
+		console.log(player);
+		 if(player.location[0] == square[0] && player.location[1] == square[1]) {
+			 option = player;
+		 }
+	}
+	console.log(option);
+	showPlayerDetails(option);
+	document.getElementById("modalOptions").innerHTML = "Attempt intercept with " + option.name + "? <br><br>";
+	var button = document.createElement("BUTTON");
+    button.innerHTML = "Cancel";
+    button.onclick = function() {cancelIntercept()};
+    modalOptions.appendChild(button);
+    var button2 = document.createElement("BUTTON");
+    button2.innerHTML = "Submit";
+    button2.onclick = function() {
+    	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+                JSON.stringify({"type": "ACTION", "action": "INTERCEPTCHOICE", "player": option.id,
+	                 "location": option.location}));
+    };
+    modalOptions.appendChild(button2);
+}
+
+function cancelIntercept(){
+	closePlayer1();
+	closePlayer2();
+	document.getElementById("modalOptions").innerHTML = "Please select a player to attempt intercept.";
 }

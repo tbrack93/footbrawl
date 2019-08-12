@@ -167,8 +167,9 @@ public class GameLobbyService {
 		p12.setST(2);
 		p12.setAV(10);
 		p12.setImgUrl("/images/human_catcher.png");
-		p12.addSkill(pass);
-		p12.addSkill(sureHands);
+		p12.addSkill(catching);
+		p12.addSkill(dodge);
+		p12.addSkill(sideStep);
 		Player p13 = new Player();
 		p13.setName("Kimmy");
 		p13.setMA(6);
