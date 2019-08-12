@@ -206,10 +206,12 @@ public class GameService {
 		team1.newKickOff();
 		team2.newKickOff();
 		Tile ball = ballLocationCheck();
-		if(ball.containsPlayer()) {
+		if(ball != null) {
+		  if(ball.containsPlayer()) {
 			ball.getPlayer().setHasBall(false);
-		} else {
+		  } else {
 			ball.removeBall();
+		  }
 		}
 		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
 			TeamInGame emptyTeam;
@@ -393,27 +395,43 @@ public class GameService {
 		if (team1.getDugout().isEmpty()) {
 			System.out.println("Team 1 has no KO'd players");
 		} else {
-			for (PlayerInGame p : team1.getDugout()) {
-				if (diceRoller(1, 6)[0] >= 4) {
+			for (PlayerInGame p : new ArrayList<PlayerInGame> (team1.getDugout())) {
+				String outcome;
+				rolled.clear();
+				int result = diceRoller(1, 6)[0];
+				rolled.add(result);
+				if ( result >= 4) {
+					p.setStatus("standing");
 					team1.addToReserves(p);
 					team1.removeFromDugout(p);
-					System.out.println(p.getName() + " wakes up and joins the rest of his team");
+					System.out.println(p.getName() + " wakes up and joins the rest of the team");
+					outcome = " wakes up and joins the team's reserves";
 				} else {
 					System.out.println(p.getName() + " is still KO'd");
+					outcome = "is still KO'd";
 				}
+				sender.sendKOResult(game.getId(), team1.getName(), p.getId(), p.getName(), rolled, 4, outcome);
 			}
 		}
 		if (team2.getDugout().isEmpty()) {
-			System.out.println("Team 1 has no KO'd players");
+			System.out.println("Team 2 has no KO'd players");
 		} else {
-			for (PlayerInGame p : team2.getDugout()) {
-				if (diceRoller(1, 6)[0] >= 4) {
-					team1.addToReserves(p);
-					team1.removeFromDugout(p);
+			for (PlayerInGame p : new ArrayList<PlayerInGame> (team2.getDugout())) {
+				rolled.clear();
+				int result = diceRoller(1, 6)[0];
+				rolled.add(result);
+				String outcome;
+				if (result >= 4) {
+					p.setStatus("standing");
+					team2.addToReserves(p);
+					team2.removeFromDugout(p);
 					System.out.println(p.getName() + " wakes up and joins the rest of his team");
+					outcome = " wakes up and joins the team's reserves";
 				} else {
 					System.out.println(p.getName() + " is still KO'd");
+					outcome = " is still KO'd";
 				}
+				sender.sendKOResult(game.getId(), team2.getName(), p.getId(), p.getName(), rolled, 4, outcome);
 			}
 		}
 	}
@@ -573,6 +591,7 @@ public class GameService {
 	}
 
 	public void turnover() {
+		System.out.println("checking for turnover");
 		if (inTurnover == false) {
 			System.out.println("Turnover");
 			inTurnover = true;
@@ -1168,6 +1187,7 @@ public class GameService {
 				sender.sendSkillUsed(game.getId(), attacker.getId(), attacker.getName(), attacker.getTeam(), "Block");
 				System.out.println(attacker.getName() + " used block skill");
 			} else {
+				attacker.setStatus("prone");
 				knockDown(attacker);
 			}
 			if (ballToScatter != null) { // ball has to scatter after all other actions
@@ -1204,7 +1224,7 @@ public class GameService {
 			}
 			pushAction(attacker, defender, followUp);
 		}
-		// endOfAction(attacker);
+		endOfAction(attacker);
 		System.out.println(attacker.getStatus());
 		if (attacker.getStatus() != "standing") {
 			turnover();
@@ -1577,8 +1597,9 @@ public class GameService {
 					scatterBall(target, 1); // if player can't catch, will scatter again
 				}
 			} else {
-				target.setContainsBall(true); // will need a message to inform front end of this ball movement
-				if (inPassOrHandOff) {
+				target.setContainsBall(true); 
+				if (inPassOrHandOff == true) {
+					System.out.println("bad throw onto empty square");
 					inPassOrHandOff = false;
 					turnover();
 				}
@@ -2779,6 +2800,7 @@ public class GameService {
 		if (actions.isEmpty()) {
 			actions.add("None");
 		}
+		inTurnover = false;
 		return actions;
 	}
 
