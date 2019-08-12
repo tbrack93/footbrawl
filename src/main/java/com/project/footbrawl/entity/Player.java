@@ -88,6 +88,10 @@ public class Player {
 	public void setSkills(List<Skill> skills) {
 		this.skills = skills;
 	}
+	
+	public void addSkill(Skill skill) {
+		skills.add(skill);
+	}
 
 	public int getTeam() {
 		return team;

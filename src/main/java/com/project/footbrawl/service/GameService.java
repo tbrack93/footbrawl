@@ -396,26 +396,36 @@ public class GameService {
 			System.out.println("Team 1 has no KO'd players");
 		} else {
 			for (PlayerInGame p : team1.getDugout()) {
-				if (diceRoller(1, 6)[0] >= 4) {
+				String outcome;
+				int result = diceRoller(1, 6)[0];
+				if ( result >= 4) {
 					team1.addToReserves(p);
 					team1.removeFromDugout(p);
-					System.out.println(p.getName() + " wakes up and joins the rest of his team");
+					System.out.println(p.getName() + " wakes up and joins the rest of the team");
+					outcome = " wakes up and joins the team's reserves";
 				} else {
 					System.out.println(p.getName() + " is still KO'd");
+					outcome = "is still KO'd";
 				}
+				sender.sendKOResult(game.getId(), team1.getName(), p.getId(), p.getName(), result, 4, outcome);
 			}
 		}
 		if (team2.getDugout().isEmpty()) {
-			System.out.println("Team 1 has no KO'd players");
+			System.out.println("Team 2 has no KO'd players");
 		} else {
 			for (PlayerInGame p : team2.getDugout()) {
-				if (diceRoller(1, 6)[0] >= 4) {
-					team1.addToReserves(p);
-					team1.removeFromDugout(p);
+				int result = diceRoller(1, 6)[0];
+				String outcome;
+				if (result >= 4) {
+					team2.addToReserves(p);
+					team2.removeFromDugout(p);
 					System.out.println(p.getName() + " wakes up and joins the rest of his team");
+					outcome = " wakes up and joins the team's reserves";
 				} else {
 					System.out.println(p.getName() + " is still KO'd");
+					outcome = " is still KO'd";
 				}
+				sender.sendKOResult(game.getId(), team2.getName(), p.getId(), p.getName(), result, 4, outcome);
 			}
 		}
 	}
@@ -1170,6 +1180,7 @@ public class GameService {
 				sender.sendSkillUsed(game.getId(), attacker.getId(), attacker.getName(), attacker.getTeam(), "Block");
 				System.out.println(attacker.getName() + " used block skill");
 			} else {
+				attacker.setStatus("prone");
 				knockDown(attacker);
 			}
 			if (ballToScatter != null) { // ball has to scatter after all other actions
@@ -1206,7 +1217,7 @@ public class GameService {
 			}
 			pushAction(attacker, defender, followUp);
 		}
-		// endOfAction(attacker);
+		endOfAction(attacker);
 		System.out.println(attacker.getStatus());
 		if (attacker.getStatus() != "standing") {
 			turnover();
@@ -1579,8 +1590,9 @@ public class GameService {
 					scatterBall(target, 1); // if player can't catch, will scatter again
 				}
 			} else {
-				target.setContainsBall(true); // will need a message to inform front end of this ball movement
-				if (inPassOrHandOff) {
+				target.setContainsBall(true); 
+				if (inPassOrHandOff == true) {
+					System.out.println("bad throw onto empty square");
 					inPassOrHandOff = false;
 					turnover();
 				}

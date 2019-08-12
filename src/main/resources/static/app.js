@@ -517,7 +517,8 @@ function decodeMessage(message){
 		      }
 		} else if(message.action == "TEAMBLITZED"){
 			showBlitzUsed(message);
-		} 
+		} else if(message.action == "KOSTATUS"){}
+		  showKOResult(message);
 		}
 	} else if(message.type == "ACTION"){
 		if(message.action == "COINTOSS"){
@@ -875,7 +876,6 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			route.length = 0;
 			if(type == "BALL"){
 				drawBall();
-			
 			}else if(type == "PUSH"){ 
 				setTimeout(function(){	   
 				   drawPlayers();
@@ -892,13 +892,12 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			      actionChoice = "move";
 			  }
 		    } 
-			console.log("tasks in queue: " + taskQueue.length);
 			var timeout = 100;
 			if(type == "BALL"){ 
 				timeout = 200;
 			}
-			animating = false;
 			 setTimeout(function(){	   
+				 animating = false;
 				 animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 				   if(taskQueue.length != 0){
 				   (taskQueue.shift())();
@@ -922,7 +921,7 @@ function escCheck (e) {
     	if(activePlayer != null && activePlayer.movement != null){
     		resetMovement();
         }
-    } else if(e.keyCode == "m"){
+    } else if(e.keyCode == "77"){
     	centreModal();
     }
     console.log(e.keyCode);
@@ -1957,6 +1956,7 @@ function resetActions(){
 function showPossibleActions(message){
 	 resetActions();
 	 inThrow = false;
+	 actionChoice = null;
 	 document.getElementById("squaresCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.width);
 	 console.log("show actions");
 	 var actions = document.getElementById("actions");
@@ -2278,7 +2278,7 @@ function showStandUp(message){
 	p.status = "standing";
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " stood up </br>" + newRolls.innerHTML;
-	if(message.end == "Y"){
+	if(message.end == "Y" && yourTurn == true){
 		drawPlayer(p);
 		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": message.player}));
@@ -2534,6 +2534,8 @@ function submitSetup(){
 }
 
 function requestSetup(message){
+	canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	document.getElementById("endTurn").style.display = "none";
 	if(message.userToChoose == team){
 		phase = "yourSetup";
 		document.getElementById("modalTitle").innerHTML = "Your Setup";
@@ -2565,6 +2567,7 @@ function requestSetup(message){
 	document.getElementById("modal").style.display = "block";
 	document.getElementById("closeModal").style.display = "block";
 	centreModal();
+	canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 }
 
 function requestKickOff(message){
@@ -2794,4 +2797,9 @@ function cancelTouchBack(){
 	document.getElementById("modalOptions").innerHTML = "Please select a player to take the ball (no catch roll required).";
 	closePlayer1();
 	closePlayer2();
+}
+
+function showKOResult(message){
+	document.getElementById("newRolls").innerHTML = message.playerName + outcome + " Needed: " + message.rollNeeded, + " Rolled: " +
+	                                                message.rolled[0] + <br> + document.getElementById("newRolls").innerHTML;
 }
