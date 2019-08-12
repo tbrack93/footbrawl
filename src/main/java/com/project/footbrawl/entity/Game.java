@@ -14,7 +14,8 @@ public class Game {
 	private String status;
 	
 	public Game() {
-		id = 1; // just for testing
+		idCounter++;
+		id = idCounter; // just for testing
 	}
 
 	public Game(Team team1, Team team2) {

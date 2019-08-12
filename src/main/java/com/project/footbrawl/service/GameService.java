@@ -95,8 +95,8 @@ public class GameService {
 //		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
 //	}
 
-	public GameService(MessageSendingService sender) {
-		this.sender = sender;
+	public GameService() {
+		
 	}
 
 	public void setGame(Game game) {
@@ -2924,4 +2924,5 @@ public class GameService {
 		}
 		endTeamSetup(activeTeam);
 	}
+	
 }
