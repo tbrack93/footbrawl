@@ -545,21 +545,21 @@ public class GameService {
 	}
 
 	public void endOfHalf() {
-		// placeholder
-		if (half == 1) {
+		half++;
+		if (half == 2) {
 			newHalf();
-		} else if (half == 2) {
+		} else if (half == 3) {
 			if (game.getTeam1Score() == game.getTeam2Score()) {
 				extraTime();
 			} else {
 				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
 			}
-		} else if (half == 3) {
+		} else if (half == 4) {
 			if (game.getTeam1Score() == game.getTeam2Score()) {
 				penaltyShootOuts();
-			}
-		} else {
-			endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+		    } else {
+			  endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+		    }
 		}
 		// check if end of game & if winner
 		// if not start new half or extra time
@@ -568,6 +568,7 @@ public class GameService {
 
 	public void endGame(TeamInGame winners) {
 		System.out.println(winners.getName() + " won the match!");
+		sender.sendGameEnd(game.getId(), winners.getName(), winners.getId(), game.getTeam1Score(), game.getTeam2Score());
 		// with database, will save result
 		// in league will need to update league points
 	}
@@ -585,6 +586,15 @@ public class GameService {
 		// team re-rolls reset
 		team1.resetRerolls();
 		team2.resetRerolls();
+		String details = "";
+		if(half == 1) {
+			details = "First half begins!";
+		} else if(half == 2) {
+			details = "Second half begins!";
+		} else if(half == 3) {
+			details = "Extra time begins!";
+		}
+		sender.sendNewHalf(game.getId(), details);
 		// new kickoff with team that received start of last half
 		kickOff(lastKickOff == team1 ? team2 : team1);
 		// some inducements may come into play here
@@ -610,7 +620,7 @@ public class GameService {
 		team2.endTurn();
 		blitz = null;
 		activeTeam = (activeTeam == team1 ? team2 : team1);
-		if (activeTeam.getTurn() == 8) {
+		if (activeTeam.getTurn() == 8 && half == 1 || activeTeam.getTurn() == 16 && half == 2) {
 			endOfHalf();
 		} else {
 			activeTeam.incrementTurn();
@@ -1483,7 +1493,7 @@ public class GameService {
 		}
 		sender.sendTouchdown(game.getId(), p.getId(), p.getName(), p.getTeamIG().getId(), p.getTeamIG().getName(),
 				game.getTeam1Score(), game.getTeam2Score());
-		if (team1.getTurn() >= 8 && team2.getTurn() >= 8) {
+		if (team1.getTurn() == 8 && team2.getTurn() == 8 || team1.getTurn() == 16 && team2.getTurn() == 16) {
 			endOfHalf();
 		} else {
 			kickOff(tg);
@@ -2756,10 +2766,10 @@ public class GameService {
 	}
 
 	public void sendBlockSuccess(PlayerInGame attacker, PlayerInGame defender) {
-		if (blitz != null && activePlayer.getStatus() == "standing") {
-			activePlayer.setActionOver(false);
+		if (blitz != null && attacker.getStatus() == "standing") {
+			attacker.setActionOver(false);
 		} else {
-			activePlayer.setActionOver(true);
+			attacker.setActionOver(true);
 		}
 		sender.sendBlockSuccess(game.getId(), attacker.getId(), defender.getId(), blitz != null);
 		blitz = null;
@@ -2923,6 +2933,33 @@ public class GameService {
 			throw new IllegalArgumentException("Not yours to end");
 		}
 		endTeamSetup(activeTeam);
+	}
+
+	public void resetGame() {
+		game.setTeam1Score(0);
+		game.setTeam2Score(0);
+		team1 = new TeamInGame(game.getTeam1());
+		team2 = new TeamInGame(game.getTeam2());
+		taskQueue = new LinkedList<>();
+		rolled = new ArrayList<>();
+		runnableResults = new LinkedBlockingQueue<>();
+		actionsNeeded = 0;
+		half = 0;
+		activePlayer = null;
+		ballToScatter = null;
+		rerollOptions = new ArrayList<>();
+		inTurnover = false;
+		pitch = new Tile[26][15];
+		for (int row = 0; row < 26; row++) {
+			for (int column = 0; column < 15; column++) {
+				pitch[row][column] = new Tile(row, column);
+			}
+		}
+		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
+		waitingForPlayers = true;
+		phase = "pre-game";
+		team1Joined = false;
+		team2Joined = false;
 	}
 	
 }
