@@ -89,6 +89,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).joinGame(team);
 			} else if (action.equals("TOUCHBACKCHOICE")){
 				lobby.getGameService(gameId).actOnTouchBack(message.getPlayer(), team);
+			} else if(action.equals("RESETGAME")){
+				lobby.getGameService(gameId).resetGame();
 			}
 		}
 

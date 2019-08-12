@@ -418,6 +418,18 @@ function decodeMessage(message){
 			showMovement(message);
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
+		}  else if(message.action == "NEWHALF"){
+			showNewHalf(message);
+		} else if(message.action == "ENDOFGAME"){
+			if(animating == true){
+				  var task = function(m){
+					  showEndOfGame(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showEndOfGame(message); 
+		      }
 		} else if(message.action == "THROWRANGES"){
 			showThrowRanges(message);
 		} else if(message.action == "THROW"){
@@ -654,6 +666,9 @@ function showMovement(message){
 }
 
 function actOnClick(click){
+	if(animating == true){
+		return;
+	}
 	if(phase == "yourSetup"){
 		actOnsetupClick(click);
 		return;
@@ -1564,6 +1579,7 @@ function showTouchdown(message){
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " scored a touchdown for Team " + message.teamName + "!</br>" + newRolls.innerHTML;
 	alert(message.playerName + " scored a touchdown for Team " + message.teamName + "!");
+	document.getElementById("modalText").innerHTML = "";
 	if(taskQueue.length >0){
 	      (taskQueue.shift())();
 	 }
@@ -2570,9 +2586,11 @@ function requestSetup(message){
 		}
 	}
 	document.getElementById("modal").style.display = "block";
+	document.getElementById("modalImages").innerHTML = "";
 	document.getElementById("closeModal").style.display = "block";
 	centreModal();
 	canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	drawPlayers();
 }
 
@@ -2808,4 +2826,31 @@ function cancelTouchBack(){
 function showKOResult(message){
 	document.getElementById("newRolls").innerHTML = ""+ message.playerName + message.description + " Needed: " + message.rollNeeded + " Rolled: " +
 	                                                message.rolled[0] + "<br>" + document.getElementById("newRolls").innerHTML;
+}
+
+function showNewHalf(message){
+	document.getElementById("newRolls").innerHTML = message.description + "<br>" + document.getElementById("newRolls").innerHTML;
+	alert(message.description);
+}
+
+function showEndOfGame(message){
+	if(userToChoose == team){
+		document.getElementById("modalTitle").innerHTML = "Congratulations!";
+		document.getElementById("modalText").innerHTML = "Your team won the match"
+	} else {
+		document.getElementById("modalTitle").innerHTML = "Good Game";
+		document.getElementById("modalText").innerHTML = message.description;
+	}
+	document.getElementById("modalOptions").innerHTML = "Final Score: <br>" + message.team1Name + ": " + message.team1Score + 
+	                                                     "<br>" + message.team2Name + ": " + message.team2Score;
+	document.getElemenyById("newGame").style.display = "block";
+}
+
+function newGame(){
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "RESETGAME"}));
+	setTimeout(function(){	   
+		location.reload();
+		   }, 3000);
+
 }

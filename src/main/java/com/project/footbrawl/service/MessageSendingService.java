@@ -520,4 +520,23 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
+	public void sendNewHalf(int gameId, String description) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("NEWHALF");
+		message.setDescription(description);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendGameEnd(int gameId, String winners, int winnerId, int team1Score, int team2Score) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("ENDOFGAME");
+		message.setDescription(winners + "won the match!");
+		message.setTeam1Score(team1Score);
+		message.setTeam2Score(team2Score);
+		message.setUserToChoose(winnerId);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
 }
