@@ -395,10 +395,13 @@ public class GameService {
 		if (team1.getDugout().isEmpty()) {
 			System.out.println("Team 1 has no KO'd players");
 		} else {
-			for (PlayerInGame p : team1.getDugout()) {
+			for (PlayerInGame p : new ArrayList<PlayerInGame> (team1.getDugout())) {
 				String outcome;
+				rolled.clear();
 				int result = diceRoller(1, 6)[0];
+				rolled.add(result);
 				if ( result >= 4) {
+					p.setStatus("standing");
 					team1.addToReserves(p);
 					team1.removeFromDugout(p);
 					System.out.println(p.getName() + " wakes up and joins the rest of the team");
@@ -407,16 +410,19 @@ public class GameService {
 					System.out.println(p.getName() + " is still KO'd");
 					outcome = "is still KO'd";
 				}
-				sender.sendKOResult(game.getId(), team1.getName(), p.getId(), p.getName(), result, 4, outcome);
+				sender.sendKOResult(game.getId(), team1.getName(), p.getId(), p.getName(), rolled, 4, outcome);
 			}
 		}
 		if (team2.getDugout().isEmpty()) {
 			System.out.println("Team 2 has no KO'd players");
 		} else {
-			for (PlayerInGame p : team2.getDugout()) {
+			for (PlayerInGame p : new ArrayList<PlayerInGame> (team2.getDugout())) {
+				rolled.clear();
 				int result = diceRoller(1, 6)[0];
+				rolled.add(result);
 				String outcome;
 				if (result >= 4) {
+					p.setStatus("standing");
 					team2.addToReserves(p);
 					team2.removeFromDugout(p);
 					System.out.println(p.getName() + " wakes up and joins the rest of his team");
@@ -425,7 +431,7 @@ public class GameService {
 					System.out.println(p.getName() + " is still KO'd");
 					outcome = " is still KO'd";
 				}
-				sender.sendKOResult(game.getId(), team2.getName(), p.getId(), p.getName(), result, 4, outcome);
+				sender.sendKOResult(game.getId(), team2.getName(), p.getId(), p.getName(), rolled, 4, outcome);
 			}
 		}
 	}
@@ -585,6 +591,7 @@ public class GameService {
 	}
 
 	public void turnover() {
+		System.out.println("checking for turnover");
 		if (inTurnover == false) {
 			System.out.println("Turnover");
 			inTurnover = true;
@@ -2793,6 +2800,7 @@ public class GameService {
 		if (actions.isEmpty()) {
 			actions.add("None");
 		}
+		inTurnover = false;
 		return actions;
 	}
 

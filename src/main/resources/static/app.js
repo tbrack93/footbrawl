@@ -517,8 +517,9 @@ function decodeMessage(message){
 		      }
 		} else if(message.action == "TEAMBLITZED"){
 			showBlitzUsed(message);
-		} else if(message.action == "KOSTATUS"){}
+		} else if(message.action == "KOSTATUS"){
 		  showKOResult(message);
+		}
 		}
 	} else if(message.type == "ACTION"){
 		if(message.action == "COINTOSS"){
@@ -1462,6 +1463,7 @@ function showNewTurn(message){
 	} else {
 		document.getElementById("endTurn").classList.add("disabled");
 	}
+	document.getElementById("endTurn").style.display = "block";
 	if(turnover == false && phase != "pre-game"){
     	document.getElementById("modalOptions").innerHTML = "";
     	document.getElementById("modalText").innerHTML = teamName;
@@ -2534,7 +2536,6 @@ function submitSetup(){
 }
 
 function requestSetup(message){
-	canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	document.getElementById("endTurn").style.display = "none";
 	if(message.userToChoose == team){
 		phase = "yourSetup";
@@ -2568,6 +2569,7 @@ function requestSetup(message){
 	document.getElementById("closeModal").style.display = "block";
 	centreModal();
 	canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	drawPlayers();
 }
 
 function requestKickOff(message){
@@ -2800,6 +2802,6 @@ function cancelTouchBack(){
 }
 
 function showKOResult(message){
-	document.getElementById("newRolls").innerHTML = message.playerName + outcome + " Needed: " + message.rollNeeded, + " Rolled: " +
-	                                                message.rolled[0] + <br> + document.getElementById("newRolls").innerHTML;
+	document.getElementById("newRolls").innerHTML = ""+ message.playerName + message.description + " Needed: " + message.rollNeeded + " Rolled: " +
+	                                                message.rolled[0] + "<br>" + document.getElementById("newRolls").innerHTML;
 }

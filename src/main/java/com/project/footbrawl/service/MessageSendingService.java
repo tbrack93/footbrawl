@@ -499,7 +499,7 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
-	public void sendKOResult(int gameId, String teamName, Integer playerId, String playerName, int result, int needed, String outcome) {
+	public void sendKOResult(int gameId, String teamName, Integer playerId, String playerName, List<Integer> rolled, int needed, String outcome) {
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("KOSTATUS");
@@ -508,7 +508,7 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setPlayerName(playerName);
 		message.setDescription(outcome);
 		message.setRollNeeded(needed);
-		message.setRolled(new ArrayList<Integer> (result));
+		message.setRolled(rolled);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
 
