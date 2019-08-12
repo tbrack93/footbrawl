@@ -1538,8 +1538,8 @@ public class GameService {
 				p.setStatus("KO");
 				p.getTeamIG().addToDugout(p);
 			} else {
-				System.out.println(p.getName() + " is injured and sent to the injury box");
-				outcome = "injured and sent to the injury box";
+				System.out.println(p.getName() + " is injured and sent to the injury box for the rest of the match");
+				outcome = "injured and sent to the injury box for the rest of the match";
 				p.setStatus("injured");
 				p.getTeamIG().addToInjured(p);
 			}
