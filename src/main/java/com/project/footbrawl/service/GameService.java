@@ -78,6 +78,7 @@ public class GameService {
 	private boolean inTurnover;
 	private Runnable blitz;
 	private PlayerInGame interceptor;
+	private List<PlayerInGame> interceptors;
 
 //	public GameService(Game game) {
 //		this.game = game;
@@ -1980,10 +1981,6 @@ public class GameService {
 		return interceptors;
 	}
 
-	public void requestInterceptor() {
-		// placeholder
-	}
-
 	// getting all squares that ball will travel over, for interception options
 	// uses enhanced version of Bresenham's line algorithm. Adapted from
 	// http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
@@ -2823,7 +2820,7 @@ public class GameService {
 		PlayerInGame p = getPlayerById(player);
 		Tile goal = pitch[target[0]][target[1]];
 		int roll = calculateThrow(p, p.getTile(), goal)[0];
-		List<PlayerInGame> interceptors = calculatePossibleInterceptors(calculateThrowTiles(p, p.getTile(), goal), p);
+		interceptors = calculatePossibleInterceptors(calculateThrowTiles(p, p.getTile(), goal), p);
 		List<jsonTile> interceptLocations = new ArrayList<>();
 		for (PlayerInGame pg : interceptors) {
 			jsonTile jt = new jsonTile();
@@ -2892,7 +2889,7 @@ public class GameService {
 		}
 		Tile goal = pitch[target[0]][target[1]];
 		List<Tile> path = calculateThrowTiles(thrower, thrower.getTile(), goal);
-		List<PlayerInGame> interceptors = calculatePossibleInterceptors(path, thrower);
+		interceptors = calculatePossibleInterceptors(path, thrower);
 		if (interceptors.size() > 1) {
 			Runnable task = new Runnable() {
 				@Override
@@ -2901,7 +2898,15 @@ public class GameService {
 				}
 			};
 			taskQueue.add(task);
-			// requestInterceptor(interceptors);
+			ArrayList<Integer> interceptIds = new ArrayList<>();
+			ArrayList<jsonTile> interceptLocations = new ArrayList<>();
+			for(PlayerInGame p : interceptors) {
+				interceptIds.add(p.getId());
+				jsonTile jt = new jsonTile();
+				jt.setPosition(p.getLocation());
+				interceptLocations.add(jt);
+			}
+			sender.requestInterceptor(game.getId(), interceptIds, interceptLocations, interceptors.get(0).getTeam());
 			return;
 		} else if (interceptors.size() == 1) {
 			interceptor = interceptors.get(0);
@@ -2960,6 +2965,18 @@ public class GameService {
 		phase = "pre-game";
 		team1Joined = false;
 		team2Joined = false;
+	}
+
+	public void actOnIntercept(int team, Integer player, int[] location) {
+		PlayerInGame p = getPlayerById(player);
+		if(!interceptors.contains(p)) {
+			throw new IllegalArgumentException("Not a valid interceptor");
+		}
+		if(!Arrays.equals(p.getLocation(), location)) {
+			throw new IllegalArgumentException("Interceptor not in that location");
+		}
+		interceptor = p;
+		taskQueue.pop().run();
 	}
 	
 }

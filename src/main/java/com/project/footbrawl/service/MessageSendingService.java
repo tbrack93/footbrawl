@@ -538,5 +538,15 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setUserToChoose(winnerId);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
-
+	
+	public void requestInterceptor(int gameId, ArrayList<Integer> interceptIds, ArrayList<jsonTile> interceptLocations,
+			int userToChoose) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("INTERCEPTORCHOICE");
+		message.setSquares(interceptLocations);
+		message.setUserToChoose(userToChoose);
+		controller.sendMessageToBothUsers(gameId, message);
+		
+	}
 }
