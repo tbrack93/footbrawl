@@ -416,7 +416,15 @@ function decodeMessage(message){
 		} else if(message.action == "ACTIONS"){
 			showPossibleActions(message);
 		} else if(message.action == "MOVEMENT"){
-			showMovement(message);
+			if(animating == true){
+				  var task = function(m){
+					  showMovement(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showMovement(message);
+		      }
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		}  else if(message.action == "NEWHALF"){
@@ -662,6 +670,8 @@ function decodeMessage(message){
 }
 
 function showMovement(message){
+	activePlayer = getPlayerById(message.player);
+	drawPlayerBorders();
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	message.squares.forEach(tile => {
 		drawMovementSquare(tile);
