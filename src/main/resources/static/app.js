@@ -86,6 +86,9 @@ function init() {
 	canvasTop = canvas.offsetTop;
 	rolls = document.getElementById("rolls");
 	rolls.style.paddingTop = "" + (canvas.clientHeight) +"px";
+	window.onbeforeunload = function() {
+		   return "Warning - reloading will break the game";
+	};
 	drawBoard();
 	timeSinceClick = new Date();
 // var player = {id: 1, team: 1, name:"John", location: [0, 1]};
