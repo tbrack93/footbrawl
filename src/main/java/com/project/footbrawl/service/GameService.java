@@ -943,7 +943,7 @@ public class GameService {
 		if (route.isEmpty()) {
 			routeMACost = 0;
 		} else {
-			routeMACost = jRoute.size() - 1 + (jRoute.get(1).getStandUpRoll() != null ? 3 : 0);
+			routeMACost = jRoute.size() - 1 + (jRoute.get(0).getStandUpRoll() != null ? 3 : 0);
 		}
 		int[][] attLocations = getJsonFriendlyAssists(attacker, opponent);
 		int[][] defLocations = getJsonFriendlyAssists(opponent, attacker);
