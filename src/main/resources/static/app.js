@@ -420,7 +420,15 @@ function decodeMessage(message){
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		}  else if(message.action == "NEWHALF"){
-			showNewHalf(message);
+			if(animating == true || turnover == true){
+				  var task = function(m){
+					  showNewHalf(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showNewHalf(message); 
+		      }
 		} else if(message.action == "ENDOFGAME"){
 			if(animating == true){
 				  var task = function(m){
@@ -911,13 +919,15 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			} else if(end == "Y" || activePlayer.status == "prone"){
 				setTimeout(function(){	   
 				    drawPlayer(activePlayer);
-					   }, 300);
-		      if(activePlayer.team == team && end == "Y"){
-			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
-				                         "location": activePlayer.location, "routeMACost": 0}));
-			      actionChoice = "move";
-			  }
+				    animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
+				    if(activePlayer.team == team && end == "Y"){
+					      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+						         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
+						                         "location": activePlayer.location, "routeMACost": 0}));
+					      actionChoice = "move";
+					  }
+					   }, 100);
+		      
 		    } 
 			var timeout = 100;
 			if(type == "BALL"){ 
@@ -925,7 +935,6 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			}
 			 setTimeout(function(){	   
 				 animating = false;
-				 animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 				   if(taskQueue.length != 0){
 				   (taskQueue.shift())();
 				   }
@@ -1431,17 +1440,19 @@ function showInjuryRoll(message){
 	// var existing = document.getElementById("modalOptions").innerHTML;
 	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + " is " + message.rollOutcome + "." + "</p>";
 	var player = getPlayerById(message.player);
-    player.status = message.playerStatus;
-    player.hasBall = false;
-    if(message.location == null){
+	if(player != null){
+      player.status = message.playerStatus;
+      player.hasBall = false;
+      if(message.location == null){
     	removePlayer(player);
     	var squareH = canvas.height / 15;
     	context.clearRect(player.location[0] * squareH-5, (14 - player.location[1]) * squareH-5, squareH+10,squareH+10);
     	drawPlayerBorders();
-    } else{
+      } else{
         player.location = message.location;
     	drawPlayer(player);
-    }
+      }
+	}  
     document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     console.log("injury tasks left: " + taskQueue.length);
 	if(taskQueue.length != 0){
@@ -2308,10 +2319,12 @@ function showStandUp(message){
 	p.status = "standing";
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " stood up </br>" + newRolls.innerHTML;
-	if(message.end == "Y" && yourTurn == true){
+	if(message.end == "Y"){
 		drawPlayer(p);
-		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+		if(yourTurn == true){
+		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": message.player}));
+		}
 	}
 }
 

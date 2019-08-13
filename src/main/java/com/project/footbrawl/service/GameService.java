@@ -111,6 +111,7 @@ public class GameService {
 		half = 0;
 		activePlayer = null;
 		ballToScatter = null;
+		inPassOrHandOff = false;
 		rerollOptions = new ArrayList<>();
 		inTurnover = false;
 		pitch = new Tile[26][15];
@@ -666,18 +667,8 @@ public class GameService {
 																		// number for movement used
 				System.out.println("action not over");
 				if (p != activePlayer && p.getTeamIG() == activeTeam) {
-					System.out.println(p.getActionOver());
-					System.out.println(activePlayer.getActedThisTurn());
-					if (activePlayer.getActedThisTurn() == true) { // if active player has
-																	// already acted this
-																	// turn,
-																	// deselecting them ends
-																	// their action
-						System.out.println("updating activePlayer");
-						endOfAction(activePlayer);
-						activePlayer = p;
-						System.out.println("active player is: " + activePlayer.getName());
-					}
+					System.out.println("updating activePlayer");
+					makeActivePlayer(p);
 				}
 				resetTiles();
 				p.setRemainingMA(originalMA - maUsed);
@@ -1183,6 +1174,7 @@ public class GameService {
 
 	// get choice of dice from stronger player's user
 	public void blockChoiceAction(int blockChoice, PlayerInGame attacker, PlayerInGame defender, boolean followUp) {
+		makeActivePlayer(attacker);
 		int result = blockChoice;
 		System.out.println("Result: " + BLOCK[result]);
 		if (result == 0) { // attacker down
@@ -1235,7 +1227,9 @@ public class GameService {
 			}
 			pushAction(attacker, defender, followUp);
 		}
-		endOfAction(attacker);
+		if(blitz == null) {
+		  endOfAction(attacker);
+		}
 		System.out.println(attacker.getStatus());
 		if (attacker.getStatus() != "standing") {
 			turnover();
@@ -1305,6 +1299,7 @@ public class GameService {
 		}
 		if (push.isEmpty()) {
 			pushOffPitch(attacker, defender);
+			
 		} else {
 			ArrayList<jsonTile> jPush = new ArrayList<>();
 			for (Tile t : push) {
@@ -1477,6 +1472,8 @@ public class GameService {
 		}
 		if (taskQueue.size() > 0) {
 			taskQueue.pop().run();
+		} else {
+			sendBlockSuccess(pusher, pushed);
 		}
 	}
 
@@ -1557,6 +1554,7 @@ public class GameService {
 		if (player.getStatus() != "prone") {
 			throw new IllegalArgumentException("Can't stand up a player that isn't prone");
 		}
+		makeActivePlayer(player);
 		if (player.getRemainingMA() < 3) {
 			System.out.println(player.getRemainingMA());
 			System.out.println(player.getName() + "tries to stand up.");
@@ -1687,7 +1685,7 @@ public class GameService {
 				scatterBall(player.getTile(), 1);
 				if (phase != "kick") {
 					Tile scatteredTo = ballLocationCheck();
-					if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
+					if (!scatteredTo.containsPlayer() && inPassOrHandOff == true || scatteredTo.containsPlayer() && scatteredTo.getPlayer().getTeamIG() != activeTeam) {
 						turnover(); // only a turnover if ball is not caught by player on active team before comes
 									// to
 									// rest
@@ -1781,7 +1779,7 @@ public class GameService {
 
 	public void passBallAction(PlayerInGame thrower, Tile target, boolean reroll) {
 		taskQueue.clear();
-		activePlayer = thrower;
+		makeActivePlayer(thrower);
 		int[] details = calculateThrow(thrower, thrower.getTile(), target);
 		int needed = details[0];
 		int modifier = details[1];
@@ -1891,13 +1889,8 @@ public class GameService {
 
 	public void handOffBallAction(PlayerInGame player, Tile target, PlayerInGame targetPlayer) {
 		actionCheck(player);
+		makeActivePlayer(player);
 		inPassOrHandOff = true;
-		if (activePlayer == null) {
-			activePlayer = player;
-		} else if (activePlayer.getActedThisTurn() == true && activePlayer != player) {
-			endOfAction(activePlayer);
-			activePlayer = player;
-		}
 		if (!player.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}
@@ -2271,6 +2264,7 @@ public class GameService {
 			return;
 		}
 		PlayerInGame p = getPlayerById(playerId);
+		makeActivePlayer(p);
 		List<Tile> tileRoute = new ArrayList<>();
 		for (int[] i : route) {
 			tileRoute.add(pitch[i[0]][i[1]]);
@@ -2699,12 +2693,7 @@ public class GameService {
 
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
 		PlayerInGame attacker = getPlayerById(player);
-		if (activePlayer == null) {
-			activePlayer = attacker;
-		} else if (activePlayer.getActedThisTurn() == true && attacker != activePlayer) {
-			endOfAction(activePlayer);
-			activePlayer = attacker;
-		}
+		makeActivePlayer(attacker);
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] details = blockAction(attacker, defender, followUp);
 		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
@@ -2977,6 +2966,15 @@ public class GameService {
 		}
 		interceptor = p;
 		taskQueue.pop().run();
+	}
+	
+	public void makeActivePlayer(PlayerInGame player) {
+		if (activePlayer == null) {
+			activePlayer = player;
+		} else if (activePlayer.getActedThisTurn() == true && activePlayer != player) {
+			endOfAction(activePlayer);
+			activePlayer = player;
+		}
 	}
 	
 }
