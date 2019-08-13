@@ -420,7 +420,15 @@ function decodeMessage(message){
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		}  else if(message.action == "NEWHALF"){
-			showNewHalf(message);
+			if(animating == true || turnover == true){
+				  var task = function(m){
+					  showNewHalf(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showNewHalf(message); 
+		      }
 		} else if(message.action == "ENDOFGAME"){
 			if(animating == true){
 				  var task = function(m){
@@ -911,13 +919,14 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			} else if(end == "Y" || activePlayer.status == "prone"){
 				setTimeout(function(){	   
 				    drawPlayer(activePlayer);
+				    if(activePlayer.team == team && end == "Y"){
+					      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+						         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
+						                         "location": activePlayer.location, "routeMACost": 0}));
+					      actionChoice = "move";
+					  }
 					   }, 300);
-		      if(activePlayer.team == team && end == "Y"){
-			      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
-				         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
-				                         "location": activePlayer.location, "routeMACost": 0}));
-			      actionChoice = "move";
-			  }
+		      
 		    } 
 			var timeout = 100;
 			if(type == "BALL"){ 
@@ -2310,10 +2319,12 @@ function showStandUp(message){
 	p.status = "standing";
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + " stood up </br>" + newRolls.innerHTML;
-	if(message.end == "Y" && yourTurn == true){
+	if(message.end == "Y"){
 		drawPlayer(p);
-		stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+		if(yourTurn == true){
+		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": message.player}));
+		}
 	}
 }
 
