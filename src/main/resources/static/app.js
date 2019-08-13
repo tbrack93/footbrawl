@@ -416,7 +416,15 @@ function decodeMessage(message){
 		} else if(message.action == "ACTIONS"){
 			showPossibleActions(message);
 		} else if(message.action == "MOVEMENT"){
-			showMovement(message);
+			if(animating == true){
+				  var task = function(m){
+					  showMovement(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 	
+		    	  showMovement(message);
+		      }
 		} else if(message.action == "ROUTE"){
 			showRoute(message);
 		}  else if(message.action == "NEWHALF"){
@@ -662,6 +670,8 @@ function decodeMessage(message){
 }
 
 function showMovement(message){
+	activePlayer = getPlayerById(message.player);
+	drawPlayerBorders();
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	message.squares.forEach(tile => {
 		drawMovementSquare(tile);
@@ -730,8 +740,8 @@ function actOnClick(click){
 				}
 				if(activePlayer != null && activePlayer.team == team && player.team != team && yourTurn == true){
 					showPlayerOnPitch(player);
-					if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
-						if(actionChoice != null && actionChoice == "block"){
+					if(actionChoice != null && actionChoice == "block"){
+						if(Math.abs(activePlayer.location[0] - player.location[0]) <=1 && Math.abs(activePlayer.location[1] - player.location[1]) <=1) { 
 		
 						stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				                 JSON.stringify({"type": "INFO", "action": "BLOCK", "player": activePlayer.id,
@@ -739,7 +749,7 @@ function actOnClick(click){
 						return;
 						} 
 						
-					} else if (actionChoice != null && actionChoice == "blitz"){
+					} if (actionChoice != null && actionChoice == "blitz"){
 						  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 				                 JSON.stringify({"type": "INFO", "action": "BLITZ", "player": activePlayer.id,
 					                 "location": activePlayer.location, "opponent": player.id, 
