@@ -111,6 +111,7 @@ public class GameService {
 		half = 0;
 		activePlayer = null;
 		ballToScatter = null;
+		inPassOrHandOff = false;
 		rerollOptions = new ArrayList<>();
 		inTurnover = false;
 		pitch = new Tile[26][15];
@@ -1687,7 +1688,7 @@ public class GameService {
 				scatterBall(player.getTile(), 1);
 				if (phase != "kick") {
 					Tile scatteredTo = ballLocationCheck();
-					if (!scatteredTo.containsPlayer() || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
+					if (!scatteredTo.containsPlayer() && inPassOrHandOff == true || scatteredTo.getPlayer().getTeamIG() != activeTeam) {
 						turnover(); // only a turnover if ball is not caught by player on active team before comes
 									// to
 									// rest

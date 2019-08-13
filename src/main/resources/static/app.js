@@ -1431,17 +1431,19 @@ function showInjuryRoll(message){
 	// var existing = document.getElementById("modalOptions").innerHTML;
 	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + " is " + message.rollOutcome + "." + "</p>";
 	var player = getPlayerById(message.player);
-    player.status = message.playerStatus;
-    player.hasBall = false;
-    if(message.location == null){
+	if(player != null){
+      player.status = message.playerStatus;
+      player.hasBall = false;
+      if(message.location == null){
     	removePlayer(player);
     	var squareH = canvas.height / 15;
     	context.clearRect(player.location[0] * squareH-5, (14 - player.location[1]) * squareH-5, squareH+10,squareH+10);
     	drawPlayerBorders();
-    } else{
+      } else{
         player.location = message.location;
     	drawPlayer(player);
-    }
+      }
+	}  
     document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
     console.log("injury tasks left: " + taskQueue.length);
 	if(taskQueue.length != 0){
