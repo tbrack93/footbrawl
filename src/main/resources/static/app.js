@@ -2335,6 +2335,7 @@ function showStandUp(message){
 	if(message.end == "Y"){
 		drawPlayer(p);
 		if(yourTurn == true){
+		  showPlayerDetails(p);
 		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": message.player}));
 		}
@@ -2432,7 +2433,11 @@ function showPlayerDetails(player){
 	if(player.team != team1.id){
 		team = 2;
 	}
-	document.getElementById("player"+team+"Name").innerHTML = player.name;
+	var status = "";
+	if(player.status != "standing"){
+	   	status = ": " + player.status;
+	}
+	document.getElementById("player"+team+"Name").innerHTML = player.name + status;
 	document.getElementById("player"+team+"Type").innerHTML = player.type;
 	document.getElementById("player"+team+"MA").innerHTML = player.ma;
 	document.getElementById("player"+team+"ST").innerHTML = player.st;
