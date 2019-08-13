@@ -1299,6 +1299,7 @@ public class GameService {
 		}
 		if (push.isEmpty()) {
 			pushOffPitch(attacker, defender);
+			
 		} else {
 			ArrayList<jsonTile> jPush = new ArrayList<>();
 			for (Tile t : push) {
@@ -1471,6 +1472,8 @@ public class GameService {
 		}
 		if (taskQueue.size() > 0) {
 			taskQueue.pop().run();
+		} else {
+			sendBlockSuccess(pusher, pushed);
 		}
 	}
 
@@ -1551,6 +1554,7 @@ public class GameService {
 		if (player.getStatus() != "prone") {
 			throw new IllegalArgumentException("Can't stand up a player that isn't prone");
 		}
+		makeActivePlayer(player);
 		if (player.getRemainingMA() < 3) {
 			System.out.println(player.getRemainingMA());
 			System.out.println(player.getName() + "tries to stand up.");
@@ -2689,12 +2693,7 @@ public class GameService {
 
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
 		PlayerInGame attacker = getPlayerById(player);
-		if (activePlayer == null) {
-			activePlayer = attacker;
-		} else if (activePlayer.getActedThisTurn() == true && attacker != activePlayer) {
-			endOfAction(activePlayer);
-			activePlayer = attacker;
-		}
+		makeActivePlayer(attacker);
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] details = blockAction(attacker, defender, followUp);
 		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);

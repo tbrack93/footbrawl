@@ -919,13 +919,14 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			} else if(end == "Y" || activePlayer.status == "prone"){
 				setTimeout(function(){	   
 				    drawPlayer(activePlayer);
+				    animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 				    if(activePlayer.team == team && end == "Y"){
 					      stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 						         JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": activePlayer.id,
 						                         "location": activePlayer.location, "routeMACost": 0}));
 					      actionChoice = "move";
 					  }
-					   }, 300);
+					   }, 100);
 		      
 		    } 
 			var timeout = 100;
@@ -934,7 +935,6 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 			}
 			 setTimeout(function(){	   
 				 animating = false;
-				 animation.getContext("2d").clearRect(0, 0, animation.height, animation.width);
 				   if(taskQueue.length != 0){
 				   (taskQueue.shift())();
 				   }
