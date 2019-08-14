@@ -1531,8 +1531,6 @@ function showNewTurn(message){
     	document.getElementById("modalImages").innerHTML = "";
     }
 	activePlayer = null;
-	document.getElementById("team1AutoSetup").style.display = "none";
-	document.getElementById("team2AutoSetup").style.display = "none";
 	document.getElementById("activeTeam").innerHTML = teamName;
 	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
@@ -2689,6 +2687,8 @@ function requestSetup(message){
 function requestKickOff(message){
 	phase = "kickOff";
 	document.getElementById("submitSetup").style.display = "none";
+	document.getElementById("team1AutoSetup").style.display = "none";
+	document.getElementById("team2AutoSetup").style.display = "none";
 	console.log("requesting kickoff");
 	var infoModal = document.getElementById("modal");
 	document.getElementById("activeTeam").innerHTML = "Kick Off";
