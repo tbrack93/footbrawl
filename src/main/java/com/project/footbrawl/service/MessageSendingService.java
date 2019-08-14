@@ -549,4 +549,20 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		controller.sendMessageToBothUsers(gameId, message);
 		
 	}
+
+	public void sendHasThrown(int gameId, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("HASTHROWN");
+		message.setUserToChoose(team);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
+
+	public void sendHasHandedOff(int gameId, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("HASHANDEDOFF");
+		message.setUserToChoose(team);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 }

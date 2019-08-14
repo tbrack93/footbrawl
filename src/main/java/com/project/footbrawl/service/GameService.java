@@ -1791,6 +1791,7 @@ public class GameService {
 		System.out.println(thrower.getName() + " tries to throw the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		thrower.setHasBall(false);
+		sender.sendHasThrown(game.getId(), activeTeam.getId());
 		if (roll == 1 || roll + modifier <= 1) { // on a natural 1 or 1 after modifiers
 			System.out.println(thrower.getName() + " fumbled the ball!");
 			rerollOptions = determineRerollOptions("THROW", thrower.getId(),
@@ -1891,6 +1892,7 @@ public class GameService {
 		actionCheck(player);
 		makeActivePlayer(player);
 		inPassOrHandOff = true;
+		sender.sendHasHandedOff(game.getId(), activeTeam.getId());
 		if (!player.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
 		}

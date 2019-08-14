@@ -86,6 +86,9 @@ function init() {
 	canvasTop = canvas.offsetTop;
 	rolls = document.getElementById("rolls");
 	rolls.style.paddingTop = "" + (canvas.clientHeight) +"px";
+	window.onbeforeunload = function() {
+		   return "Warning - reloading will break the game";
+	};
 	drawBoard();
 	timeSinceClick = new Date();
 // var player = {id: 1, team: 1, name:"John", location: [0, 1]};
@@ -663,6 +666,10 @@ function decodeMessage(message){
 	      }
 	  } else if(message.action == "HANDOFF"){
 		  showHandOff(message);
+	  } else if(message.action == "HASTHROWN"){
+		  showHasThrown(message);
+	  } else if(message.action == "HASHANDEDOFF"){
+		  showHasHandedOff(message);
 	  }
    } else if(message.type == "INVALID"){
 	   showInvalid(message);
@@ -1152,7 +1159,7 @@ function showPickUpResult(message){
 	 }
 	 if(message.end == "Y"){
 			if(taskQueue.length == 0 && message.rollOutcome != "failed"){
-                 drawPlayer(getPlayerById(message.player));
+                 drawPlayer(p);
                  drawBall();
 			}
 			if(message.rollOutcome == "success"){
@@ -1287,6 +1294,7 @@ function showFailedAction(message){
    // shadow.clearRect(0, 0, shadow.width, shadow.height);
     shadow.globalAlpha = 0.4;
     shadow.fillStyle = "black";
+    shadow.clearRect(0,0, modal.width, modal.height);
     shadow.fillRect(0,0, modal.width, modal.height);
     animationContext.clearRect(0,0, animation.width, animation.height);
     var player = getPlayerById(message.player); 
@@ -1395,9 +1403,13 @@ function showRerollUsed(message){
 	  if(message.userToChoose == team1.id){
 	  	rerolls = "team1Rerolls";
 		team1.remainingTeamRerolls--;
+		document.getElementById("team1Reroll").title = "Has Used Team Reroll this turn";
+		document.getElementById("team1Reroll").style.opacity = 0.3;
 	  } else{
 		rerolls = "team2Rerolls";
 		team2.remainingTeamRerolls--;
+		document.getElementById("team2Reroll").title = "Has Used Team Reroll this turn";
+		document.getElementById("team2Reroll").style.opacity = 0.3;
 	  }
 		document.getElementById(rerolls).innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
     }
@@ -1542,8 +1554,8 @@ function updateGameStatus(message){
 		document.getElementById("endTurn").style.display = "block";
 		document.getElementById("team1Turn").style.visibility = "visible";
 		document.getElementById("team2Turn").style.visibility = "visible";
-		document.getElementById("team1Blitzed").style.visibility = "visible";
-		document.getElementById("team2Blitzed").style.visibility = "visible";
+		document.getElementById("team1Actions").style.visibility = "visible";
+		document.getElementById("team2Actions").style.visibility = "visible";
 		if(document.getElementById("team2Reserves").style.display == "block"){
 			document.getElementById("reserves1").click();
 		}
@@ -1552,8 +1564,22 @@ function updateGameStatus(message){
 	    }
 		document.getElementById("modalTitle").innerHTML = "Game Begins!";
 	} 
-	document.getElementById("team1Blitzed").innerHTML = "Not Blitzed This Turn";
-	document.getElementById("team2Blitzed").innerHTML = "Not Blitzed This Turn";
+	document.getElementById("team1Reroll").style.opacity = 0.7;
+	document.getElementById("team1Reroll").title = "Not Used Team Reroll This Turn";
+	document.getElementById("team2Reroll").style.opacity = 0.7;
+	document.getElementById("team2Reroll").title = "Not Used Team Reroll This Turn";
+	document.getElementById("team1Blitz").style.opacity = 0.7;
+	document.getElementById("team1Blitz").title = "Not Blitzed This Turn";
+	document.getElementById("team2Blitz").style.opacity = 0.7;
+	document.getElementById("team2Blitz").title = "Not Blitzed This Turn";
+	document.getElementById("team1Throw").style.opacity = 0.7;
+	document.getElementById("team1Throw").title = "Not Thrown This Turn";
+	document.getElementById("team2Throw").style.opacity = 0.7;
+	document.getElementById("team2Throw").title = "Not Thrown This Turn";
+	document.getElementById("team1HandOff").style.opacity = 0.7;
+	document.getElementById("team1HandOff").title = "Not Handed Off This Turn";
+	document.getElementById("team2HandOff").style.opacity = 0.7;
+	document.getElementById("team2HandOff").title = "Not Handed Off This Turn";
 	animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 	ballLocation = message.ballLocation;
 	selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
@@ -1958,11 +1984,35 @@ function findPlayerInSquare(square){
 
 function showBlitzUsed(message){
 	if(message.userToChoose == team1.id){
-		document.getElementById("team1Blitzed").innerHTML = "Has Blitzed This Turn";
+		document.getElementById("team1Blitz").style.opacity = 0.3;
+		document.getElementById("team1Blitz").title = "Has BlitzedThisTurn";
 	} else {
-		document.getElementById("team2Blitzed").innerHTML = "Has Blitzed This Turn";
+		document.getElementById("team2Blitz").style.opacity = 0.3;
+		document.getElementById("team2Blitz").title = "Has BlitzedThisTurn";
 	}
 }
+
+function showHasThrown(message){
+	if(message.userToChoose == team1.id){
+		document.getElementById("team1Throw").style.opacity = 0.3;
+		document.getElementById("team1Throw").title = "Has Thrown This Turn";
+	} else {
+		document.getElementById("team2Throw").style.opacity = 0.3;
+		document.getElementById("team2Throw").title = "Has Thrown This Turn";
+	}
+}
+
+function showHasHandedOff(message){
+	if(message.userToChoose == team1.id){
+		document.getElementById("team1HandOff").style.opacity = 0.3;
+		document.getElementById("team1HandOff").title = "Has Handed Off This Turn";
+	} else {
+		document.getElementById("team2HandOff").style.opacity = 0.3;
+		document.getElementById("team2HandOff").title = "Has Handed Off This Turn";
+	}
+}
+
+
 
 function closeModal(){
 	modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
@@ -2332,6 +2382,7 @@ function showStandUp(message){
 	if(message.end == "Y"){
 		drawPlayer(p);
 		if(yourTurn == true){
+		  showPlayerDetails(p);
 		  stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
 	             JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": message.player}));
 		}
@@ -2429,7 +2480,11 @@ function showPlayerDetails(player){
 	if(player.team != team1.id){
 		team = 2;
 	}
-	document.getElementById("player"+team+"Name").innerHTML = player.name;
+	var status = "";
+	if(player.status != "standing"){
+	   	status = ": " + player.status;
+	}
+	document.getElementById("player"+team+"Name").innerHTML = player.name + status;
 	document.getElementById("player"+team+"Type").innerHTML = player.type;
 	document.getElementById("player"+team+"MA").innerHTML = player.ma;
 	document.getElementById("player"+team+"ST").innerHTML = player.st;

@@ -4,8 +4,11 @@
 <title>Game</title>
 <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}"
 	rel="stylesheet">
-<link href="https://fonts.googleapis.com/css?family=Cinzel&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css?family=Cormorant+Garamond&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Cinzel&display=swap"
+	rel="stylesheet">
+<link
+	href="https://fonts.googleapis.com/css?family=Cormorant+Garamond&display=swap"
+	rel="stylesheet">
 <link th:href="@{/main.css}" rel="stylesheet">
 <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
@@ -24,187 +27,240 @@
 
 	<div class="container-fluid">
 		<div class="row">
-		
+
 			<div class="col-sm-2"></div>
-		   <div class="col-sm-8 text-center" id="gameStatus">
-		   	<div class="col-sm-2"></div>
-		   	 <div class="col-sm-8">
-		   <h3 id="activeTeam"> Game Starting</h3>
-		   
-		   <h4 id="score">0 - 0</h4>
-		   <div id = "errors">Test</div>
-		   </div>
-		   	<div class="col-sm-2">
-		   	<br>
-		   	  <button id="endTurn" class="btn btn-warning" onclick="endTurn()" style="display:none"> End Turn</button>
-		   	  	  <button id="submitSetup" class="btn btn-warning" onclick="submitSetup()" style="display:none"> End Setup</button>
-		   	</div>
-		   </div>
-		   
-		</div>
-		</div>
+			<div class="col-sm-8 text-center" id="gameStatus">
+				<div class="col-sm-2"></div>
+				<div class="col-sm-8">
+					<h3 id="activeTeam">Game Starting</h3>
 
-		<div class="row">
-			<div class="col-sm-2 teamInfo text-center">
-				<h4 id="team1Name"></h4>
-				<p id="team1Turn" style="visibility:hidden">Current Turn:</p>
-				<p id="team1Rerolls">Team Rerolls:</p>
-				<p id="team1Blitzed" style="visibility:hidden">Not Blitzed This Turn</p>
-				<hr class="leftHr">
-				<a id = "reserves1" onclick="showReserves(1)" >
-				  <h4 id="reserves1Title">Reserves +</h4>
-				 </a>
-				<div id="team1Reserves" class="reserves" style="display:none">
-				
+					<h4 id="score">0 - 0</h4>
+					<div id="errors">Test</div>
 				</div>
-				<br>
-				<div id="team1Player" style="display:none"> 
-				<img onclick="closePlayer1()" src="/images/cancel.png" class="float-right" title="cancel" height="20" width="20" id="cancelPlayer1">
-				
-				  <div class="col-sm-12">
-				    <h4 id="player1Name" style="color:white"> Name</h4>
-				    <p id="player1Type">Type</p>
-				  </div>
-				  <div class="row playerRow">
-				  <div class="col-sm-4 text-center">
-				     <p>MA</p> 
-				     <p id="player1MA" style="color:white"></p>
-				     <p>ST</p>
-				      <p id="player1ST" style="color:white"></p>
-				   </div>
-				   <div class="col-sm-8">
-				    <img src="" height="90px" width="90px" id="player1Img" style="vertical-align: middle"/>
-				   </div>
-				    </div> 
-				    <div class="row playerRow">
-				    <div class="col-sm-4 text-center">
-				     <p>AG</p>
-				     <p id="player1AG" style="color:white"></p>
-				     <p>AV</p>
-				     <p id="player1AV" style="color:white"></p>
-				     </div>
-				     <div class="col-sm-8 text-left">
-				     Skills:
-				     <p id="player1Skills" style="color:white;font-family: 'Cormorant Garamond', serif;" ></p>
-				     </div>
-				  </div>
+				<div class="col-sm-2">
+					<br>
+					<button id="endTurn" class="btn btn-warning" onclick="endTurn()"
+						style="display: none">End Turn</button>
+					<button id="submitSetup" class="btn btn-warning"
+						onclick="submitSetup()" style="display: none">End Setup</button>
 				</div>
 			</div>
-			<div class="col-sm-8">
-				<br>
-				<div id="modal" class="announcementModal">
-					<div class="modalHeader">
-						<h4 id="modalTitle">Something something</h4>
+
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-sm-2 teamInfo text-center">
+			<h4 id="team1Name"></h4>
+			<p id="team1Turn" style="visibility: hidden">Current Turn:</p>
+			<p id="team1Rerolls">Team Rerolls:</p>
+			<div id="team1Actions" style="visibility: hidden">
+				<img src="/images/reroll.png" class="mx-auto"
+					title="Not Used Team Reroll This Turn" height="35" width="35" id="team1Reroll" style="opacity: 0.7">
+				<img src="/images/blitz.png" class="mx-auto"
+					title="Not Blitzed This Turn" height="35" width="35" id="team1Blitz" style="opacity: 0.7">
+				<img src="/images/throw.png" class="mx-auto"
+					title="Not Thrown This Turn" height="35" width="35" id="team1Throw" style="opacity: 0.7">
+				<img src="/images/hand_off.png"
+						class="mx-auto" title="Not Handed Off This Turn" height="35" width="35"
+						id="team1HandOff" style="opacity: 0.7"> 
+			</div>
+			<hr class="leftHr">
+			<a id="reserves1" onclick="showReserves(1)">
+				<h4 id="reserves1Title">Reserves +</h4>
+			</a>
+			<div id="team1Reserves" class="reserves" style="display: none">
+
+			</div>
+			<br>
+			<div id="team1Player" style="display: none">
+				<img onclick="closePlayer1()" src="/images/cancel.png"
+					class="float-right" title="cancel" height="20" width="20"
+					id="cancelPlayer1">
+
+				<div class="col-sm-12">
+					<h4 id="player1Name" style="color: white">Name</h4>
+					<p id="player1Type">Type</p>
+				</div>
+				<div class="row playerRow">
+					<div class="col-sm-4 text-center">
+						<p>MA</p>
+						<p id="player1MA" style="color: white"></p>
+						<p>ST</p>
+						<p id="player1ST" style="color: white"></p>
 					</div>
+					<div class="col-sm-8">
+						<img src="" height="90px" width="90px" id="player1Img"
+							style="vertical-align: middle" />
+					</div>
+				</div>
+				<div class="row playerRow">
+					<div class="col-sm-4 text-center">
+						<p>AG</p>
+						<p id="player1AG" style="color: white"></p>
+						<p>AV</p>
+						<p id="player1AV" style="color: white"></p>
+					</div>
+					<div class="col-sm-8 text-left">
+						Skills:
+						<p id="player1Skills"
+							style="color: white; font-family: 'Cormorant Garamond', serif;"></p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-8">
+			<br>
+			<div id="modal" class="announcementModal">
+				<div class="modalHeader">
+					<h4 id="modalTitle">Something something</h4>
+				</div>
+				<hr>
+				<div class="modalBody">
+					<div id="modalImages"></div>
+					<p id="modalText" class="text-center"></p>
+
 					<hr>
-					<div class="modalBody">
-					<div id = "modalImages"></div>
-						<p id="modalText" class = "text-center"></p>
-						
-						<hr>
-						<div id="modalOptions"></div>
-						<div id="close">
-						
-						   <button id="closeModal" class="btn btn-warning" onclick="closeModal()" style="display:none">Close</button>
-						    <button id="newGame" class="btn btn-success" onclick="newGame()" style="display:none">Play Again</button>
-						</div>
-					</div>
-				</div>
-				<div id="actions" class="playerOptions text-center" style="display:none">
-				<img onclick="closeActions()" src="/images/cancel.png" class="float-right" title="cancel" height="20" width="20" id="cancel" style="margin-bottom:-20px; margin-right:-100px">
-				
-			   <div id="actionsMain">
-			     <div id="actionsTitle">Actions</div> 
-			     <img onclick="requestStandUp()" src="/images/stand_up.png" class="mx-auto actionImg" title="Stand Up" height="25" width="25" id="standUp" style="display:none">
-			     <img onclick="requestMovement()" src="/images/move.png" class="mx-auto actionImg" title="Move" height="25" width="25" id="move" style="display:none">
-			     <img onclick="startBlock()" src="/images/block.png" class="mx-auto actionImg" title="Block" height="30" width="30" id="block" style="display:none">
-			     <img onclick="startBlitz()" src="/images/blitz.png" class="mx-auto actionImg" title="Blitz" height="25" width="25" id="blitz" style="display:none">
-			     <img onclick="startThrow()" src="/images/throw.png" class="mx-auto actionImg" title="Throw" height="25" width="25" id="throw" style="display:none">
-			     <img onclick="startHandOff()" src="/images/hand_off.png" class="mx-auto actionImg" title="Hand Off" height="25" width="25" id="handOff" style="display:none">
-			     <img onclick="placePlayer()" src="/images/place.png" class="mx-auto actionImg" title="Place" height="25" width="25" id="place" style="display:none">
-			     <img onclick="moveToReserves()" src="/images/remove.png" class="mx-auto actionImg" title="Remove" height="25" width="25" id="remove" style="display:none">  
-			     
-			   </div>
-				</div>
-				<canvas id="backgroundCanvas" width="3500">
-    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
-                </canvas>
-				<canvas id="squaresCanvas" width="3500">
-    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
-                </canvas>
-				<canvas id="canvas" style="border: 1px solid lightgrey;"
-					width="3500">
-    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
-               </canvas>
-				<canvas id="animationCanvas" style="border: 1px solid lightgrey;"
-					width="3500">
-    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
-               </canvas>
-				<canvas id="selectionCanvas" style="border: 1px solid lightgrey;"
-					width="3500">
-    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
-               </canvas>
-				<canvas id="modalCanvas" style="border: 1px solid lightgrey;"
-					width="3500">
-    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
-               </canvas>
+					<div id="modalOptions"></div>
+					<div id="close">
 
-				<div id=rolls>
-					<div class="col-sm-3">
-						<p>Latest Rolls & Results:</p>
-					</div>
-					<div class="col-sm-9">
-						<p id=newRolls></p>
+						<button id="closeModal" class="btn btn-warning"
+							onclick="closeModal()" style="display: none">Close</button>
+						<button id="newGame" class="btn btn-success" onclick="newGame()"
+							style="display: none">Play Again</button>
 					</div>
 				</div>
 			</div>
-			<div class="col-sm-2 teamInfo text-center" id="team2Info">
-				<h4 id="team2Name"></h4>
+			<div id="actions" class="playerOptions text-center"
+				style="display: none">
+				<img onclick="closeActions()" src="/images/cancel.png"
+					class="float-right" title="cancel" height="20" width="20"
+					id="cancel" style="margin-bottom: -20px; margin-right: -100px">
 
-				<p id="team2Turn" style="visibility:hidden">Current Turn:</p>
-				<p id="team2Rerolls">Team Rerolls:</p>
-				<p id="team2Blitzed" style="visibility:hidden">Not Blitzed This Turn</p>
-				<hr class="rightHr">
-				<a id = "reserves2" onclick="showReserves(2)" >
-				  <h4 id="reserves2Title">Reserves +</h4>
-				 </a>
-				<div id="team2Reserves" class="reserves" style="display:none">
-				
+				<div id="actionsMain">
+					<div id="actionsTitle">Actions</div>
+					<img onclick="requestStandUp()" src="/images/stand_up.png"
+						class="mx-auto actionImg" title="Stand Up" height="25" width="25"
+						id="standUp" style="display: none"> 
+						<img
+						onclick="requestMovement()" src="/images/move.png"
+						class="mx-auto actionImg" title="Move" height="25" width="25"
+						id="move" style="display: none"> 
+						<img onclick="startBlock()"
+						src="/images/block.png" class="mx-auto actionImg" title="Block"
+						height="30" width="30" id="block" style="display: none"> <img
+						onclick="startBlitz()" src="/images/blitz.png"
+						class="mx-auto actionImg" title="Blitz" height="25" width="25"
+						id="blitz" style="display: none"> 
+						<img
+						onclick="startThrow()" src="/images/throw.png"
+						class="mx-auto actionImg" title="Throw" height="25" width="25"
+						id="throw" style="display: none"> 
+						<img
+						onclick="startHandOff()" src="/images/hand_off.png"
+						class="mx-auto actionImg" title="Hand Off" height="25" width="25"
+						id="handOff" style="display: none"> <img
+						onclick="placePlayer()" src="/images/place.png"
+						class="mx-auto actionImg" title="Place" height="25" width="25"
+						id="place" style="display: none"> <img
+						onclick="moveToReserves()" src="/images/remove.png"
+						class="mx-auto actionImg" title="Remove" height="25" width="25"
+						id="remove" style="display: none">
+
 				</div>
-				<br>
-				<div id="team2Player" style="display:none"> 
-				<img onclick="closePlayer2()" src="/images/cancel.png" title="cancel" height="20" width="20" id="cancelPlayer2">
-				
-				  <div class="col-sm-12">
-				    <h4 id="player2Name" style="color:white"> Name</h4>
-				    <p id="player2Type">Type</p>
-				  </div>
-				  <div class="row playerRow">
-				  <div class="col-sm-8">
-				    <img src="" height="90px" width="90px" id="player2Img" style="vertical-align: middle"/>
-				   </div>
-				  <div class="col-sm-4 text-center">
-				     <p>MA</p> 
-				     <p id="player2MA" style="color:white"></p>
-				     <p>ST</p>
-				      <p id="player2ST" style="color:white"></p>
-				   </div>
-				    </div> 
-				    <div class="row playerRow">
-				    <div class="col-sm-8 text-right">
-				     Skills:
-				     <p id="player2Skills" style="color:white; font-family: 'Cormorant Garamond', serif;" ></p>
-				     </div>
-				    <div class="col-sm-4 text-center">
-				     <p>AG</p>
-				     <p id="player2AG" style="color:white"></p>
-				     <p>AV</p>
-				     <p id="player2AV" style="color:white"></p>
-				     </div>
-				     
-				  </div>
+			</div>
+			<canvas id="backgroundCanvas" width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+                </canvas>
+			<canvas id="squaresCanvas" width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+                </canvas>
+			<canvas id="canvas" style="border: 1px solid lightgrey;" width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+               </canvas>
+			<canvas id="animationCanvas" style="border: 1px solid lightgrey;"
+				width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+               </canvas>
+			<canvas id="selectionCanvas" style="border: 1px solid lightgrey;"
+				width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+               </canvas>
+			<canvas id="modalCanvas" style="border: 1px solid lightgrey;"
+				width="3500">
+    Your browser does not support the HTML5 canvas tag. Try with Firefox or Chrome.
+               </canvas>
+
+			<div id=rolls>
+				<div class="col-sm-3">
+					<p>Latest Rolls & Results:</p>
+				</div>
+				<div class="col-sm-9">
+					<p id=newRolls></p>
 				</div>
 			</div>
 		</div>
+		<div class="col-sm-2 teamInfo text-center" id="team2Info">
+			<h4 id="team2Name"></h4>
+
+			<p id="team2Turn" style="visibility: hidden">Current Turn:</p>
+			<p id="team2Rerolls">Team Rerolls:</p>
+			<div id="team2Actions" style="visibility: hidden">
+			<img src="/images/hand_off.png"
+						class="mx-auto" title="Not Handed Off This Turn" height="35" width="35"
+						id="team2HandOff" style="opacity: 0.7"> 
+						<img src="/images/throw.png" class="mx-auto"
+					title="Not Thrown This Turn" height="35" width="35" id="team2Throw" style="opacity: 0.7">
+					<img src="/images/blitz.png" class="mx-auto"
+					title="Not Blitzed This Turn" height="35" width="35" id="team2Blitz" style="opacity: 0.7">
+				<img src="/images/reroll.png" class="mx-auto"
+					title="Not Used Team Reroll This Turn" height="35" width="35" id="team2Reroll" style="opacity: 0.7">
+				
+			</div>
+			<hr class="rightHr">
+			<a id="reserves2" onclick="showReserves(2)">
+				<h4 id="reserves2Title">Reserves +</h4>
+			</a>
+			<div id="team2Reserves" class="reserves" style="display: none">
+
+			</div>
+			<br>
+			<div id="team2Player" style="display: none">
+				<img onclick="closePlayer2()" src="/images/cancel.png"
+					title="cancel" height="20" width="20" id="cancelPlayer2">
+
+				<div class="col-sm-12">
+					<h4 id="player2Name" style="color: white">Name</h4>
+					<p id="player2Type">Type</p>
+				</div>
+				<div class="row playerRow">
+					<div class="col-sm-8">
+						<img src="" height="90px" width="90px" id="player2Img"
+							style="vertical-align: middle" />
+					</div>
+					<div class="col-sm-4 text-center">
+						<p>MA</p>
+						<p id="player2MA" style="color: white"></p>
+						<p>ST</p>
+						<p id="player2ST" style="color: white"></p>
+					</div>
+				</div>
+				<div class="row playerRow">
+					<div class="col-sm-8 text-right">
+						Skills:
+						<p id="player2Skills"
+							style="color: white; font-family: 'Cormorant Garamond', serif;"></p>
+					</div>
+					<div class="col-sm-4 text-center">
+						<p>AG</p>
+						<p id="player2AG" style="color: white"></p>
+						<p>AV</p>
+						<p id="player2AV" style="color: white"></p>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
