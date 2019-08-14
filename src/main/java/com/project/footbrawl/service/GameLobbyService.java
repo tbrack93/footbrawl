@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.entity.Game;
@@ -27,6 +26,8 @@ public class GameLobbyService {
 	private GameService gs2;
 	
 	private GameService gs3;
+	
+	private Game defaultGame;
 		
 	private Map<Integer, GameService> activeGames; // game id and gameservice
 	
@@ -43,7 +44,6 @@ public class GameLobbyService {
 		Skill catching = new Skill("Catch", "That ball is mine", "catch");
 		Skill pass = new Skill("Pass", "fly my pretty", "throw");
 		Skill sureHands = new Skill("Sure Hands", "reliable mitts", "ball");
-		List<Skill> skills = new ArrayList<>();
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
@@ -302,6 +302,7 @@ public class GameLobbyService {
 		Game g = new Game();
 		g.setTeam1(team1);
 		g.setTeam2(team2);
+		defaultGame = g;
 	//	g.setTeam1Score(1);
 	//	g.setTeam2Score(0);
 		gs.setGame(g);
@@ -349,6 +350,7 @@ public class GameLobbyService {
 		activeGames.put(gs.getGameId(), gs);
 //		activeGames.put(gs2.getGameId(), gs2);
 //		activeGames.put(gs3.getGameId(), gs3);
+		createNewGameAndService();
 	}
 	
 	public GameService getGameService(int id) {
@@ -365,6 +367,15 @@ public class GameLobbyService {
 	
 	public List<GameService> getActiveGames() {
 		return new ArrayList<GameService>(activeGames.values());
+	}
+	
+	public void createNewGameAndService() {
+		GameService gs = new GameService();
+		beanFactory.autowireBean(gs);
+		Game g = new Game();
+		g.duplicateGame(defaultGame);
+		gs.setGame(g);
+		activeGames.put(g.getId(), gs);
 	}
 	
 //	public static void main(String[] args) {
