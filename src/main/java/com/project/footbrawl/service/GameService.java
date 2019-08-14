@@ -2100,6 +2100,7 @@ public class GameService {
 
 	public void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
+		System.out.println(player.getLocation());
 		List<PlayerInGame> opponents;
 		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch())
 				: new ArrayList<>(team1.getPlayersOnPitch());
@@ -2977,6 +2978,97 @@ public class GameService {
 			endOfAction(activePlayer);
 			activePlayer = player;
 		}
+	}
+	
+	public void autoSetupTeam(String type, int team) {
+		if(team != activeTeam.getId()) {
+			throw new IllegalArgumentException("Not you to choose");
+		}
+		if(activeTeam.getId() == team1.getId()) {
+			System.out.println("in autosetup");
+			for(PlayerInGame p : team1.getPlayersOnPitch()) {
+				if(p.getTile() !=null) {
+					p.getTile().removePlayer();
+				}
+			}
+			if(type.contains("offense")) {
+				pitch[11][4].addPlayer(getPlayerById(1));
+				pitch[11][1].addPlayer(getPlayerById(4));
+				pitch[12][5].addPlayer(getPlayerById(11));
+				pitch[9][11].addPlayer(getPlayerById(5));
+				pitch[12][7].addPlayer(getPlayerById(9));
+				pitch[12][8].addPlayer(getPlayerById(8));
+				pitch[11][10].addPlayer(getPlayerById(7));
+				pitch[12][9].addPlayer(getPlayerById(14));
+				pitch[12][6].addPlayer(getPlayerById(13));
+				pitch[11][13].addPlayer(getPlayerById(10));
+				pitch[9][3].addPlayer(getPlayerById(12));	
+			} else if(type.contains("defense")) {
+				pitch[7][7].addPlayer(getPlayerById(7));
+				pitch[12][6].addPlayer(getPlayerById(13));
+				pitch[12][7].addPlayer(getPlayerById(9));
+				pitch[11][9].addPlayer(getPlayerById(5));
+				pitch[12][8].addPlayer(getPlayerById(8));
+				pitch[12][5].addPlayer(getPlayerById(11));
+				pitch[11][4].addPlayer(getPlayerById(12));
+				pitch[12][12].addPlayer(getPlayerById(14));
+				pitch[12][1].addPlayer(getPlayerById(4));
+				pitch[12][2].addPlayer(getPlayerById(1));
+				pitch[12][13].addPlayer(getPlayerById(10));
+			}
+			List<PlayerInGame> copy = new ArrayList<>(team1.getReserves());
+			for(PlayerInGame p : copy) {
+				team1.addPlayerOnPitch(p);
+			}
+			for(PlayerInGame p : team1.getDugout()) {
+				p.getTile().removePlayer();
+			}
+			for(PlayerInGame p : team1.getInjured()) {
+				p.getTile().removePlayer();
+			}
+		} else {
+			for(PlayerInGame p : team2.getPlayersOnPitch()) {
+				if(p.getTile() !=null) {
+					p.getTile().removePlayer();
+				}
+			}
+			if(type.contains("offense")) {
+				pitch[14][4].addPlayer(getPlayerById(15));
+				pitch[14][2].addPlayer(getPlayerById(22));
+				pitch[23][9].addPlayer(getPlayerById(3));
+				pitch[14][13].addPlayer(getPlayerById(17));
+				pitch[13][7].addPlayer(getPlayerById(20));
+				pitch[14][12].addPlayer(getPlayerById(2));
+				pitch[14][1].addPlayer(getPlayerById(21));
+				pitch[13][9].addPlayer(getPlayerById(18));
+				pitch[13][5].addPlayer(getPlayerById(19));
+				pitch[23][5].addPlayer(getPlayerById(16));
+				pitch[14][10].addPlayer(getPlayerById(6));
+			} else if(type.contains("defense")) {
+				pitch[18][5].addPlayer(getPlayerById(22));
+				pitch[13][10].addPlayer(getPlayerById(6));
+				pitch[13][7].addPlayer(getPlayerById(20));
+				pitch[18][9].addPlayer(getPlayerById(3));
+				pitch[13][8].addPlayer(getPlayerById(2));
+				pitch[13][12].addPlayer(getPlayerById(18));
+				pitch[13][2].addPlayer(getPlayerById(19));
+				pitch[13][4].addPlayer(getPlayerById(15));
+				pitch[14][1].addPlayer(getPlayerById(16));
+				pitch[14][13].addPlayer(getPlayerById(17));
+				pitch[13][6].addPlayer(getPlayerById(21));
+			}
+			List<PlayerInGame> copy = new ArrayList<>(team2.getReserves());
+			for(PlayerInGame p : copy) {
+				team2.addPlayerOnPitch(p);
+			}
+			for(PlayerInGame p : team2.getDugout()) {
+				p.getTile().removePlayer();
+			}
+			for(PlayerInGame p : team2.getInjured()) {
+				p.getTile().removePlayer();
+			}
+		}
+		sender.sendSetupUpdate(game.getId(), activeTeam, activeTeam == team1 ? 1 : 2);
 	}
 	
 }
