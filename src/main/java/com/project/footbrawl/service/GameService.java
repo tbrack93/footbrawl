@@ -945,8 +945,8 @@ public class GameService {
 		} else {
 			routeMACost = jRoute.size() - 1 + (jRoute.get(0).getStandUpRoll() != null ? 3 : 0);
 		}
-		int[][] attLocations = getJsonFriendlyAssists(attacker, opponent);
-		int[][] defLocations = getJsonFriendlyAssists(opponent, attacker);
+		int[][] attLocations = getJsonFriendlyAssists(attacker, route.get(route.size()-1), opponent, opponent.getTile());
+		int[][] defLocations = getJsonFriendlyAssists(opponent, opponent.getTile(), attacker, route.get(route.size() -1));
 		sender.sendBlitzDetails(game.getId(), attacker.getId(), opponent.getId(),
 				route.get(route.size() - 1).getLocation(), opponent.getLocation(), attLocations, defLocations, jRoute,
 				routeMACost, block, attacker.getTeam());
@@ -987,7 +987,7 @@ public class GameService {
 		if (defender.getTeam() == attacker.getTeam()) {
 			throw new IllegalArgumentException("Can't foul player on same team");
 		}
-		int[] assists = calculateAssists(attacker, defender);
+		int[] assists = calculateAssists(attacker, attacker.getTile(), defender);
 		int modifier = assists[0] - assists[1];
 		attacker.getTeamIG().setFouled(true);
 		movePlayerRouteAction(attacker, route);
@@ -1046,7 +1046,7 @@ public class GameService {
 			throw new IllegalArgumentException("Can only foul a player on the ground");
 		}
 		System.out.println();
-		int[] assists = calculateAssists(attacker, defender);
+		int[] assists = calculateAssists(attacker, attacker.getTile(), defender);
 		int modifier = assists[0] - assists[1];
 		if (modifier == 0) {
 			System.out.println("No armour roll modifier");
@@ -1251,7 +1251,7 @@ public class GameService {
 		if (defender.getStatus() != "standing") {
 			throw new IllegalArgumentException("Cannot block a player on the ground");
 		}
-		int[] assists = calculateAssists(attacker, defender);
+		int[] assists = calculateAssists(attacker, from, defender);
 		int attStr = attacker.getST() + assists[0];
 		int defStr = defender.getST() + assists[1];
 		int strongerTeam = attStr >= defStr ? attacker.getTeam() : defender.getTeam();
@@ -2130,13 +2130,21 @@ public class GameService {
 		}
 	}
 
-	public int[] calculateAssists(PlayerInGame attacker, PlayerInGame defender) {
-		List<PlayerInGame> attSupport = getAssists(attacker, defender);
-		List<PlayerInGame> defSupport = getAssists(defender, attacker);
+	public int[] calculateAssists(PlayerInGame attacker, Tile attackerLocation, PlayerInGame defender) {
+		List<PlayerInGame> attSupport = getAssists(attacker, attackerLocation, defender, defender.getTile());
+		List<PlayerInGame> defSupport = getAssists(defender, defender.getTile(), attacker, attackerLocation);
 		return new int[] { attSupport.size(), defSupport.size() };
 	}
 
-	public List<PlayerInGame> getAssists(PlayerInGame p1, PlayerInGame p2) {
+	public List<PlayerInGame> getAssists(PlayerInGame p1, Tile p1Location, PlayerInGame p2, Tile p2Location) {
+		Tile p1Origin = p1.getTile();
+		Tile p2Origin = p2.getTile();
+		if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
+			p1Location.addPlayer(p1);
+		}
+		if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
+			p2Location.addPlayer(p2);
+		}
 		p1.setHasTackleZones(false);
 		p2.setHasTackleZones(false);
 		addTackleZones(p2);
@@ -2161,6 +2169,14 @@ public class GameService {
 		}
 		p1.setHasTackleZones(true);
 		p2.setHasTackleZones(true);
+		if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
+			p1Location.removePlayer();
+			p1Origin.addPlayer(p1);
+		}
+		if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
+			p2Location.removePlayer();
+			p2Origin.addPlayer(p2);
+		}
 		return results;
 	}
 
@@ -2678,14 +2694,14 @@ public class GameService {
 		}
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] block = calculateBlock(getPlayerById(player), pitch[location[0]][location[1]], getPlayerById(opponent));
-		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
-		int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
+		int[][] attLocations = getJsonFriendlyAssists(attacker, attacker.getTile(), defender, defender.getTile());
+		int[][] defLocations = getJsonFriendlyAssists(defender, defender.getTile(), attacker, attacker.getTile());
 		sender.sendBlockInfo(game.getId(), player, opponent, location, defender.getLocation(), block, attLocations,
 				defLocations, team);
 	}
 
-	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, PlayerInGame defender) {
-		List<PlayerInGame> support = getAssists(attacker, defender);
+	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, Tile attackerLocation, PlayerInGame defender, Tile defenderLocation) {
+		List<PlayerInGame> support = getAssists(attacker, attackerLocation, defender, defenderLocation);
 		// just send assist locations to save amount of data sent
 		int[][] assistLocations = new int[support.size()][2];
 		for (int i = 0; i < support.size(); i++) {
@@ -2699,8 +2715,8 @@ public class GameService {
 		makeActivePlayer(attacker);
 		PlayerInGame defender = getPlayerById(opponent);
 		int[] details = blockAction(attacker, defender, followUp);
-		int[][] attLocations = getJsonFriendlyAssists(attacker, defender);
-		int[][] defLocations = getJsonFriendlyAssists(defender, attacker);
+		int[][] attLocations = getJsonFriendlyAssists(attacker, attacker.getTile(), defender, defender.getTile());
+		int[][] defLocations = getJsonFriendlyAssists(defender, attacker.getTile(), attacker, attacker.getTile());
 		runnableLocation = new int[][] { location, defender.getLocation() };
 		if (rerollOptions.size() > 0) {
 			Runnable task = new Runnable() {
