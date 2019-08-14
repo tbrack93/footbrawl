@@ -28,9 +28,12 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			<div class="col-sm-2"></div>
+			<div class="col-sm-2">
+			</div>
 			<div class="col-sm-8 text-center" id="gameStatus">
-				<div class="col-sm-2"></div>
+				<div class="col-sm-2">
+				 
+				</div>
 				<div class="col-sm-8">
 					<h3 id="activeTeam">Game Starting</h3>
 
@@ -45,7 +48,8 @@
 						onclick="submitSetup()" style="display: none">End Setup</button>
 				</div>
 			</div>
-
+            <div class="col-sm-2">
+               </div>
 		</div>
 	</div>
 
@@ -56,14 +60,16 @@
 			<p id="team1Rerolls">Team Rerolls:</p>
 			<div id="team1Actions" style="visibility: hidden">
 				<img src="/images/reroll.png" class="mx-auto"
-					title="Not Used Team Reroll This Turn" height="35" width="35" id="team1Reroll" style="opacity: 0.7">
-				<img src="/images/blitz.png" class="mx-auto"
-					title="Not Blitzed This Turn" height="35" width="35" id="team1Blitz" style="opacity: 0.7">
-				<img src="/images/throw.png" class="mx-auto"
-					title="Not Thrown This Turn" height="35" width="35" id="team1Throw" style="opacity: 0.7">
-				<img src="/images/hand_off.png"
-						class="mx-auto" title="Not Handed Off This Turn" height="35" width="35"
-						id="team1HandOff" style="opacity: 0.7"> 
+					title="Not Used Team Reroll This Turn" height="35" width="35"
+					id="team1Reroll" style="opacity: 0.7"> <img
+					src="/images/blitz.png" class="mx-auto"
+					title="Not Blitzed This Turn" height="35" width="35"
+					id="team1Blitz" style="opacity: 0.7"> <img
+					src="/images/throw.png" class="mx-auto"
+					title="Not Thrown This Turn" height="35" width="35" id="team1Throw"
+					style="opacity: 0.7"> <img src="/images/hand_off.png"
+					class="mx-auto" title="Not Handed Off This Turn" height="35"
+					width="35" id="team1HandOff" style="opacity: 0.7">
 			</div>
 			<hr class="leftHr">
 			<a id="reserves1" onclick="showReserves(1)">
@@ -71,6 +77,11 @@
 			</a>
 			<div id="team1Reserves" class="reserves" style="display: none">
 
+			</div>
+			<div id="team1AutoSetup" style="display:none">
+			   <h5>Auto Setup:</h5>
+			     <button onclick="submitAutoSetup('offense')" class="btn btn-danger">Offense</button>
+				  <button onclick="submitAutoSetup('defense')" class="btn btn-primary">Defense</button>
 			</div>
 			<br>
 			<div id="team1Player" style="display: none">
@@ -141,22 +152,18 @@
 					<div id="actionsTitle">Actions</div>
 					<img onclick="requestStandUp()" src="/images/stand_up.png"
 						class="mx-auto actionImg" title="Stand Up" height="25" width="25"
-						id="standUp" style="display: none"> 
-						<img
+						id="standUp" style="display: none"> <img
 						onclick="requestMovement()" src="/images/move.png"
 						class="mx-auto actionImg" title="Move" height="25" width="25"
-						id="move" style="display: none"> 
-						<img onclick="startBlock()"
+						id="move" style="display: none"> <img onclick="startBlock()"
 						src="/images/block.png" class="mx-auto actionImg" title="Block"
 						height="30" width="30" id="block" style="display: none"> <img
 						onclick="startBlitz()" src="/images/blitz.png"
 						class="mx-auto actionImg" title="Blitz" height="25" width="25"
-						id="blitz" style="display: none"> 
-						<img
+						id="blitz" style="display: none"> <img
 						onclick="startThrow()" src="/images/throw.png"
 						class="mx-auto actionImg" title="Throw" height="25" width="25"
-						id="throw" style="display: none"> 
-						<img
+						id="throw" style="display: none"> <img
 						onclick="startHandOff()" src="/images/hand_off.png"
 						class="mx-auto actionImg" title="Hand Off" height="25" width="25"
 						id="handOff" style="display: none"> <img
@@ -206,16 +213,18 @@
 			<p id="team2Turn" style="visibility: hidden">Current Turn:</p>
 			<p id="team2Rerolls">Team Rerolls:</p>
 			<div id="team2Actions" style="visibility: hidden">
-			<img src="/images/hand_off.png"
-						class="mx-auto" title="Not Handed Off This Turn" height="35" width="35"
-						id="team2HandOff" style="opacity: 0.7"> 
-						<img src="/images/throw.png" class="mx-auto"
-					title="Not Thrown This Turn" height="35" width="35" id="team2Throw" style="opacity: 0.7">
-					<img src="/images/blitz.png" class="mx-auto"
-					title="Not Blitzed This Turn" height="35" width="35" id="team2Blitz" style="opacity: 0.7">
-				<img src="/images/reroll.png" class="mx-auto"
-					title="Not Used Team Reroll This Turn" height="35" width="35" id="team2Reroll" style="opacity: 0.7">
-				
+				<img src="/images/hand_off.png" class="mx-auto"
+					title="Not Handed Off This Turn" height="35" width="35"
+					id="team2HandOff" style="opacity: 0.7"> <img
+					src="/images/throw.png" class="mx-auto"
+					title="Not Thrown This Turn" height="35" width="35" id="team2Throw"
+					style="opacity: 0.7"> <img src="/images/blitz.png"
+					class="mx-auto" title="Not Blitzed This Turn" height="35"
+					width="35" id="team2Blitz" style="opacity: 0.7"> <img
+					src="/images/reroll.png" class="mx-auto"
+					title="Not Used Team Reroll This Turn" height="35" width="35"
+					id="team2Reroll" style="opacity: 0.7">
+
 			</div>
 			<hr class="rightHr">
 			<a id="reserves2" onclick="showReserves(2)">
@@ -223,6 +232,11 @@
 			</a>
 			<div id="team2Reserves" class="reserves" style="display: none">
 
+			</div>
+			<div id="team2AutoSetup" style="display:none">
+			   <h5>Auto Setup:</h5>
+				  <button onclick="submitAutoSetup('offense')" class="btn btn-danger">Offense</button>
+				  <button onclick="submitAutoSetup('defense')" class="btn btn-primary">Defense</button>
 			</div>
 			<br>
 			<div id="team2Player" style="display: none">

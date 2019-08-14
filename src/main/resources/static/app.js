@@ -1531,6 +1531,8 @@ function showNewTurn(message){
     	document.getElementById("modalImages").innerHTML = "";
     }
 	activePlayer = null;
+	document.getElementById("team1AutoSetup").style.display = "none";
+	document.getElementById("team2AutoSetup").style.display = "none";
 	document.getElementById("activeTeam").innerHTML = teamName;
 	document.getElementById("team2Turn").innerHTML = "Current Turn: " + team2.turn;
 	document.getElementById("team1Turn").innerHTML = "Current Turn: " + team1.turn;
@@ -2650,8 +2652,10 @@ function requestSetup(message){
 		document.getElementById("activeTeam").innerHTML = "Your Setup";
 		if(team == 1){
 			document.getElementById("reserves1").click();
+			document.getElementById("team1AutoSetup").style.display = "block";
 		} else{
 			document.getElementById("reserves2").click();
+			document.getElementById("team2AutoSetup").style.display = "block";
 		}
 		document.getElementById("submitSetup").style.display = "block";
 	} else {
@@ -2665,6 +2669,8 @@ function requestSetup(message){
 		}
 		document.getElementById("modalOptions").innerHTML = "Opponent to setup their team<br><br>";
 		document.getElementById("submitSetup").style.display = "none";
+		document.getElementById("team1AutoSetup").style.display = "none";
+		document.getElementById("team2AutoSetup").style.display = "none";
 		if(team == 1){
 			document.getElementById("reserves2").click();
 		} else{
@@ -3008,4 +3014,10 @@ function cancelIntercept(){
 	closePlayer1();
 	closePlayer2();
 	document.getElementById("modalOptions").innerHTML = "Please select a player to attempt intercept.";
+}
+
+function submitAutoSetup(type){
+	console.log(type);
+	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
+            JSON.stringify({"type": "ACTION", "action": "AUTOSETUP", "description": type}));
 }

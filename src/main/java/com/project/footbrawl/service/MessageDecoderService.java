@@ -93,6 +93,8 @@ public class MessageDecoderService {
 				lobby.getGameService(gameId).resetGame();
 			} else if(action.equals("INTERCEPTCHOICE")) {
 				lobby.getGameService(gameId).actOnIntercept(team, message.getPlayer(), message.getLocation());
+			} else if(action.equals("AUTOSETUP")) {
+				lobby.getGameService(gameId).autoSetupTeam(message.getDescription(), team);
 			}
 		}
 
