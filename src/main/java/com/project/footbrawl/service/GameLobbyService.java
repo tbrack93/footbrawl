@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.project.footbrawl.entity.Game;
@@ -16,19 +18,25 @@ import com.project.footbrawl.entity.Team;
 @Service
 public class GameLobbyService {
 
+    
+    @Autowired 
+    private AutowireCapableBeanFactory beanFactory;
 	
-	@Autowired
 	private GameService gs;
 	
-	@Autowired
 	private GameService gs2;
 	
-	@Autowired
 	private GameService gs3;
 		
 	private Map<Integer, GameService> activeGames; // game id and gameservice
 	
-	public GameLobbyService(GameService gs, GameService gs2, GameService gs3) {
+	public GameLobbyService(AutowireCapableBeanFactory beanFactory) {
+		this.beanFactory = beanFactory;
+		GameService gs = new GameService();
+		beanFactory.autowireBean(gs);
+//		GameService gs2 = factory.getObject();
+//		GameService gs3 = factory.getObject();
+		System.out.println(gs);
 		Skill block = new Skill("Block", "blocking is fun", "block");
 		Skill dodge = new Skill("Dodge", "avoid your enemies", "dodge");
 		Skill sideStep = new Skill("Side Step", "Who do you think you're pushing?", "block");
@@ -36,7 +44,6 @@ public class GameLobbyService {
 		Skill pass = new Skill("Pass", "fly my pretty", "throw");
 		Skill sureHands = new Skill("Sure Hands", "reliable mitts", "ball");
 		List<Skill> skills = new ArrayList<>();
-		this.gs = gs;
 		activeGames = new HashMap<>();
 		Player p = new Player();
 		p.setName("Billy");
@@ -298,50 +305,50 @@ public class GameLobbyService {
 	//	g.setTeam1Score(1);
 	//	g.setTeam2Score(0);
 		gs.setGame(g);
-		Game g2 = new Game();
-		g2.setTeam1(team1);
-		g2.setTeam2(team2);
-		gs2.setGame(g2);
-		Game g3 = new Game();
-		g3.setTeam1(team1);
-		g3.setTeam2(team2);
-		gs3.setGame(g3);
-//		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
-//		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
-//		gs.pitch[5][2].addPlayer(team1Players.get(0));
-//		gs.pitch[4][6].addPlayer(team2Players.get(0));
-//		gs.pitch[5][5].addPlayer(team2Players.get(1));
-//		gs.pitch[4][4].addPlayer(team1Players.get(1));
-//		gs.pitch[4][5].addPlayer(team1Players.get(2));
-//		gs.pitch[0][0].addPlayer(team2Players.get(2));
-		//team1Players.get(2).setHasBall(true);
-		//team2Players.get(0).setHasBall(true);
-	 //   gs.pitch[4][3].addBall();
-	//	gs.setActiveTeam(gs.team2);
-		//gs.team1.setTurn(4);
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team1.addToReserves(new PlayerInGame(p));
-//		gs.team2.addToReserves(new PlayerInGame(p2));
-		//gs.team2.setTurn(3);
-	//	team1Players.get(0).setStatus("prone");
-		//team1Players.get(1).setStatus("stunned");
+//		Game g2 = new Game();
+//		g2.setTeam1(team1);
+//		g2.setTeam2(team2);
+//		gs2.setGame(g2);
+//		Game g3 = new Game();
+//		g3.setTeam1(team1);
+//		g3.setTeam2(team2);
+//		gs3.setGame(g3);
+////		List<PlayerInGame> team1Players = gs.team1.getPlayersOnPitch();
+////		List<PlayerInGame> team2Players = gs.team2.getPlayersOnPitch();
+////		gs.pitch[5][2].addPlayer(team1Players.get(0));
+////		gs.pitch[4][6].addPlayer(team2Players.get(0));
+////		gs.pitch[5][5].addPlayer(team2Players.get(1));
+////		gs.pitch[4][4].addPlayer(team1Players.get(1));
+////		gs.pitch[4][5].addPlayer(team1Players.get(2));
+////		gs.pitch[0][0].addPlayer(team2Players.get(2));
+//		//team1Players.get(2).setHasBall(true);
+//		//team2Players.get(0).setHasBall(true);
+//	 //   gs.pitch[4][3].addBall();
+//	//	gs.setActiveTeam(gs.team2);
+//		//gs.team1.setTurn(4);
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team1.addToReserves(new PlayerInGame(p));
+////		gs.team2.addToReserves(new PlayerInGame(p2));
+//		//gs.team2.setTurn(3);
+//	//	team1Players.get(0).setStatus("prone");
+//		//team1Players.get(1).setStatus("stunned");
 		activeGames.put(gs.getGameId(), gs);
-		activeGames.put(gs2.getGameId(), gs2);
-		activeGames.put(gs3.getGameId(), gs3);
+//		activeGames.put(gs2.getGameId(), gs2);
+//		activeGames.put(gs3.getGameId(), gs3);
 	}
 	
 	public GameService getGameService(int id) {

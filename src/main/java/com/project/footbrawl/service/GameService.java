@@ -14,6 +14,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import com.project.footbrawl.instance.jsonTile;
 
 // controls a game's logic and progress
 // future: contain DTO for database interactions
+
 @Service
 @Scope("prototype")
 public class GameService {
