@@ -22,12 +22,12 @@ public class GameController {
 	@Autowired
 	private ApplicationContext context;
 	
-	@GetMapping("/join")
+	@GetMapping(path = "/join")
 	public String joinGame() {
 		GameLobbyService lobby = (GameLobbyService) context.getBean(GameLobbyService.class);
 		int[] target = lobby.assignToGame();
 		System.out.println("in join");
-		return "forward:/game/gameplay/" + target[0] + "/" + target[1];
+		return "redirect:/game/gameplay/" + target[0] + "/" + target[1];
 	}
 	
 	@GetMapping("/test")
