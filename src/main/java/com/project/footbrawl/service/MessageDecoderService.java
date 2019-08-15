@@ -86,6 +86,9 @@ public class MessageDecoderService {
 			} else if (action.equals("KICKCHOICE")) {
 				lobby.getGameService(gameId).chooseKickOff(team, message.getDescription());
 			} else if (action.equals("JOINGAME")) {
+				System.out.println(lobby);
+				System.out.println(gameId);
+				System.out.println(team);
 				lobby.getGameService(gameId).joinGame(team);
 			} else if (action.equals("TOUCHBACKCHOICE")){
 				lobby.getGameService(gameId).actOnTouchBack(message.getPlayer(), team);

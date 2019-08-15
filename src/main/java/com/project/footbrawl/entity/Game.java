@@ -15,11 +15,12 @@ public class Game {
 	
 	public Game() {
 		idCounter++;
-		id = idCounter; // just for testing
+		id = idCounter; 
+		System.out.println("new game: " + id);
 	}
 
 	public Game(Team team1, Team team2) {
-		this.id = ++idCounter; // will be done by database
+		this.id = ++idCounter; 
 		this.team1 = team1;
 		this.team2 = team2;
 		team1Score = 0;

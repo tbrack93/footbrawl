@@ -57,6 +57,8 @@ public class GameService {
 	TeamInGame team1;
 	TeamInGame team2;
 	Tile[][] pitch;
+	private boolean team1Assigned;
+	private boolean team2Assigned;
 	private boolean team1Joined;
 	private boolean team2Joined;
 	private boolean waitingForPlayers;
@@ -99,7 +101,25 @@ public class GameService {
 //	}
 
 	public GameService() {
-		
+		team1Assigned = false;
+		team2Assigned = false;
+		waitingForPlayers = true;
+	}
+	
+	public int assignPlayer() {
+		if(team1Assigned == false) {
+			team1Assigned = true;
+			return 1;
+		} else if(team2Assigned == false) {
+			team2Assigned = true;
+			waitingForPlayers = false;
+			return 2;
+		}
+		return -1;
+	}
+	
+	public boolean isWaitingForPlayers() {
+		return waitingForPlayers;
 	}
 
 	public void setGame(Game game) {
