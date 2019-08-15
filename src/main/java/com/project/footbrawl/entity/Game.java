@@ -15,11 +15,12 @@ public class Game {
 	
 	public Game() {
 		idCounter++;
-		id = idCounter; // just for testing
+		id = idCounter; 
+		System.out.println("new game: " + id);
 	}
 
 	public Game(Team team1, Team team2) {
-		this.id = ++idCounter; // will be done by database
+		this.id = ++idCounter; 
 		this.team1 = team1;
 		this.team2 = team2;
 		team1Score = 0;
@@ -72,6 +73,13 @@ public class Game {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+	
+	public void duplicateGame(Game game) {
+		team1 = game.team1;
+		team2 = game.team2;
+		team1Score = game.team1Score;
+		team2Score = game.team2Score;
 	}
 
 }

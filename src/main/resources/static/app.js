@@ -975,6 +975,7 @@ function escCheck (e) {
     		resetMovement();
         }
     } else if(e.keyCode == "77"){
+    	dragEnd();
     	centreModal();
     	dragEnd();
     }

@@ -1,14 +1,34 @@
 package com.project.footbrawl.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.project.footbrawl.service.GameLobbyService;
 
 @Controller
 @RequestMapping("/game")
 public class GameController {
+	
+	@Autowired
+	private AutowireCapableBeanFactory beanFactory;
+	
+	@Autowired
+	private ApplicationContext context;
+	
+	@GetMapping("/join")
+	public String joinGame() {
+		GameLobbyService lobby = (GameLobbyService) context.getBean(GameLobbyService.class);
+		int[] target = lobby.assignToGame();
+		System.out.println("in join");
+		return "forward:/game/gameplay/" + target[0] + "/" + target[1];
+	}
 	
 	@GetMapping("/test")
 	public void testing() {
