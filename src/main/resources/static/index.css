@@ -34,7 +34,7 @@ body{
 #football{
 	position: absolute;
 	right: 5%;
-	bottom: 3%;
+	bottom: 1%;
 }
 
 #helmet{
@@ -87,6 +87,8 @@ h1{
 }
 
 #points{
+	margin-left: -30px;
+	margin-top: 5px;
 	font-size: 18px;
 }
 
