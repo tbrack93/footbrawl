@@ -327,7 +327,7 @@ public class GameLobbyService {
 		ArrayList<Integer> active = new ArrayList<>(activeGames.keySet());
 		for (Integer i : active) {
 			GameService gs = activeGames.get(i);
-			System.out.println("here " + gs.getGameId());
+
 			if (gs.isWaitingForPlayers() == true) {
 				game = gs.getGameId();
 				team = gs.assignPlayer();

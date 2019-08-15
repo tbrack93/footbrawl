@@ -3,30 +3,38 @@
 <head>
 <title>Game</title>
 <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-<link href="/main.css" rel="stylesheet">
+<link href="/gutcruncher.css" rel="stylesheet">
+
+<link href="/index.css" rel="stylesheet">
 <script src="/webjars/jquery/jquery.min.js"></script>
-<script src="/webjars/sockjs-client/sockjs.min.js"></script>
-<script src="/webjars/stomp-websocket/stomp.min.js"></script>
-<script src="/app.js"></script>
 </head>
 <body>
-	<noscript>
-		<h2 style="color: #ff0000">Seems your browser doesn't support
-			JavaScript! Websockets rely on JavaScript being enabled. Please
-			enable JavaScript and try again</h2>
-	</noscript>
+	
 	<br>
-	<br>
-	<div class="container-fluid">
+
+	<div >
 		<div class="row">
-			<div class="col-lg-1 col-sm-2"></div>
-			<div class="col-lg-10 col-sm-8">
-			<form action="/game/join" method="get">
-				<button type = "submit">ACTIVATE</button>
-			</form>
+			<div id="heading" class="col-sm-12">
+			  <div class="col-sm-5 text-right">
+				<h1 class="footbrawl" id="fantasy" style="font-family: 'gutcruncherregular'">Fantasy</h1>
+				</div>
+				<div class ="col-sm-2 text-center">
+				<img id="helmet" src="/images/helmet.png" height="160px">
+				</div>
+				<div class="col-sm-5 text-left">
+				<h1 class="footbrawl" id="foot" style="font-family: 'gutcruncherregular'">FootBrawl</h1>
+				</div>
+				
+
 			</div>
-			<div class="col-lg-1 col-sm-2"></div>
 		</div>
 	</div>
+	<div class="container">
+		<img id="football" src="/images/football.png" height="250px">
+		
+	</div>
+	<form action="/game/join" method="get">
+					<button type="submit">ACTIVATE</button>
+				</form>
 </body>
 </html>
