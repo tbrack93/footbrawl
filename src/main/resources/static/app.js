@@ -474,7 +474,15 @@ function decodeMessage(message){
 	    }else if(message.action == "REROLLCHOICE"){
 			showRerollUsed(message);
 		} else if(message.action == "BLOCKOVER"){
-			showBlockEnd(message);
+			if(animating == true){
+				  var task = function(m){
+					 showBlockEnd(message);
+		    	  };
+		    	  var t = animateWrapFunction(task, this, [message]);
+		    	  taskQueue.push(t);
+		      } else{ 
+		    	  showBlockEnd(message);
+		      }
 		}else if(message.action == "SKILLUSED"){
 			console.log("skill used");
 			if(animating == true){
@@ -943,12 +951,12 @@ function animateMovement(route, counter, img, startingX, startingY, targetX, tar
 						                         "location": activePlayer.location, "routeMACost": 0}));
 					      actionChoice = "move";
 					  }
-					   }, 100);
+					   }, 250);
 		      
 		    } 
-			var timeout = 100;
+			var timeout = 200;
 			if(type == "BALL"){ 
-				timeout = 200;
+				timeout = 300;
 			}
 			 setTimeout(function(){	   
 				 animating = false;
@@ -975,9 +983,9 @@ function escCheck (e) {
     		resetMovement();
         }
     } else if(e.keyCode == "77"){
-    	dragEnd();
     	centreModal();
     	dragEnd();
+    	reset();
     }
     console.log(e.keyCode);
 }
@@ -1015,7 +1023,7 @@ function getPlayerById(id){
 
 function showRoll(message){
 	if(message.rollOutcome == "failed"){
-		if(!(message.rollType == "INTERCEPT" && (message.rerollOptions == null || messsage.rerollOptions.length > 0))){
+		if(animating = true || !(message.rollType == "INTERCEPT" && (message.rerollOptions == null || messsage.rerollOptions.length > 0))){
 		  var task = function(m){
 		    showFailedAction(m);
   	      };
@@ -1025,6 +1033,7 @@ function showRoll(message){
 	}
 	squares.getContext("2d").clearRect(0, 0, squares.width, squares.height);
 	var newRolls = document.getElementById("newRolls");
+	document.getElementById("modalImages").innerHTML = "";
 	newRolls.innerHTML =  message.playerName + ": " +message.rollType + " Needed: " + message.rollNeeded + " Rolled: " +
 	                  +  message.rolled + " Result: " + message.rollOutcome + "</br>" + newRolls.innerHTML;
 	if(message.rollType == "DODGE"){
@@ -1310,8 +1319,12 @@ function showFailedAction(message){
 	var display = document.getElementById("modal");
 	display.style.display = "block";
 	squareH = canvas.clientHeight/15;
+	display.style.transform = "";
 	display.style.left = ""+ (column +3) * squareH-5 + "px";
 	display.style.top = "" + (row) * squareH-5 + "px";
+	if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
+		centreModal();
+	}
 	var effect = " fell down.";
 	if(message.rollType == "PICKUPBALL" || message.rollType == "CATCH"){
 		effect = " dropped the ball";
@@ -1697,6 +1710,10 @@ function showBlock(message, blitz){
  	 display.style.display = "block";
  	 display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
  	 display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+ 	if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
+		centreModal();
+	}
+ 	 
 }
 
 function showBlockAssists(message){
@@ -1756,6 +1773,7 @@ function showBlockResult(message){
 	newRolls.innerHTML =  message.playerName + " blocked " + message.opponentName + ". Rolled: " + rollText + ".</br>" + newRolls.innerHTML;
 	if(message.rerollOptions == null || message.rerollOptions.length == 0){
 		  document.getElementById("modalOptions").innerHTML = "<p> No possible rerolls </p>";
+		  
 	} else if(message.userToChoose != team){
 		   document.getElementById("modalOptions").innerHTML = "<p> Awaiting opponent reroll decision </p>" +
 		                          "Possible rerolls: " + message.rerollOptions;
@@ -1768,14 +1786,18 @@ function showBlockResult(message){
  	display.style.display = "block";
  	display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
  	display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+ 	if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
+		centreModal();
+	}
  	if(taskQueue.length >0){
       (taskQueue.shift())();
  	}
 }
 
 function requestBlockDiceChoice(message){
-	var dice = document.getElementsByClassName("dice");
-	for(i = 0 ; i < dice.length; i++){
+	if(message.userToChoose == team){
+	  var dice = document.getElementsByClassName("dice");
+	  for(i = 0 ; i < dice.length; i++){
 		dice[i].style.cursor = "pointer";
 		dice[i].id = "" + i;
 		dice[i].addEventListener('click', (e) => {
@@ -1783,8 +1805,11 @@ function requestBlockDiceChoice(message){
 					    JSON.stringify({"type": "ACTION", action: "BLOCKDICECHOICE", "diceChoice": event.srcElement.id, 
 					    	"player": message.player, "followUp": followUp, "opponent": message.opponent}));
 	    	});
+	  }
+      document.getElementById("modalOptions").innerHTML += "<p> Please select a dice.</p>";    
+	} else{
+		 document.getElementById("modalOptions").innerHTML += "<p> Waiting for opponent to choose a dice.</p>"; 
 	}
-    document.getElementById("modalOptions").innerHTML = "<p> Please select a dice.</p>";    
 }
 
 function showBlockDiceChoice(message){
@@ -1836,7 +1861,7 @@ function showBlockEnd(message){
 	inBlock = false;
 	inPush = false;
 	followUp = false;
-//	drawPlayers();
+	drawPlayers();
 	//drawPlayerBorders();
 //	drawBall();
 	if(message.description == "BLITZ"){
@@ -1880,6 +1905,7 @@ function requestPushChoice(message){
        inPush = true;
       document.getElementById("modalOptions").innerHTML = "Please select where to push";
     } else{
+    	inPush = false;
     	 document.getElementById("modalOptions").innerHTML = "Awaiting opponent's push choice";
     }
     sContext.restore();
@@ -2024,6 +2050,7 @@ function closeModal(){
 	document.getElementById("modalOptions").innerHTML = "";
 	document.getElementById("closeModal").style.display = "none";
 	inBlock = false;
+	inModal = false;
 	if(team == team1.id){
 		closePlayer2();
 	} else{
@@ -2076,6 +2103,9 @@ function showPossibleActions(message){
 	 actions = document.getElementById("actions"); // have to get updated height & width based on number of images shown
 	 actions.style.left = ""+ ((message.location[0] * squareH) - actions.offsetWidth/3)  + "px";
 	 actions.style.top = "" + (((14- message.location[1]) * squareH) - actions.offsetHeight) + "px";
+	 if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
+			centreModal();
+		}
 }
 
 function requestMovement(){
@@ -2215,6 +2245,9 @@ function showThrowModal(message){
 	 display.style.display = "block";
 	 display.style.left = ""+ (message.target[0] +3) * squareH-5 + "px";
 	 display.style.top = "" + ((14- message.target[1])-5) * squareH-5 + "px";
+	 if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
+			centreModal();
+		}
 }
 
 function cancelThrow(player){
@@ -2690,6 +2723,7 @@ function requestKickOff(message){
 	document.getElementById("submitSetup").style.display = "none";
 	document.getElementById("team1AutoSetup").style.display = "none";
 	document.getElementById("team2AutoSetup").style.display = "none";
+	document.getElementById("modalOptions").innerHTML = "";
 	console.log("requesting kickoff");
 	var infoModal = document.getElementById("modal");
 	document.getElementById("activeTeam").innerHTML = "Kick Off";
