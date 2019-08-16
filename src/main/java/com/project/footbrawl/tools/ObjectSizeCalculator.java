@@ -23,7 +23,7 @@
  * questions.
  */
 
-package tools;
+package com.project.footbrawl.tools;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -83,27 +84,21 @@ public class GameService {
 	private Runnable blitz;
 	private PlayerInGame interceptor;
 	private List<PlayerInGame> interceptors;
-
-//	public GameService(Game game) {
-//		this.game = game;
-//		team1 = new TeamInGame(game.getTeam1());
-//		team2 = new TeamInGame(game.getTeam2());
-//		queue = new LinkedList<>();
-//		activePlayer = null;
-//		ballToScatter = null;
-//		pitch = new Tile[26][15];
-//		for (int row = 0; row < 26; row++) {
-//			for (int column = 0; column < 15; column++) {
-//				pitch[row][column] = new Tile(row, column);
-//			}
-//		}
-//		setTileNeighbours(); // doing it once and saving in Tile objects saves repeated computations
-//	}
+	private Date created;
 
 	public GameService() {
 		team1Assigned = false;
 		team2Assigned = false;
 		waitingForPlayers = true;
+		created = new Date();
+	}
+	
+	public Date getCreated() {
+		return created;
+	}
+	
+	public boolean isGameFinished() {
+	   return phase == "ended";
 	}
 	
 	public int assignPlayer() {
@@ -593,6 +588,7 @@ public class GameService {
 	public void endGame(TeamInGame winners) {
 		System.out.println(winners.getName() + " won the match!");
 		sender.sendGameEnd(game.getId(), winners.getName(), winners.getId(), game.getTeam1Score(), game.getTeam2Score());
+		phase = "ended";
 		// with database, will save result
 		// in league will need to update league points
 	}
@@ -3107,6 +3103,11 @@ public class GameService {
 			}
 		}
 		sender.sendSetupUpdate(game.getId(), activeTeam, activeTeam == team1 ? 1 : 2);
+	}
+	
+	// just for testing
+	public void setPhase(String phase) {
+		this.phase = phase;
 	}
 	
 }

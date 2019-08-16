@@ -2939,7 +2939,7 @@ function showEndOfGame(message){
 	document.getElemenyById("newGame").style.display = "block";
 }
 
-function newGame(){
+function newGame(){ // needs updating
 	stompClient.send("/app/game/gameplay/" + game + "/" + team, {}, 
             JSON.stringify({"type": "ACTION", "action": "RESETGAME"}));
 	setTimeout(function(){	   

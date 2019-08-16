@@ -3,9 +3,12 @@ package com.project.footbrawl.service;
 import java.util.ArrayList;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +20,7 @@ import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
 import com.project.footbrawl.entity.Team;
-
-import tools.ObjectSizeCalculator;
+import com.project.footbrawl.tools.ObjectSizeCalculator;
 
 @Service
 @Scope("singleton")
@@ -32,7 +34,6 @@ public class GameLobbyService {
 	private Map<Integer, GameService> activeGames; // game id and gameservice
 
 	public GameLobbyService(AutowireCapableBeanFactory beanFactory) {
-		System.out.println(this);
 		this.beanFactory = beanFactory;
 		if (defaultGame == null) {
 			activeGames = new HashMap<>();
@@ -295,6 +296,7 @@ public class GameLobbyService {
 			GameService gs = new GameService();
 			beanFactory.autowireBean(gs);
 			gs.setGame(g);
+			//gs.setPhase("ended");
 			addGameService(gs);
 			//System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
 		}
@@ -339,8 +341,21 @@ public class GameLobbyService {
 			}
 		}
 		createNewGameAndService();
-   //	System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
+     	System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
 		return assignToGame();
+	}
+
+	public void cleanUpGameServices() {
+		Iterator<Map.Entry<Integer, GameService>> games = activeGames.entrySet().iterator();
+		while(games.hasNext()) {
+			Map.Entry<Integer, GameService> game = games.next();
+			GameService gs = game.getValue();
+			if(gs.isGameFinished() || new Date().getTime() - gs.getCreated().getTime() > 9000000) {
+				System.out.println("Removing game: " + gs.getGameId());
+				gs = null; 
+				games.remove();
+			}
+		}
 	}
 
 //	public static void main(String[] args) {
