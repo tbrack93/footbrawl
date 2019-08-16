@@ -1,15 +1,15 @@
-html{
-  height:100%;
+html {
+	height: 100%;
 }
 
-body{
+body {
 	font-family: 'Cormorant Garamond', serif;
-	background: url(/images/parchment.jpg); /* Background vector created by rawpixel.com - www.freepik.com */
+	background: url(/images/parchment.jpg);
+	/* Background vector created by rawpixel.com - www.freepik.com */
 	background-repeat: no-repeat;
 	background-size: cover;
 	overflow: hidden;
 }
-
 
 canvas {
 	position: absolute;
@@ -20,6 +20,7 @@ canvas {
 }
 
 .row {
+	
 }
 
 #backgroundCanvas {
@@ -32,8 +33,6 @@ canvas {
 #canvas {
 	z-index: 5;
 }
-
-
 
 #squaresCanvas {
 	z-index: 1;
@@ -50,39 +49,38 @@ canvas {
 #modal {
 	display: none;
 	position: absolute;
-	z-index:90;
+	z-index: 90;
 	background-color: #FBFBFB;
-    padding: 10px;
-    border: 1px solid #b4b4b4;
-    border-radius: 5px;
-    width: 225px;
+	padding: 10px;
+	border: 1px solid #b4b4b4;
+	border-radius: 5px;
+	width: 225px;
 }
 
 #modalTitle {
-  padding: 2px 2px;
-  margin: 0 0 5px;
+	padding: 2px 2px;
+	margin: 0 0 5px;
 }
 
 #modalCanvas {
-z-index: 30;
+	z-index: 30;
 }
-
 
 #rolls {
 	font-size: 16px;
 }
 
-#modalOptions{
+#modalOptions {
 	text-align: center;
 }
 
-button{
-	   margin-left: 4px;
-	   margin-right: 4px;
-	   margin-bottom: 8px;
+button {
+	margin-left: 4px;
+	margin-right: 4px;
+	margin-bottom: 8px;
 }
 
-#dontReroll{
+#dontReroll {
 	margin-top: 10px;
 }
 
@@ -91,195 +89,194 @@ hr {
 	margin-bottom: 10px;
 }
 
-.teamInfo{
+.teamInfo {
 	font-family: 'Cinzel', serif;
 	padding-left:
 }
 
-.leftHr{
-	margin-left:15px;
+.leftHr {
+	margin-left: 15px;
 }
 
-.rightHr{
-	margin-right:15px;
+.rightHr {
+	margin-right: 15px;
 }
 
-#gameStatus{
-  padding: 0px;	
-  font-family: 'Cinzel', serif;
+#gameStatus {
+	padding: 0px;
+	font-family: 'Cinzel', serif;
 }
 
 #score {
-  margin: 0px;
+	margin: 0px;
 }
 
-#modalImages{
-	display:flex;
+#modalImages {
+	display: flex;
 }
 
-.dice{
+.dice {
 	margin-left: auto;
 	margin-right: auto;
 }
 
-#close{
-	display:flex;	
+#close {
+	display: flex;
 }
 
-#newRolls{
+#newRolls {
 	overflow-y: auto !important;
-    height: 65px;
+	height: 65px;
 }
 
-
-#actions{
-  position: absolute;
-  width: 100px;
-  z-index: 100;
-  color: #fafafa;
-  padding-top: -10px;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+#actions {
+	position: absolute;
+	width: 100px;
+	z-index: 100;
+	color: #fafafa;
+	padding-top: -10px;
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px
+		0 #000;
 }
 
-#team1Actions{
-  display: flex;
-  width:100%;
-  margin-left: 10px;
-  margin-right: 10px;
-  margin-bottom: 20px;
-  margin-top: 20px;
+#team1Actions {
+	display: flex;
+	width: 100%;
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-bottom: 20px;
+	margin-top: 20px;
 }
 
-#team2Actions{
-  display: flex;
-  width:100%;
-  margin-left: 0px;
-  margin-right: 30px;
-  padding-right: 15px;
-  margin-bottom: 20px;
-  margin-top: 20px;
+#team2Actions {
+	display: flex;
+	width: 100%;
+	margin-left: 0px;
+	margin-right: 30px;
+	padding-right: 15px;
+	margin-bottom: 20px;
+	margin-top: 20px;
 }
 
 #team1Actions img {
-margin-left: auto;
-  margin-right: auto;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 #team2Actions img {
-margin-left: auto;
-margin-right: auto;
--webkit-transform: scaleX(-1);
-  transform: scaleX(-1);
+	margin-left: auto;
+	margin-right: auto;
+	-webkit-transform: scaleX(-1);
+	transform: scaleX(-1);
 }
 
-#actionsMain{
-	 background-color: rgba(0, 0, 255, .4);
-	 border-radius: 10px;
-	 padding-bottom: 4px;
+#actionsMain {
+	background-color: rgba(0, 0, 255, .4);
+	border-radius: 10px;
+	padding-bottom: 4px;
 }
 
 #cancel {
-	padding:0px;
+	padding: 0px;
 }
 
-a{
+a {
 	text-decoration: none !important;
 	cursor: pointer;
 }
 
-.reserves{
-text-align:left;
+.reserves {
+	text-align: left;
 }
 
-.reserves p{
-text-align:center;
+.reserves p {
+	text-align: center;
 }
 
-#team1Reserves{
-	margin-left:10px;
+#team1Reserves {
+	margin-left: 10px;
 }
 
-#team1Player{
-	margin-left:12px;
-	padding-left:3px;
-	padding-top:6px;
+#team1Player {
+	margin-left: 12px;
+	padding-left: 3px;
+	padding-top: 6px;
 	background-color: #3B4581;
 	border-radius: 5px;
 	color: #CFD1CE;
-	width:90%
+	width: 90%
 }
 
-#team2Player{
-	margin-right:0px;
-	padding-right:0px;
-	padding-top:6px;
-	padding-left:0;
+#team2Player {
+	margin-right: 0px;
+	padding-right: 0px;
+	padding-top: 6px;
+	padding-left: 0;
 	background-color: #800C00;
 	border-radius: 5px;
 	color: #CFD1CE;
-	width:90%
+	width: 90%
 }
 
-#team2Reserves{
-	margin-right:10px;
+#team2Reserves {
+	margin-right: 10px;
 }
 
 .reserve {
 	cursor: pointer;
 }
 
-#player1Img{
-	padding-top:8px;
+#player1Img {
+	padding-top: 8px;
 	padding-bottom: 5px;
 	margin-right: 10px;
 }
 
-#player2Img{
-	padding-top:8px;
+#player2Img {
+	padding-top: 8px;
 	padding-bottom: 5px;
 	margin-left: 10px;
 }
 
-
-#team1Player p{
+#team1Player p {
 	margin: 0 0 2px;
 }
 
-#team2Player p{
+#team2Player p {
 	margin: 2px 0 0;
 }
 
-#team1Player h4{
+#team1Player h4 {
 	margin: 0 0 2px;
 }
 
-#team2Player h4{
+#team2Player h4 {
 	margin: 0 0 2px;
 }
 
-.playerRow{
+.playerRow {
 	
 }
 
-#cancelPlayer1{
+#cancelPlayer1 {
 	margin-left: 95%;
 	margin-top: -25px;
-	margin-bottom:0;
+	margin-bottom: 0;
 	cursor: pointer;
 }
 
-#cancelPlayer2{
+#cancelPlayer2 {
 	margin-left: 95%;
 	margin-top: -25px;
-	margin-bottom:0;
+	margin-bottom: 0;
 	cursor: pointer;
 }
 
-#team2Info{
-	padding-right:10px;
+#team2Info {
+	padding-right: 10px;
 }
 
-#errors{
+#errors {
 	color: red;
 	font-family: 'Cormorant Garamond', serif;
 	font-size: 16px;
@@ -287,14 +284,36 @@ text-align:center;
 	visibility: hidden;
 }
 
-#endTurn{
-	margin-top:12px;
+#endTurn {
+	margin-top: 12px;
 }
 
-.fade{
+.fade {
 	transition: opacity 3s;
 }
 
-#closeModal{
-	margin-top:5px;
+#closeModal {
+	margin-top: 5px;
+}
+
+@media (resolution: 96dpi) {
+	#activeTeam {
+		margin-top: 7px;
+		margin-bottom: 7px;
+	}
+	.autosetupBtn {
+		padding: 4px 8px;
+	}
+	#team2Actions {
+		margin-top: 7px;
+		margin-bottom: 7px;
+	}
+	#team1Actions {
+		margin-top: 7px;
+		margin-bottom: 7px;
+	}
+	body {
+		overflow-y: scroll;
+		overflow-x: hidden;
+	}
 }
