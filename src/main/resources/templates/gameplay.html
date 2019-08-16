@@ -28,12 +28,9 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			<div class="col-sm-2">
-			</div>
+			<div class="col-sm-2"></div>
 			<div class="col-sm-8 text-center" id="gameStatus">
-				<div class="col-sm-2">
-				 
-				</div>
+				<div class="col-sm-2"></div>
 				<div class="col-sm-8">
 					<h3 id="activeTeam">Game Starting</h3>
 
@@ -48,8 +45,7 @@
 						onclick="submitSetup()" style="display: none">End Setup</button>
 				</div>
 			</div>
-            <div class="col-sm-2">
-               </div>
+			<div class="col-sm-2"></div>
 		</div>
 	</div>
 
@@ -78,10 +74,12 @@
 			<div id="team1Reserves" class="reserves" style="display: none">
 
 			</div>
-			<div id="team1AutoSetup" style="display:none">
-			   <h5>Auto Setup:</h5>
-			     <button onclick="submitAutoSetup('offense')" class="btn btn-danger autosetupBtn">Offense</button>
-				  <button onclick="submitAutoSetup('defense')" class="btn btn-primary autosetupBtn">Defense</button>
+			<div id="team1AutoSetup" style="display: none">
+				<h5>Auto Setup:</h5>
+				<button onclick="submitAutoSetup('offense')"
+					class="btn btn-danger autosetupBtn">Offense</button>
+				<button onclick="submitAutoSetup('defense')"
+					class="btn btn-primary autosetupBtn">Defense</button>
 			</div>
 			<br>
 			<div id="team1Player" style="display: none">
@@ -137,8 +135,9 @@
 
 						<button id="closeModal" class="btn btn-warning"
 							onclick="closeModal()" style="display: none">Close</button>
-						<a href= "/game/join"><button id="newGame" class="btn btn-success"
-							style="display: none">Play Again</button></a>
+						<a href="/game/join"><button id="newGame"
+								class="btn btn-success" style="display: none">Play
+								Again</button></a>
 					</div>
 				</div>
 			</div>
@@ -147,7 +146,6 @@
 				<img onclick="closeActions()" src="/images/cancel.png"
 					class="float-right" title="cancel" height="20" width="20"
 					id="cancel" style="margin-bottom: -20px; margin-right: -100px">
-
 				<div id="actionsMain">
 					<div id="actionsTitle">Actions</div>
 					<img onclick="requestStandUp()" src="/images/stand_up.png"
@@ -233,10 +231,12 @@
 			<div id="team2Reserves" class="reserves" style="display: none">
 
 			</div>
-			<div id="team2AutoSetup" style="display:none">
-			   <h5>Auto Setup:</h5>
-				  <button onclick="submitAutoSetup('offense')" class="btn btn-danger autosetupBtn">Offense</button>
-				  <button onclick="submitAutoSetup('defense')" class="btn btn-primary autosetupBtn">Defense</button>
+			<div id="team2AutoSetup" style="display: none">
+				<h5>Auto Setup:</h5>
+				<button onclick="submitAutoSetup('offense')"
+					class="btn btn-danger autosetupBtn">Offense</button>
+				<button onclick="submitAutoSetup('defense')"
+					class="btn btn-primary autosetupBtn">Defense</button>
 			</div>
 			<br>
 			<div id="team2Player" style="display: none">

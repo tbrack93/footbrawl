@@ -721,7 +721,7 @@ public class GameService {
 
 	// breadth first search to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		System.out.println(p.getRemainingMA());
+		//System.out.println(p.getRemainingMA());
 		if (cost >= p.getRemainingMA() + 2) {
 			return;
 		}
@@ -750,6 +750,7 @@ public class GameService {
 	// zones and going for it
 	public List<Tile> getOptimisedRoute(int playerId, int[] from, int[] goal) {
 		PlayerInGame p = getPlayerById(playerId);
+		makeActivePlayer(p);
 		actionCheck(p);
 		addTackleZones(p);
 		Tile origin = pitch[from[0]][from[1]];
@@ -856,7 +857,7 @@ public class GameService {
 		if (route.isEmpty()) {
 			return new ArrayList<jsonTile>();
 		}
-		PlayerInGame p = route.get(0).getPlayer();
+		PlayerInGame p = activePlayer;
 		addTackleZones(p);
 		int standingCost = 0;
 		if (p.getStatus().equals("prone")) {
@@ -2116,9 +2117,8 @@ public class GameService {
 		}
 	}
 
-	public void addTackleZones(PlayerInGame player) {
+	public synchronized void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
-		System.out.println(player.getLocation());
 		List<PlayerInGame> opponents;
 		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch())
 				: new ArrayList<>(team1.getPlayersOnPitch());
@@ -2195,6 +2195,8 @@ public class GameService {
 			p2Location.removePlayer();
 			p2Origin.addPlayer(p2);
 		}
+		System.out.println(p1.getLocation()[0] + p1.getLocation()[1]);
+		System.out.println(p2.getLocation()[0] + p2.getLocation()[0]);
 		return results;
 	}
 

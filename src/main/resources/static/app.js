@@ -1446,9 +1446,9 @@ function showArmourRoll(message){
 	var newRolls = document.getElementById("newRolls");
 	newRolls.innerHTML =  message.playerName + "'s "+ message.rollOutcome + ". Armour: "  + message.rollNeeded + " Rolled: " +
 	                      message.rolled + "</br>" + newRolls.innerHTML;
-	if(inBlock == false){
-		document.getElementById("modalOptions").innerHTML = "";
-	}
+//	if(inBlock == false){
+//		document.getElementById("modalOptions").innerHTML = "";
+//	}
 	document.getElementById("modalOptions").innerHTML += "<p>" + message.playerName + "'s " + message.rollOutcome + "." + "</p>";
 	document.getElementById("animationCanvas").getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 	if(taskQueue.length != 0){
@@ -1932,21 +1932,21 @@ function showSideStepSkill(message){
 	if(message.userToChoose == team){
 		chooser = "you choose ";
 	}
-	modalText.innerHTML = "<br>" +message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>";
+	modalText.innerHTML += "<br>" +message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>";
     newRolls.innerHTML =  message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>" + newRolls.innerHTML;
 }
 
 function showDodgeInBlock(message){
 	var newRolls = document.getElementById("newRolls");
 	var modalText = document.getElementById("modalText");
-	modalText.innerHTML = "<br>" +message.playerName + " used the Dodge Skill, so is just pushed back<br>";
+	modalText.innerHTML += "<br>" +message.playerName + " used the Dodge Skill, so is just pushed back<br>";
     newRolls.innerHTML =  message.playerName + " used the Dodge Skill, so is just pushed back<br>" + newRolls.innerHTML;
 }
 
 function showCatchSkill(message){
 	var newRolls = document.getElementById("newRolls");
 	var modalText = document.getElementById("modalText");
-	modalText.innerHTML = "<br>" +message.playerName + " used the Catch Skill<br>";
+	modalText.innerHTML += "<br>" +message.playerName + " used the Catch Skill to reroll<br>";
     newRolls.innerHTML =  message.playerName + " used the Catch Skill to reroll<br>" + newRolls.innerHTML;
     if(inThrow == true){
     	if(taskQueue.length >0){
