@@ -1,6 +1,7 @@
 package com.project.footbrawl.service;
 
 import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,8 @@ import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
 import com.project.footbrawl.entity.Team;
+
+import tools.ObjectSizeCalculator;
 
 @Service
 @Scope("singleton")
@@ -293,6 +296,7 @@ public class GameLobbyService {
 			beanFactory.autowireBean(gs);
 			gs.setGame(g);
 			addGameService(gs);
+			//System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
 		}
 	}
 
@@ -335,6 +339,7 @@ public class GameLobbyService {
 			}
 		}
 		createNewGameAndService();
+   //	System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
 		return assignToGame();
 	}
 
