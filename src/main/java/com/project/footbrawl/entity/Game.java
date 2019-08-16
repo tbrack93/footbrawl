@@ -16,7 +16,6 @@ public class Game {
 	public Game() {
 		idCounter++;
 		id = idCounter; 
-		System.out.println("new game: " + id);
 	}
 
 	public Game(Team team1, Team team2) {

@@ -288,7 +288,6 @@ public class GameLobbyService {
 			team2.addPlayer(p22);
 			team1.setTeamRerolls(4);
 			team2.setTeamRerolls(4);
-			System.out.println("second?");
 			Game g = new Game();
 			g.setTeam1(team1);
 			g.setTeam2(team2);
