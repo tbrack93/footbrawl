@@ -20,7 +20,7 @@ import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.entity.Player;
 import com.project.footbrawl.entity.Skill;
 import com.project.footbrawl.entity.Team;
-import com.project.footbrawl.tools.ObjectSizeCalculator;
+//import com.project.footbrawl.tools.ObjectSizeCalculator;
 
 @Service
 @Scope("singleton")
@@ -341,7 +341,7 @@ public class GameLobbyService {
 			}
 		}
 		createNewGameAndService();
-     	System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
+//     	System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
 		return assignToGame();
 	}
 
