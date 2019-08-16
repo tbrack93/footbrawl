@@ -81,10 +81,13 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private boolean inTurnover;
+	private boolean turnedOver;
 	private Runnable blitz;
 	private PlayerInGame interceptor;
 	private List<PlayerInGame> interceptors;
 	private Date created;
+
+	
 
 	public GameService() {
 		team1Assigned = false;
@@ -630,13 +633,14 @@ public class GameService {
 
 	public void turnover() {
 		System.out.println("checking for turnover");
-	//	if (inTurnover == false) {
+		if (turnedOver == false) {
+			turnedOver = true;
 			System.out.println("Turnover");
 			inTurnover = true;
 			System.out.println(activeTeam.getName() + " suffered a turnover");
 			sender.sendTurnover(game.getId(), activeTeam.getId(), activeTeam.getName());
 			endTurn();
-	//	}
+		}
 	}
 
 	// for internal endTurn actions (from within this object)
@@ -1255,6 +1259,8 @@ public class GameService {
 		}
 		if(blitz == null) {
 		  endOfAction(attacker);
+		} else {
+			System.out.println("Blitzer is here:" + attacker.getTile());
 		}
 		System.out.println(attacker.getStatus());
 		if (attacker.getStatus() != "standing") {
@@ -2199,14 +2205,14 @@ public class GameService {
 		}
 		p1.setHasTackleZones(true);
 		p2.setHasTackleZones(true);
-		if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
+		//if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
 			p1Location.removePlayer();
 			p1Origin.addPlayer(p1);
-		}
-		if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
+	//	}
+	//	if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
 			p2Location.removePlayer();
 			p2Origin.addPlayer(p2);
-		}
+	//	}
 		return results;
 	}
 
@@ -2284,6 +2290,7 @@ public class GameService {
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
+		makeActivePlayer(getPlayerById(playerId));
 		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target));
 		int routeMACost;
 		if (route.isEmpty()) {
@@ -2295,6 +2302,7 @@ public class GameService {
 	}
 
 	public void sendWaypointRoute(int playerId, int[] target, List<int[]> waypoints, int teamId) {
+		makeActivePlayer(getPlayerById(playerId));
 		List<jsonTile> route = jsonRoute(getRouteWithWaypoints(playerId, waypoints, target));
 		int routeMACost;
 		if (route.isEmpty()) {
@@ -2812,6 +2820,7 @@ public class GameService {
 	}
 
 	public ArrayList<String> getPossibleActions(PlayerInGame player) {
+		turnedOver = false;
 		if (player.getTeam() != activeTeam.getId()) {
 			throw new IllegalArgumentException("Not their turn");
 		}
