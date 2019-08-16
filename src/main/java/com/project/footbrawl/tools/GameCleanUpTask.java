@@ -1,6 +1,7 @@
 package com.project.footbrawl.tools;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,10 +11,11 @@ import com.project.footbrawl.service.GameLobbyService;
 public class GameCleanUpTask {
 	
 	@Autowired
-	private GameLobbyService lobby;
+	private ApplicationContext context;
 	
-	@Scheduled(fixedRate = 900000)
+	@Scheduled(initialDelay = 10000, fixedRate = 900000)
     public void cleanUpGameServices(){
+		GameLobbyService lobby = context.getBean(GameLobbyService.class);
 		lobby.cleanUpGameServices();
 	}
 	
