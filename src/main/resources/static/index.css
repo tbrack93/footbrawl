@@ -1,71 +1,71 @@
-html{
-  height:100%;
+html {
+	height: 100%;
 }
 
-body{
+body {
 	font-family: 'Cormorant Garamond', serif;
-	background: url(/images/parchment.jpg); /* Background vector created by rawpixel.com - www.freepik.com */
+	background: url(/images/parchment.jpg);
+	/* Background vector created by rawpixel.com - www.freepik.com */
 	background-repeat: no-repeat;
 	background-size: cover;
 	overflow: hidden;
 }
 
 #heading {
-	 background-color: #000063;
-	 margin-top:10px;
+	background-color: #000063;
+	margin-top: 10px;
 }
 
-.footbrawl{
+.footbrawl {
 	font-size: 84px;
 	color: white;
-    -webkit-text-stroke: 0.5px #7f0001;
-    padding-bottom: 5px;
-    padding-top: 0px;
+	-webkit-text-stroke: 0.5px #7f0001;
+	padding-bottom: 5px;
+	padding-top: 0px;
 }
 
-#foot{
+#foot {
 	margin-left: -20px;
 }
 
-#fantasy{
+#fantasy {
 	margin-right: -20px;
 }
 
-#football{
+#football {
 	position: absolute;
 	right: 5%;
 	bottom: 1%;
 }
 
-#helmet{
+#helmet {
 	position: absolute;
-	left:0;
+	left: 0;
 	top: 0px;
 }
 
-h1{
+h1 {
 	margin-top: 5px;
 	margin-bottom: 5px;
 }
 
-#summary{
+#summary {
 	margin-top: 5%;
 }
 
-#summary-details{
-  margin-left: -60px;
+#summary-details {
+	margin-left: -60px;
 }
 
-.summary-title{
+.summary-title {
 	font-family: 'Cinzel', serif;
-	width: 310px;
-    color: #d4af37;
+	color: #d4af37;
 	background-color: #111112;
 	margin-bottom: 0px;
 	margin-top: 0px;
-	width: 479px;
-	padding-left:20px;
-	padding-right:20px;
+	width: 449px;
+	padding-left: 20px;
+	padding-right: 20px;
 	padding-top: 10px;
 	padding-bottom: 5px;
 	text-align: center;
@@ -74,56 +74,73 @@ h1{
 #actions {
 	margin-top: 0px;
 	padding-top: 10px;
-	width: 479px;
+	width: 449px;
 	background-color: #111112;
 	padding-bottom: 12px;
 	border-bottom-left-radius: 6px;
 	border-bottom-right-radius: 6px;
 }
 
-#basics{
+#basics {
 	margin-left: 10px;
 	margin-top: -10px;
 }
 
-#points{
+#points {
 	margin-left: -30px;
 	margin-top: 5px;
 	font-size: 18px;
 }
 
-#summary-content{
-   	font-family: 'Cormorant Garamond', serif;
-   	background-color: #111112; 
-   	font-size: 20px;
-   	text-align: center;
-   	padding-left:10px;
-	padding-right:10px; 
-	width: 479px;
+#summary-content {
+	font-family: 'Cormorant Garamond', serif;
+	background-color: #111112;
+	font-size: 16px;
+	text-align: center;
+	padding-left: 10px;
+	padding-right: 10px;
+	width: 449px;
 	color: white;
 	margin-bottom: 0px;
 	padding-bottom: 5px;
 }
 
-#bloodbowl{
+#bloodbowl {
 	background-color: #111112;
-	padding-left:10px;
-	padding-right:10px; 
+	padding-left: 10px;
+	padding-right: 10px;
 }
-
 
 #learn {
-	 float:left;
-	 margin-left:20px;
+	float: left;
+	margin-left: 20px;
 }
- 
- #join{
- float: left;
- margin-left: 20px;
- }
- 
- #kings{
- border-top-left-radius:6px;
- border-top-right-radius:6px;
- 
- }
+
+#join {
+	float: left;
+	margin-left: 20px;
+}
+
+#kings {
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+}
+
+@media (resolution: 96dpi) {
+	.summary-title {
+		font-size: 12px;
+	}
+	#football {
+		height: 25%;
+	}
+	ul {
+		font-size: 15px;
+	}
+	.summary-title {
+		font-size: 20px;
+		padding-top: 5px;
+	}
+	#summary-content{
+	  font-size: 15px;
+	  }
+}
