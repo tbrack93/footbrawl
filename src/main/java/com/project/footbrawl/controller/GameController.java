@@ -1,13 +1,11 @@
 package com.project.footbrawl.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.project.footbrawl.service.GameLobbyService;
@@ -15,9 +13,6 @@ import com.project.footbrawl.service.GameLobbyService;
 @Controller
 @RequestMapping("/game")
 public class GameController {
-	
-	@Autowired
-	private AutowireCapableBeanFactory beanFactory;
 	
 	@Autowired
 	private ApplicationContext context;
