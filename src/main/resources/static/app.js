@@ -3129,7 +3129,7 @@ function showThrowIn(message){
 	   document.getElementById("modalOptions").innerHTML +=  "<p> The crowd threw the ball back, but it went off pitch again!</p>";
 	   document.getElementById("newRolls").innerHTML =  "The crowd threw the ball back, but it went off pitch again! </br>" + newRolls.innerHTML;
 	} else{
-	   document.getElementById("modalOptions").innerHTML +=  "<p> The crowd threw the ball to: " + message.target + "</p>";
+	   document.getElementById("modalOptions").innerHTML +=  "<p> The crowd threw the ball back on pitch to: " + message.target + "</p>";
 	   document.getElementById("newRolls").innerHTML =  "The crowd threw the ball to: " + message.target + "</br>" + newRolls.innerHTML;
 	}
 	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
