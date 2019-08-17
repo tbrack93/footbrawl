@@ -82,6 +82,7 @@ public class GameService {
 	private boolean inTurnover;
 	private boolean turnedOver;
 	private Runnable blitz;
+	private boolean isFollowUp;
 	private PlayerInGame interceptor;
 	private List<PlayerInGame> interceptors;
 	private Date created;
@@ -2755,6 +2756,7 @@ public class GameService {
 	}
 
 	public void carryOutBlock(int player, int opponent, int[] location, boolean followUp, boolean reroll, int team) {
+		isFollowUp = followUp;
 		PlayerInGame attacker = getPlayerById(player);
 		makeActivePlayer(attacker);
 		PlayerInGame defender = getPlayerById(opponent);
@@ -2790,7 +2792,7 @@ public class GameService {
 		}
 	}
 
-	public void carryOutBlockChoice(int diceChoice, int player, int opponent, boolean followUp, int team) {
+	public void carryOutBlockChoice(int diceChoice, int player, int opponent, int team) {
 		getPlayerById(player).setActedThisTurn(true);
 		sender.sendBlockDiceChoice(game.getId(), player, opponent, rolled.get(diceChoice),
 				team == team1.getId() ? team1.getName() : team2.getName(), team);
@@ -2798,7 +2800,7 @@ public class GameService {
 		// System.out.println("rolled: " + rolled.get(0));
 		// System.out.println("rolled: " + rolled.get(1));
 		System.out.println("chosen: " + rolled.get(diceChoice));
-		blockChoiceAction(rolled.get(diceChoice) - 1, getPlayerById(player), getPlayerById(opponent), followUp);
+		blockChoiceAction(rolled.get(diceChoice) - 1, getPlayerById(player), getPlayerById(opponent), isFollowUp);
 		// blockChoiceAction(1, getPlayerById(player), getPlayerById(opponent),
 		// followUp); // need to sort out follow up
 

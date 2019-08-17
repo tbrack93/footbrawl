@@ -1845,7 +1845,7 @@ function requestBlockDiceChoice(message){
     dice[i].addEventListener('click', (e) => {
       stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
        JSON.stringify({"type": "ACTION", action: "BLOCKDICECHOICE", "diceChoice": event.srcElement.id,
-        "player": message.player, "followUp": followUp, "opponent": message.opponent}));
+        "player": message.player, "opponent": message.opponent}));
     });
   }
   document.getElementById("modalOptions").innerHTML += "<p> Please select a dice.</p>";
@@ -2316,13 +2316,16 @@ function showCatchResult(message){
 	ballLocation = null;
 	drawPlayer(getPlayerById(message.player));
 	inBlock = false;
-	//animating = false;
 	if(phase == "kick" || team1.turn == 0 && team2.turn == 0){
 	  setTimeout(function(){
 	  if(taskQueue.length != 0){
 	    (taskQueue.shift())();
 			   }
 	  }, 500);
+	} else{
+		setTimeout(function(){
+			  animating = false;
+			  }, 500);
 	}
 }
 
