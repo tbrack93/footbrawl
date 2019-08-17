@@ -77,8 +77,6 @@ public class Game {
 	public void duplicateGame(Game game) {
 		team1 = game.team1;
 		team2 = game.team2;
-		team1Score = game.team1Score;
-		team2Score = game.team2Score;
 	}
 
 }

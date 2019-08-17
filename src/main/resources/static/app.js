@@ -1212,6 +1212,7 @@ if(message.end == "Y"){
      JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
        "location": message.target, "routeMACost": 0}));
    inPickup = false;
+   animating = false;
  }
 } if(taskQueue.length > 0 && (animating == false || message.rollOutcome == "failed")){
   (taskQueue.shift())();
@@ -2318,14 +2319,15 @@ function showCatchResult(message){
 	inBlock = false;
 	if(phase == "kick" || team1.turn == 0 && team2.turn == 0){
 	  setTimeout(function(){
-	  if(taskQueue.length != 0){
-	    (taskQueue.shift())();
-			   }
+	    if(taskQueue.length != 0){
+	      (taskQueue.shift())();
+	    } 
 	  }, 500);
-	} else{
+	} else {
 		setTimeout(function(){
-			  animating = false;
-			  }, 500);
+		   animating = false;
+		   inBlock = false;
+		  }, 500);
 	}
 }
 

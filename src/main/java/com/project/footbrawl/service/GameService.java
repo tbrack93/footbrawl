@@ -2352,16 +2352,17 @@ public class GameService {
 				return;
 			}
 		}
-		if (p.isHasBall()) {
-			System.out.println("checking for touchdown");
-			if ((route.get(jsonMoved.size() - 1)[0] == 0 && p.getTeamIG() == team2)
-					|| route.get(jsonMoved.size() - 1)[0] == 25 && p.getTeamIG() == team1) {
-				touchdown(p);
-			}
-		}
 		if (actionsNeeded > 0) {
 			continueAction(playerId, route, jsonMoved, teamId);
 		} else {
+			if (p.isHasBall()) {
+				System.out.println("checking for touchdown");
+				if ((route.get(jsonMoved.size() - 1)[0] == 0 && p.getTeamIG() == team2)
+						|| route.get(jsonMoved.size() - 1)[0] == 25 && p.getTeamIG() == team1) {
+					touchdown(p);
+					return;
+				}
+			}
 			if (taskQueue.size() > 0) {
 				taskQueue.pop().run();
 			} else if (blitz != null) {
@@ -2819,6 +2820,8 @@ public class GameService {
 	public void sendBlockSuccess(PlayerInGame attacker, PlayerInGame defender) {
 		if (blitz != null && attacker.getStatus() == "standing") {
 			attacker.setActionOver(false);
+			attacker.setActedThisTurn(true);
+			makeActivePlayer(attacker);
 		} else {
 			attacker.setActionOver(true);
 		}
