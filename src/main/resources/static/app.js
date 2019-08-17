@@ -616,6 +616,16 @@ if(message.action == "TEAMSETUP"){
 } else{
   requestSetup(message);
 }
+} else if(message.action == "THROWIN"){
+	if(animating == true){
+		   var task = function(m){
+		    showThrowIn(message);
+		  };
+		  var t = animateWrapFunction(task, this, [message]);
+		  taskQueue.push(t);
+		} else{
+		  showThrowIn(message);
+		}
 } else if(message.action == "ROUTE"){
  activePlayer = getPlayerById(message.player);
  if(animating == true){
@@ -839,7 +849,8 @@ function actOnClick(click){
              "location": activePlayer.location, "target": square, "waypoints": waypoints}));
            lastSquareClicked = square;
          } else{
-           //console.log("player can't reach that square");
+        	 var details = {"description": "Player can't reach that point", "action": "MOVEMENT"};     	
+        	 showInvalid(details);
          }
 
        }
@@ -960,7 +971,7 @@ function showMoved(message, type){
     setTimeout(function(){
      drawPlayers();
      drawBall();
-   }, 200);
+   }, 300);
   } else if(end == "Y" || activePlayer.status == "prone"){
     setTimeout(function(){
       drawPlayer(activePlayer);
@@ -1379,7 +1390,7 @@ function showFailedAction(message){
 
 setTimeout(function(){
  drawPlayer(player);
- document.getElementById("modal").style.display = "block";
+// document.getElementById("modal").style.display = "block";
 		    // modal.style.display = "block";
        if(taskQueue.length != 0){
          (taskQueue.shift())();
@@ -1586,7 +1597,7 @@ if(turnover == false || turnover == null){
  modal.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 }
 turnover = false;
-taskQueue.length = 0;
+//taskQueue.length = 0;
 }
 
 
@@ -1655,7 +1666,7 @@ setTimeout(function(){
 }
 
 function endTurn(){
-	if(yourTurn == true && inBlock == false && inModal == false){
+	if(yourTurn == true && inBlock == false && inModal == false && animating == false){
    var result = confirm("Are you sure you want to end your turn?");
    if (result == true) {
     stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
@@ -1666,7 +1677,7 @@ function endTurn(){
     return;
   }
 } else{
-  if(inBlock == true || inModal == true){
+  if(inBlock == true || inModal == true || animating == true){
    alert("In an action");
  } else{
   alert("Not your turn");
@@ -1961,27 +1972,25 @@ function showPushResult(message){
 	var modalText = document.getElementById("modalOptions");
 	message.route = [{position: message.location}, {position: message.target}];
 	if(message.description == "OFFPITCH"){
-   modalText.innerHTML = message.playerName + " was pushed off pitch and beaten by the crowd! </br>";
-   newRolls.innerHTML =  message.playerName + " was pushed off pitch and beaten by the crowd! </br>" + newRolls.innerHTML;
-   removePlayer(getPlayerById(message.player));
-   canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-   drawPlayers();
-   drawBall();
-   setTimeout(function(){
-     if(taskQueue.length != 0){
-      (taskQueue.shift())();
-    }
-  }, 2000);
-   return;
- }
- if(message.description == "PUSH"){
-   modalText.innerHTML = message.playerName + " was pushed to " + message.target + "</br>";
-   newRolls.innerHTML =  message.playerName + " was pushed to " + message.target + "</br>" + newRolls.innerHTML;
+      modalText.innerHTML = message.playerName + " was pushed off pitch and beaten by the crowd! </br>";
+      newRolls.innerHTML =  message.playerName + " was pushed off pitch and beaten by the crowd! </br>" + newRolls.innerHTML;
+	}else if(message.description == "PUSH"){
+       modalText.innerHTML = message.playerName + " was pushed to " + message.target + "</br>";
+     newRolls.innerHTML =  message.playerName + " was pushed to " + message.target + "</br>" + newRolls.innerHTML;
  } else if (message.description == "FOLLOW"){
    modalText.innerHTML += message.playerName + " followed up to " + message.target;
    newRolls.innerHTML =  message.playerName + " followed up to " + message.target + "</br>" + newRolls.innerHTML;
  }
- showMoved(message, "PUSH");
+ if(message.description == "OFFPITCH"){
+	 if(getPlayerById(message.player).hasBall == true){
+		 getPlayerById(message.player).hasBall = false;
+		 ballLocation = null;
+	 }
+   showMoved(message, "PUSHOFFPITCH");
+   removePlayer(getPlayerById(message.player));
+ } else {
+	 showMoved(message, "PUSH");
+ }
 }
 
 function showSideStepSkill(message){
@@ -3111,4 +3120,34 @@ function submitAutoSetup(type){
 	//console.log(type);
 	stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
     JSON.stringify({"type": "ACTION", "action": "AUTOSETUP", "description": type}));
+}
+
+function showThrowIn(message){
+	animating = true;
+	ballLocation = null;
+	if(message.target[0] < 0 || message.target[0]>=25 || message.target[1] <0 || message.target[1]>=15){
+	   document.getElementById("modalOptions").innerHTML +=  "<p> The crowd threw the ball back, but it went off pitch again!</p>";
+	   document.getElementById("newRolls").innerHTML =  "The crowd threw the ball back, but it went off pitch again! </br>" + newRolls.innerHTML;
+	} else{
+	   document.getElementById("modalOptions").innerHTML +=  "<p> The crowd threw the ball back on pitch to: " + message.target + "</p>";
+	   document.getElementById("newRolls").innerHTML =  "The crowd threw the ball to: " + message.target + "</br>" + newRolls.innerHTML;
+	}
+	squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	var ballImg = new Image();
+	ballImg.src = "/images/ball.png";
+	ballImg.onload = function() {
+	    var squareH = canvas.height / 15;
+	    var startingX = message.location[0] * squareH + squareH/3;
+	    var startingY = (14 - message.location[1]) * squareH + squareH/3;
+	    canvas.getContext("2d").clearRect(0, 0, startingX - squareH/3, startingY - squareH/3);
+	    drawPlayer(activePlayer);
+	    var targetX = message.target[0] * squareH + squareH/3;
+	    var targetY = (14 - message.target[1]) * squareH + squareH/3;
+	    var speed = 15;
+	    xIncrement = (targetX - startingX) / speed;
+	    yIncrement = (targetY - startingY) / speed;
+	    var route = [message.target];
+	    animateMovement(route, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "Y", "BALL");
+	    canvas.getContext("2d").clearRect(0, 0, startingX - squareH/3, startingY - squareH/3);
+	}
 }
