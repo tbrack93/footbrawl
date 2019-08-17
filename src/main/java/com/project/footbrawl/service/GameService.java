@@ -3029,7 +3029,7 @@ public class GameService {
 	public void makeActivePlayer(PlayerInGame player) {
 		if (activePlayer == null) {
 			activePlayer = player;
-		} else if (activePlayer.getActedThisTurn() == true && activePlayer != player) {
+		} else if ((activePlayer.getActedThisTurn() == true || activePlayer.getTeam() != activeTeam.getId()) && activePlayer != player) {
 			endOfAction(activePlayer);
 			activePlayer = player;
 		}
