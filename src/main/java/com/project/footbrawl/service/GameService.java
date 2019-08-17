@@ -377,8 +377,8 @@ public class GameService {
 					"Must be placed in your half of the pitch");
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
-		if (!target.containsPlayer() && !player.getTeamIG().getPlayersOnPitch().contains(player)) {
-			if (team.getPlayersOnPitch().size() >= 11) {
+		if (!target.containsPlayer()) {
+			if (team.getPlayersOnPitch().size() >= 11 && !player.getTeamIG().getPlayersOnPitch().contains(player)) {
 				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
 						"Cannot have more than 11 players on the pitch");
 				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
