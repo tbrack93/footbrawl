@@ -1595,7 +1595,7 @@ function updateGameStatus(message){
 	closePlayer1();
 	closePlayer2();
 	if(message.team1FullDetails.turn == 0 && message.team2FullDetails.turn == 1 ||
-    message.team1FullDetails.turn == 1 && message.team2FullDetails.turn == 0 || phase = "main game"){
+    message.team1FullDetails.turn == 1 && message.team2FullDetails.turn == 0 || phase == "main game"){
 		document.getElementById("endTurn").style.display = "block";
   document.getElementById("team1Turn").style.visibility = "visible";
   document.getElementById("team2Turn").style.visibility = "visible";
