@@ -566,4 +566,13 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setUserToChoose(team);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	public void sendThrowIn(int gameId, int[] location, int[] target) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("THROWIN");
+		message.setLocation(location);
+		message.setTarget(target);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 }

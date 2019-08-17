@@ -376,7 +376,7 @@ public class GameService {
 					"Must be placed in your half of the pitch");
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
-		if (!target.containsPlayer()) {
+		if (!target.containsPlayer() && !player.getTeamIG().getPlayersOnPitch().contains(player)) {
 			if (team.getPlayersOnPitch().size() >= 11) {
 				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
 						"Cannot have more than 11 players on the pitch");
@@ -1399,7 +1399,7 @@ public class GameService {
 					sender.sendPushResult(game.getId(), pushed, p.getName(), pushedLocation, target, "PUSH");
 					if (p.isHasBall()) {
 						System.out.println("checking for touchdown");
-						if ((target[0] == 0 && p.getTeamIG() == team2) || target[1] == 25 && p.getTeamIG() == team1) {
+						if ((target[0] == 0 && p.getTeamIG() == team2) || target[0] == 25 && p.getTeamIG() == team1) {
 							touchdown(p);
 						}
 					}
@@ -1467,7 +1467,9 @@ public class GameService {
 
 	public void pushOffPitch(PlayerInGame pusher, PlayerInGame pushed) {
 		System.out.println(pushed.getName() + " was pushed into the crowd and gets beaten!");
-		sender.sendPushResult(game.getId(), pushed.getId(), pushed.getName(), pushed.getLocation(), null, "OFFPITCH");
+		int [] direction = new int[] {pushed.getLocation()[0] - pusher.getLocation()[0], pushed.getLocation()[1] - pusher.getLocation()[1]};
+		int [] target = new int[] {pushed.getLocation()[0] + direction[0], pushed.getLocation()[1] + direction[1]};
+		sender.sendPushResult(game.getId(), pushed.getId(), pushed.getName(), pushed.getLocation(), target, "OFFPITCH");
 		Tile origin = pushed.getTile();
 		injuryRoll(pushed); // if KO'd or injured it will remove them from pitch
 		if (pushed.getStatus() == "stunned") {
@@ -1479,10 +1481,10 @@ public class GameService {
 		}
 		if (pushed.isHasBall()) {
 			System.out.println("pushed off has ball");
-			Runnable scatter = new Runnable() {
+			Runnable ballOff = new Runnable() {
 				@Override
 				public void run() {
-					scatterBall(origin, 1);
+					ballOffPitch(origin);
 					if (taskQueue.isEmpty()) {
 						sendBlockSuccess(pusher, pushed);
 					} else {
@@ -1490,7 +1492,7 @@ public class GameService {
 					}
 				}
 			};
-			taskQueue.add(scatter); // scatter needs to happen after follow up and knockdown
+			taskQueue.add(ballOff); // throw in needs to happen after follow up and knockdown
 			if (pushed.getTeamIG() == activeTeam) { // only turnover if player on active team and had ball
 				Runnable task2 = new Runnable() {
 					@Override
@@ -1651,6 +1653,9 @@ public class GameService {
 				
 			}
 		} else {
+			if(phase != "kick") {
+			  sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
+			}
 			ballOffPitch(origin);
 		}
 	}
@@ -2115,6 +2120,7 @@ public class GameService {
 			if (destination[0] < 0 || destination[0] > 25 || destination[1] < 0 || destination[1] > 14) {
 				System.out.println("Ball thrown off pitch again!");
 				System.out.println("Destination: " + destination[0] + " " + destination[1]);
+				sender.sendThrowIn(game.getId(), position, destination);
 				destination[0] -= direction[0];
 				destination[1] -= direction[1];
 				ballOffPitch(pitch[destination[0]][destination[1]]);
@@ -2123,6 +2129,7 @@ public class GameService {
 		}
 		Tile target = pitch[destination[0]][destination[1]];
 		System.out.println("Ball thrown to square " + destination[0] + " " + destination[1]);
+		sender.sendThrowIn(game.getId(), position, destination);
 		if (target.containsPlayer()) {
 			if (target.getPlayer().isHasTackleZones()) {
 				catchBallAction(target.getPlayer(), false);
@@ -2130,7 +2137,7 @@ public class GameService {
 				scatterBall(target, 1);
 			}
 		} else {
-			target.setContainsBall(true);
+			scatterBall(target, 1);
 		}
 	}
 
