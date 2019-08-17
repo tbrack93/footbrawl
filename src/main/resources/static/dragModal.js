@@ -44,3 +44,9 @@ function dragEnd(e){
 function setTranslate(xPos, yPos, el) {
 	  el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
 }
+
+function reset(){
+	xOffset = 0;
+	yOffset = 0;
+	
+}

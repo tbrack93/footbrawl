@@ -81,10 +81,13 @@ public class GameService {
 	private boolean routeSaved;
 	private List<String> rerollOptions;
 	private boolean inTurnover;
+	private boolean turnedOver;
 	private Runnable blitz;
 	private PlayerInGame interceptor;
 	private List<PlayerInGame> interceptors;
 	private Date created;
+
+	
 
 	public GameService() {
 		team1Assigned = false;
@@ -520,6 +523,14 @@ public class GameService {
 		if (p.getTeam() != teamId) {
 			throw new IllegalArgumentException("Not yours to choose");
 		}
+		Tile location = ballLocationCheck();
+		if(location != null) {
+		  if(location.containsPlayer()) {
+			location.getPlayer().setHasBall(false);
+		  } else {
+			  location.removeBall();
+		  }
+		}
 		p.setHasBall(true);
 		sender.sendTouchBackResult(game.getId(), playerId, p.getName());
 		phase = "main game";
@@ -622,7 +633,8 @@ public class GameService {
 
 	public void turnover() {
 		System.out.println("checking for turnover");
-		if (inTurnover == false) {
+		if (turnedOver == false) {
+			turnedOver = true;
 			System.out.println("Turnover");
 			inTurnover = true;
 			System.out.println(activeTeam.getName() + " suffered a turnover");
@@ -721,7 +733,7 @@ public class GameService {
 
 	// breadth first search to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		System.out.println(p.getRemainingMA());
+		//System.out.println(p.getRemainingMA());
 		if (cost >= p.getRemainingMA() + 2) {
 			return;
 		}
@@ -750,6 +762,7 @@ public class GameService {
 	// zones and going for it
 	public List<Tile> getOptimisedRoute(int playerId, int[] from, int[] goal) {
 		PlayerInGame p = getPlayerById(playerId);
+		makeActivePlayer(p);
 		actionCheck(p);
 		addTackleZones(p);
 		Tile origin = pitch[from[0]][from[1]];
@@ -856,7 +869,7 @@ public class GameService {
 		if (route.isEmpty()) {
 			return new ArrayList<jsonTile>();
 		}
-		PlayerInGame p = route.get(0).getPlayer();
+		PlayerInGame p = activePlayer;
 		addTackleZones(p);
 		int standingCost = 0;
 		if (p.getStatus().equals("prone")) {
@@ -884,7 +897,6 @@ public class GameService {
 				jt.setPickUpBallRoll(calculatePickUpBall(p, t));
 			}
 			jsonRoute.add(jt);
-			System.out.println(jt.getPosition());
 		}
 		return jsonRoute;
 	}
@@ -954,7 +966,6 @@ public class GameService {
 		List<jsonTile> jRoute = jsonRoute(route);
 		PlayerInGame opponent = target.getPlayer();
 		int[] block = calculateBlock(attacker, route.get(route.size() - 1), opponent);
-		System.out.println();
 		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
 				+ " chooses");
 		int routeMACost;
@@ -1063,7 +1074,6 @@ public class GameService {
 		if (defender.getStatus().contentEquals("standing")) {
 			throw new IllegalArgumentException("Can only foul a player on the ground");
 		}
-		System.out.println();
 		int[] assists = calculateAssists(attacker, attacker.getTile(), defender);
 		int modifier = assists[0] - assists[1];
 		if (modifier == 0) {
@@ -1081,8 +1091,9 @@ public class GameService {
 		if (p.isHasBall()) {
 			p.setHasBall(false);
 			scatterBall(location, 1);
+		} else {
+		   turnover();
 		}
-		turnover();
 	}
 
 	private void checkRouteValid(PlayerInGame p, List<Tile> route) {
@@ -1222,6 +1233,7 @@ public class GameService {
 				Runnable knock = new Runnable() {
 					@Override
 					public void run() {
+						System.out.println("In knock");
 						if (team1.getPlayersOnPitch().contains(defender)
 								|| team2.getPlayersOnPitch().contains(defender)) { // don't do knockdown if already been
 																					// pushed off pitch
@@ -1247,6 +1259,8 @@ public class GameService {
 		}
 		if(blitz == null) {
 		  endOfAction(attacker);
+		} else {
+			System.out.println("Blitzer is here:" + attacker.getTile());
 		}
 		System.out.println(attacker.getStatus());
 		if (attacker.getStatus() != "standing") {
@@ -1629,10 +1643,13 @@ public class GameService {
 					System.out.println("bad throw onto empty square");
 					inPassOrHandOff = false;
 					turnover();
+				} else if(inTurnover == true) {
+					turnover();
 				}
 				if(phase == "kick") {
 					checkForTouchBack();
 				}
+				
 			}
 		} else {
 			ballOffPitch(origin);
@@ -1834,8 +1851,9 @@ public class GameService {
 					@Override
 					public void run() {
 						System.out.println("in no reroll");
+						inPassOrHandOff = false;
+						inTurnover = true;
 						scatterBall(thrower.getTile(), 1);
-						turnover();
 					}
 				};
 				taskQueue.add(task2);
@@ -1843,8 +1861,9 @@ public class GameService {
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "failed",
 					thrower.getLocation(), target.getLocation(), rerollOptions, thrower.getTeam(), finalRoll, reroll);
 			if (rerollOptions.isEmpty()) {
+				inPassOrHandOff = false;
+				inTurnover = true;
 				scatterBall(thrower.getTile(), 1);
-				turnover();
 			}
 		} else {
 			if (interceptor != null) {
@@ -2118,7 +2137,6 @@ public class GameService {
 
 	public void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
-		System.out.println(player.getLocation());
 		List<PlayerInGame> opponents;
 		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch())
 				: new ArrayList<>(team1.getPlayersOnPitch());
@@ -2187,14 +2205,14 @@ public class GameService {
 		}
 		p1.setHasTackleZones(true);
 		p2.setHasTackleZones(true);
-		if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
+		//if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
 			p1Location.removePlayer();
 			p1Origin.addPlayer(p1);
-		}
-		if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
+	//	}
+	//	if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
 			p2Location.removePlayer();
 			p2Origin.addPlayer(p2);
-		}
+	//	}
 		return results;
 	}
 
@@ -2272,6 +2290,7 @@ public class GameService {
 	}
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
+		makeActivePlayer(getPlayerById(playerId));
 		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target));
 		int routeMACost;
 		if (route.isEmpty()) {
@@ -2283,6 +2302,7 @@ public class GameService {
 	}
 
 	public void sendWaypointRoute(int playerId, int[] target, List<int[]> waypoints, int teamId) {
+		makeActivePlayer(getPlayerById(playerId));
 		List<jsonTile> route = jsonRoute(getRouteWithWaypoints(playerId, waypoints, target));
 		int routeMACost;
 		if (route.isEmpty()) {
@@ -2422,8 +2442,8 @@ public class GameService {
 			}
 			if (ballToScatter != null) {
 				System.out.println("SCATTER FROM HERE");
+				inTurnover = true;
 				scatterBall(ballToScatter, 1);
-				turnover();
 			}
 			if (p.getStatus() != "standing") {
 				turnover();
@@ -2588,7 +2608,7 @@ public class GameService {
 	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
 		System.out.println("in determine rerolls");
 		List<String> results = new ArrayList<>();
-		if (action != "BLOCK" && awaitingReroll != null && Arrays.equals(location[0], runnableLocation[0])
+		if (action != "BLOCK" && awaitingReroll != null && runnableLocation != null && Arrays.equals(location[0], runnableLocation[0])
 				&& Arrays.equals(location[1], runnableLocation[1]) && playerId == Integer.parseInt(awaitingReroll[2])
 				&& action == awaitingReroll[1]) { // means in a
 													// reroll -
@@ -2695,8 +2715,8 @@ public class GameService {
 			return;
 		}
 		if (ballToScatter != null) {
+			inTurnover = true;
 			scatterBall(ballToScatter, 1);
-			turnover();
 		}
 		if (p.getStatus() != "standing") {
 			ballToScatter = null;
@@ -2800,6 +2820,7 @@ public class GameService {
 	}
 
 	public ArrayList<String> getPossibleActions(PlayerInGame player) {
+		turnedOver = false;
 		if (player.getTeam() != activeTeam.getId()) {
 			throw new IllegalArgumentException("Not their turn");
 		}
@@ -3008,7 +3029,7 @@ public class GameService {
 	public void makeActivePlayer(PlayerInGame player) {
 		if (activePlayer == null) {
 			activePlayer = player;
-		} else if (activePlayer.getActedThisTurn() == true && activePlayer != player) {
+		} else if ((activePlayer.getActedThisTurn() == true || activePlayer.getTeam() != activeTeam.getId()) && activePlayer != player) {
 			endOfAction(activePlayer);
 			activePlayer = player;
 		}

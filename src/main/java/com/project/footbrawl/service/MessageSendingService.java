@@ -314,7 +314,8 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setAction("BLOCKDICECHOICE");
 		message.setPlayer(player);
 		message.setOpponent(opponent);
-		controller.sendMessageToUser(gameId, teamId, message);	
+		message.setUserToChoose(teamId);
+		controller.sendMessageToBothUsers(gameId, message);	
 	}
 
 	public void sendBlockDiceChoice(int gameId, int player, int opponent, int diceChoice, String teamName, int teamId) {

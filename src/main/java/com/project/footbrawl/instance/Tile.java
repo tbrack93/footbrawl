@@ -111,7 +111,8 @@ public class Tile {
 		costToReach = 99;
 		tacklers.clear();
 		if(player != null && player.getTile() != this) {
-			removePlayer();
+			player.getTile().addPlayer(player);
+			player = null;
 		}
 	}
 
