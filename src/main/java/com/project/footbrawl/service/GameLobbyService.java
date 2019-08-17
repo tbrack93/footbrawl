@@ -226,7 +226,7 @@ public class GameLobbyService {
 			p18.setType("Black Orc");
 			p18.setImgUrl("/images/black_orc.png");
 			Player p19 = new Player();
-			p19.setName("Chris");
+			p19.setName("Mike");
 			p19.setAG(2);
 			p19.setMA(4);
 			p19.setAV(9);

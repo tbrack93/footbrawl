@@ -960,7 +960,7 @@ function showMoved(message, type){
     setTimeout(function(){
      drawPlayers();
      drawBall();
-   }, 100);
+   }, 200);
   } else if(end == "Y" || activePlayer.status == "prone"){
     setTimeout(function(){
       drawPlayer(activePlayer);
@@ -971,7 +971,7 @@ function showMoved(message, type){
            "location": activePlayer.location, "routeMACost": 0}));
        actionChoice = "move";
      }
-   }, 250);
+   }, 300);
 
   }
   animating = false;
@@ -1595,7 +1595,7 @@ function updateGameStatus(message){
 	closePlayer1();
 	closePlayer2();
 	if(message.team1FullDetails.turn == 0 && message.team2FullDetails.turn == 1 ||
-    message.team1FullDetails.turn == 1 && message.team2FullDetails.turn == 0){
+    message.team1FullDetails.turn == 1 && message.team2FullDetails.turn == 0 || phase = "main game"){
 		document.getElementById("endTurn").style.display = "block";
   document.getElementById("team1Turn").style.visibility = "visible";
   document.getElementById("team2Turn").style.visibility = "visible";
@@ -1896,11 +1896,12 @@ function showBlockEnd(message){
 	drawPlayers();
 	// drawPlayerBorders();
 // drawBall();
-if(message.description == "BLITZ"){
+if(message.description == "BLITZ" && yourTurn == true){
   var player = getPlayerById(message.player);
   stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
     JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": player.id,
       "location": player.location, "routeMACost": 0}));
+  actionChoice = movement;
 } else{
   if(activePlayer.movement != null){
     activePlayer.movement.length = 0;
@@ -1964,6 +1965,7 @@ function showPushResult(message){
    modalText.innerHTML = message.playerName + " was pushed off pitch and beaten by the crowd! </br>";
    newRolls.innerHTML =  message.playerName + " was pushed off pitch and beaten by the crowd! </br>" + newRolls.innerHTML;
    removePlayer(getPlayerById(message.player));
+   canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
    drawPlayers();
    drawBall();
    setTimeout(function(){
@@ -2305,8 +2307,9 @@ function showCatchResult(message){
 	getPlayerById(message.player).hasBall = true;
 	ballLocation = null;
 	drawPlayer(getPlayerById(message.player));
-	animating = false;
-	if(phase == "kick"){
+	inBlock = false;
+	//animating = false;
+	if(phase == "kick" || team1.turn == 0 && team2.turn == 0){
 	  setTimeout(function(){
 	  if(taskQueue.length != 0){
 	    (taskQueue.shift())();
