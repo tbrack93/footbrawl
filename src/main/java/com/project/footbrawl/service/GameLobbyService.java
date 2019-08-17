@@ -262,6 +262,16 @@ public class GameLobbyService {
 			p22.setType("Goblin");
 			p22.setImgUrl("/images/goblin.png");
 			p22.addSkill(dodge);
+			Player p23 = new Player();
+			p23.setName("Gary");
+			p23.setAG(3);
+			p23.setMA(6);
+			p23.setAV(7);
+			p23.setTeam(2);
+			p23.setST(2);
+			p23.setType("Goblin");
+			p23.setImgUrl("/images/goblin.png");
+			p23.addSkill(dodge);
 			Team team1 = new Team("bobcats");
 			Team team2 = new Team("murderers");
 			team1.addPlayer(p);
@@ -286,6 +296,7 @@ public class GameLobbyService {
 			team2.addPlayer(p20);
 			team2.addPlayer(p21);
 			team2.addPlayer(p22);
+			team2.addPlayer(p23);
 			team1.setTeamRerolls(4);
 			team2.setTeamRerolls(4);
 			Game g = new Game();

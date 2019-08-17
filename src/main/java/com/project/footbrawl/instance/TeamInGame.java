@@ -249,6 +249,7 @@ public class TeamInGame {
 	public void newKickOff() {
 		for(PlayerInGame p : playersOnPitch) {
 			p.setStatus("standing");
+			p.setHasBall(false);
 		}
 		reserves.addAll(playersOnPitch);
 		playersOnPitch.clear();

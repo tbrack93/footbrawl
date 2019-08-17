@@ -1607,7 +1607,6 @@ function updateGameStatus(message){
  if(document.getElementById("team2Reserves").style.display == "block"){
   document.getElementById("reserves2").click();
 }
-document.getElementById("modalTitle").innerHTML = "Game Begins!";
 }
 document.getElementById("team1Reroll").style.opacity = 0.7;
 document.getElementById("team1Reroll").title = "Not Used Team Reroll This Turn";
@@ -2721,7 +2720,6 @@ function showSetupActions(player){
  }
 
  function requestSetup(message){
-   document.getElementById("endTurn").style.display = "none";
    if(message.userToChoose == team){
     phase = "yourSetup";
     document.getElementById("modalTitle").innerHTML = "Your Setup";
@@ -2761,6 +2759,7 @@ centreModal();
 canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 drawPlayers();
+document.getElementById("endTurn").style.display = "none";
 }
 
 function requestKickOff(message){
@@ -3022,9 +3021,12 @@ function showEndOfGame(message){
 	yourTurn = false;
 	inModal = true;
 	animating = true;
-	document.getElementById("modalOptions").innerHTML = "Final Score: <br>" + message.team1Name + ": " + message.team1Score +
-  "<br>" + message.team2Name + ": " + message.team2Score;
-  document.getElemenyById("newGame").style.display = "block";
+	document.getElementById("team1Turn").innerHTML = "Current Turn : 16";
+	document.getElementById("team2Turn").innerHTML = "Current Turn : 16";
+	document.getElementById("modalOptions").innerHTML = "Final Score: <br> Bobcats: " + message.team1Score +
+  "<br> Murderers: " + message.team2Score;
+  document.getElementById("newGame").style.display = "block";
+  document.getElementById("modal").style.display = "block";
 }
 
 function newGame(){ // needs updating

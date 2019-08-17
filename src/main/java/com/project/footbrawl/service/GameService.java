@@ -15,7 +15,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -36,8 +35,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 1, 1, 6, 6, 6, 6, 1, 1, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = true;
+			Arrays.asList(new Integer[] { 1, 1, 3, 1, 1, 1, 1, 1, 8, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -378,7 +377,7 @@ public class GameService {
 			throw new IllegalArgumentException("Must be placed in your half of the pitch");
 		}
 		if (!target.containsPlayer()) {
-			if (team.getPlayersOnPitch().size() >= 12) {
+			if (team.getPlayersOnPitch().size() >= 11) {
 				sender.sendInvalidMessage(game.getId(), team.getId(), "PLACEMENT",
 						"Cannot have more than 11 players on the pitch");
 				throw new IllegalArgumentException("Cannot have more than 11 players on the pitch");
@@ -3114,7 +3113,9 @@ public class GameService {
 			}
 			List<PlayerInGame> copy = new ArrayList<>(team2.getReserves());
 			for(PlayerInGame p : copy) {
-				team2.addPlayerOnPitch(p);
+				if(p.getId() != 23) {
+				  team2.addPlayerOnPitch(p);
+				}
 			}
 			for(PlayerInGame p : team2.getDugout()) {
 				p.getTile().removePlayer();
