@@ -545,12 +545,12 @@ public class GameService {
 		PlayerInGame best = possible.get(0);
 		for (PlayerInGame p : possible) {
 			int[] placement = p.getLocation();
-			if (placement[0] >= 4 && placement[0] <= 10) { // not in widezone
-				if (activeTeam.getId() == team1.getId() && placement[1] < furthestBack) {
-					furthestBack = placement[1];
+			if (placement[1] >= 4 && placement[1] <= 10) { // not in widezone
+				if (activeTeam.getId() == team1.getId() && placement[0] < furthestBack) {
+					furthestBack = placement[0];
 					best = p;
-				} else if (activeTeam.getId() == team2.getId() && placement[1] > furthestBack) {
-					furthestBack = placement[1];
+				} else if (activeTeam.getId() == team2.getId() && placement[0] > furthestBack) {
+					furthestBack = placement[0];
 					best = p;
 				}
 			}
