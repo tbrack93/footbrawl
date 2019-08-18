@@ -764,7 +764,7 @@ function actOnClick(click){
     JSON.stringify({"type": "INFO", "action": "THROW", "player": activePlayer.id,
       "location": activePlayer.location, "target": square}));
    return;
- } else if(actionChoice == "throw" && "throw" && square[0] == activePlayer.location[0] && square[1] == activePlayer.location[1]){
+ } else if((actionChoice == "throw" || actionChoice =="handoff") && square[0] == activePlayer.location[0] && square[1] == activePlayer.location[1]){
    stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
      JSON.stringify({"type": "INFO", "action": "ACTIONS", "player": activePlayer.id}));
  }
@@ -1089,11 +1089,17 @@ function showRoll(message){
   }
   if(message.rollType == "INTERCEPT"){
     if(message.rollOutcome == "failed"){
+    	animating = false;
       setTimeout(function(){
         if(taskQueue.length != 0){
-          (taskQueue.shift())();
+          if(message.end == "N"){
+        	  (taskQueue.shift())();
+              (taskQueue.shift())();
+          } else {
+        	  (taskQueue.shift())();
+          }
         }
-      }, 200);
+      }, 300);
     }else{
      showIntercept(message);
    }
@@ -2312,23 +2318,24 @@ function sendCarryOutThrow(message){
 
 function showCatchResult(message){
 	phase = "main game";
+	animating = false;
 	interceptChoice = false;
 	getPlayerById(message.player).hasBall = true;
 	ballLocation = null;
 	drawPlayer(getPlayerById(message.player));
 	inBlock = false;
-	if(phase == "kick" || team1.turn == 0 && team2.turn == 0){
+	animating = false;
 	  setTimeout(function(){
 	    if(taskQueue.length != 0){
 	      (taskQueue.shift())();
 	    } 
 	  }, 500);
-	} else {
-		setTimeout(function(){
-		   animating = false;
-		   inBlock = false;
-		  }, 500);
-	}
+	  //else {
+//		setTimeout(function(){
+//		   animating = false;
+//		   inBlock = false;
+//		  }, 500);
+//	}
 }
 
 function showIntercept(message){
@@ -2966,6 +2973,7 @@ function requestTouchBack(message){
 
 function showTouchBackChoice(message){
 	document.getElementById("newRolls").innerHTML =  "Touch back: ball given to " + message.playerName + "</br>" + newRolls.innerHTML;
+	phase = "main game";
 }
 
 function actOnTouchBackClick(click){
@@ -3075,7 +3083,7 @@ function requestInterceptor(message){
 	var sContext = squares.getContext("2d");
 	sContext.clearRect(0, 0, squares.width, squares.height);
 	sContext.save();
-	sContext.globalAlpha = 0.3;
+	sContext.globalAlpha = 0.5;
 	sContext.fillStyle = "white";
 	for(var i = 0; i <message.squares.length; i++){
 		var possible = message.squares[i].position;
@@ -3100,6 +3108,7 @@ function actOnInterceptClick(click){
 }
 //console.log(option);
 showPlayerDetails(option);
+document.getElementById("modal").style.display = "block";
 document.getElementById("modalOptions").innerHTML = "Attempt intercept with " + option.name + "? <br><br>";
 var button = document.createElement("BUTTON");
 button.innerHTML = "Cancel";

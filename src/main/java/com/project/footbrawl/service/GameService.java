@@ -864,12 +864,11 @@ public class GameService {
 		return route;
 	}
 
-	public List<jsonTile> jsonRoute(List<Tile> route) {
+	public List<jsonTile> jsonRoute(List<Tile> route, PlayerInGame p) {
 		List<jsonTile> jsonRoute = new ArrayList<>();
 		if (route.isEmpty()) {
 			return new ArrayList<jsonTile>();
 		}
-		PlayerInGame p = activePlayer;
 		addTackleZones(p);
 		int standingCost = 0;
 		if (p.getStatus().equals("prone")) {
@@ -963,7 +962,7 @@ public class GameService {
 			throw new IllegalArgumentException("Invalid target");
 		}
 		List<Tile> route = calculateBlitzRoute(attacker, waypoints, goal);
-		List<jsonTile> jRoute = jsonRoute(route);
+		List<jsonTile> jRoute = jsonRoute(route, attacker);
 		PlayerInGame opponent = target.getPlayer();
 		int[] block = calculateBlock(attacker, route.get(route.size() - 1), opponent);
 		System.out.println("Blitz: " + block[0] + " dice, " + (block[1] == attacker.getTeam() ? "attacker" : "defender")
@@ -2142,7 +2141,7 @@ public class GameService {
 		}
 	}
 
-	public void addTackleZones(PlayerInGame player) {
+	public synchronized void addTackleZones(PlayerInGame player) {
 		resetTackleZones();
 		List<PlayerInGame> opponents;
 		opponents = player.getTeamIG() == team1 ? new ArrayList<>(team2.getPlayersOnPitch())
@@ -2298,7 +2297,7 @@ public class GameService {
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
 		makeActivePlayer(getPlayerById(playerId));
-		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target));
+		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target), getPlayerById(playerId));
 		int routeMACost;
 		if (route.isEmpty()) {
 			routeMACost = 0;
@@ -2310,7 +2309,7 @@ public class GameService {
 
 	public void sendWaypointRoute(int playerId, int[] target, List<int[]> waypoints, int teamId) {
 		makeActivePlayer(getPlayerById(playerId));
-		List<jsonTile> route = jsonRoute(getRouteWithWaypoints(playerId, waypoints, target));
+		List<jsonTile> route = jsonRoute(getRouteWithWaypoints(playerId, waypoints, target), getPlayerById(playerId));
 		int routeMACost;
 		if (route.isEmpty()) {
 			routeMACost = 0;
