@@ -1088,6 +1088,7 @@ function showRoll(message){
     showThrowResult(message);
   }
   if(message.rollType == "INTERCEPT"){
+	  phase = "main game";
     if(message.rollOutcome == "failed"){
     	animating = false;
       setTimeout(function(){
@@ -1233,7 +1234,7 @@ function showBallScatter(message){
 	 // modal.style.display = "none";
 	  // document.getElementById("modal").style.display = "none";
    if(message.target[0] < 0 || message.target[0]>=25 || message.target[1] <0 || message.target[1]>=15){
-    newRolls.innerHTML = "Ball scattered off pitch!";
+    newRolls.innerHTML = "Ball scattered off pitch! </br>" + newRolls.innerHTML;
     if(phase != "kick" && phase != "touchBack"){
      document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered off pitch!</p>";
    }
