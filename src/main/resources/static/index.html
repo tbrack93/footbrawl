@@ -11,12 +11,34 @@
 	href="https://fonts.googleapis.com/css?family=Cormorant+Garamond&display=swap"
 	rel="stylesheet">
 <link href="/index.css" rel="stylesheet">
-<script src="/webjars/jquery/jquery.min.js"></script>
+<script src="index.js"></script>
 </head>
 <body>
 
 	<br>
-
+			<br>
+			<div id="modal" class="announcementModal" style="display:none">
+				<div class="modalHeader">
+					<h4 id="modalTitle">Join Game</h4>
+				</div>
+				<hr>
+				<div class="modalBody">
+					<p id="modalText" class="text-center">Play As:</p>
+                    <button class="btn btn-primary" id="humans" onClick = selectTeam("humans")>Humans</button>
+                      <button class="btn btn-danger" id="orcs" onClick = selectTeam("orcs")>Orcs</button>
+                      	    <button class="btn btn-warning" id="either" onClick = selectTeam("either")>Either</button>
+                   
+					<hr>
+					<div id="modalOptions"></div>
+					<input type="checkbox" id = "invite"> Invite second player (you will be given a link for them to join)<br>
+					<div id="close">
+                     <br>
+						<button id="cancel" class="btn btn-default" onClick = closeModal()>Cancel</button>
+						<button id="newGame"
+								class="btn btn-default" onClick = join()>Join Game</button>
+					</div>
+				</div>
+			</div>
 	<div>
 		<div class="row">
 			<div id="heading" class="col-sm-12">
@@ -48,10 +70,8 @@
 					<div class="col-sm-12" id="actions">
 						<a href="https://www.bloodbowl.com/" target="_blank"><button
 								class="btn btn-primary" id="learn">Learn More</button></a>
-						<form action="/game/join" method="get">
-							<button type="submit" id="join" class="btn btn-warning">Join
+							<button id="join" class="btn btn-warning" onClick=showModal()>Join
 								A Game</button>
-						</form>
 					</div>
 				</div>
 			</div>

@@ -333,7 +333,13 @@ public class GameLobbyService {
 		activeGames.put(g.getId(), gs);
 	}
 
-	public synchronized int[] assignToGame() {
+	public synchronized int[] assignToGame(String teamType, boolean invite) {
+		int teamId = 0;
+		if(teamType.contains("orcs")) {
+			teamId = 2;
+		} else if(teamType.contains("humans")) {
+			teamId = 1;
+		}
 		int game;
 		int team;
 		ArrayList<Integer> active = new ArrayList<>(activeGames.keySet());
@@ -341,14 +347,22 @@ public class GameLobbyService {
 			GameService gs = activeGames.get(i);
 
 			if (gs.isWaitingForPlayers() == true) {
-				game = gs.getGameId();
-				team = gs.assignPlayer();
-				return new int[] { game, team };
+				if(invite == false && (teamId == 0 || teamId == 1 && !gs.isTeam1Assigned() || teamId == 2 && !gs.isTeam2Assigned())) {
+				  game = gs.getGameId();
+				  team = gs.assignPlayer(teamId);
+				  return new int[] { game, team, 0};
+				}
+				if(invite == true && !gs.isTeam1Assigned() && !gs.isTeam2Assigned()) {
+				  game = gs.getGameId();
+				  team = gs.assignPlayer(teamId);
+				  int team2 = gs.assignPlayer(0);
+				  return new int[] { game, team, team2 };
+				}
 			}
 		}
 		createNewGameAndService();
 //     	System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
-		return assignToGame();
+		return assignToGame(teamType, invite);
 	}
 
 	public void cleanUpGameServices() {
