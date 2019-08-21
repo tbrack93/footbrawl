@@ -104,16 +104,50 @@ public class GameService {
 	   return phase == "ended";
 	}
 	
-	public int assignPlayer() {
+	public int assignPlayer(int teamId) {
+		System.out.println(teamId);
+	if(teamId == 0) {
 		if(team1Assigned == false) {
 			team1Assigned = true;
+			if(team2Assigned == true) {
+				waitingForPlayers = false;
+			} 
 			return 1;
 		} else if(team2Assigned == false) {
 			team2Assigned = true;
-			waitingForPlayers = false;
+			if(team1Assigned == true) {
+				waitingForPlayers = false;
+			}
 			return 2;
 		}
+	} else if(teamId == 1) {
+		if(team1Assigned == true) {
+			throw new IllegalArgumentException("already taken");
+		}
+		team1Assigned = true;
+		if(team2Assigned == true) {
+			waitingForPlayers = false;
+		}
+		return 1;
+	} else {
+		if(team2Assigned == true) {
+			throw new IllegalArgumentException("already taken");
+		}
+		team2Assigned = true;
+		if(team1Assigned == true) {
+			waitingForPlayers = false;
+		}
+		return 2;
+	}
 		return -1;
+	}
+	
+	public boolean isTeam1Assigned() {
+		return team1Assigned;
+	}
+	
+	public boolean isTeam2Assigned() {
+		return team2Assigned;
 	}
 	
 	public boolean isWaitingForPlayers() {
@@ -810,6 +844,7 @@ public class GameService {
 				for (Tile neighbour : neighbours) {
 					if (!neighbour.isVisited()) {
 
+						// manhattan distance
 						double predictedDistance = Math.abs((neighbour.getLocation()[0] - target.getLocation()[0]))
 								+ Math.abs((neighbour.getLocation()[1] - target.getLocation()[1]));
 

@@ -315,3 +315,7 @@ a {
 		overflow-x: hidden;
 	}
 }
+
+#modalText{
+	word-wrap: break-word
+}

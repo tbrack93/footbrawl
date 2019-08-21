@@ -62,7 +62,6 @@ window.onload = init;
 document.addEventListener("keydown", escCheck);
 
 function init() {
-	setDraggable();
 	inPush = false;
 	turnover = false;
 	players = new Array();
@@ -2901,6 +2900,7 @@ function showKick(message){
 
 function requestKickChoice(message){
 	phase = "pre-game";
+	setDraggable();
 	document.getElementById("newRolls").innerHTML =  message.teamName + " won the coin toss</br>" + newRolls.innerHTML;
 	document.getElementById("modalTitle").innerHTML = "Coin Toss";
 	var chooser = message.teamName;
@@ -2932,7 +2932,15 @@ centreModal();
 
 function showWaiting(message){
 	document.getElementById("modalTitle").innerHTML = "Starting Game";
-	document.getElementById("modalText").innerHTML = "Waiting for opponent to join";
+	var text = "Waiting for opponent to join";
+	var opponent = document.getElementById("invitedId").value;
+	if(opponent != 0){
+		var currentUrl = window.location.href;
+		var opponentUrl = currentUrl.split("?")[0];
+		opponentUrl = opponentUrl.substring(0, opponentUrl.length - 1) + opponent + "?invite=0<br><br>";
+		document.getElementById("modalText").innerHTML = "Please give this link to your friend to join: " + opponentUrl ;
+	}
+	document.getElementById("modalText").innerHTML += "Waiting for opponent to join";
 	document.getElementById("modal").style.display = "block";
 	centreModal();
 }

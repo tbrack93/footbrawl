@@ -144,3 +144,26 @@ h1 {
 	  font-size: 15px;
 	  }
 }
+
+#modal {
+	/* display: none; */
+	position: absolute;
+	z-index: 90;
+	background-color: #FBFBFB;
+	padding: 10px;
+	border: 1px solid #b4b4b4;
+	border-radius: 5px;
+	width: 250px;
+	left:40%;
+	top:40%;
+}
+
+#modalTitle {
+	padding: 2px 2px;
+	margin: 0 0 5px;
+}
+
+button{
+	margin-left:10px;
+}
+
