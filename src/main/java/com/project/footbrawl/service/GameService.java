@@ -1346,7 +1346,7 @@ public class GameService {
 					if (attacker.isHasBall()) {
 						System.out.println("checking for touchdown");
 						if ((target.getLocation()[0] == 0 && attacker.getTeamIG() == team2)
-								|| target.getLocation()[1] == 25 && attacker.getTeamIG() == team1) {
+								|| target.getLocation()[0] == 25 && attacker.getTeamIG() == team1) {
 							touchdown(attacker);
 						}
 					}
@@ -1465,7 +1465,7 @@ public class GameService {
 		if (p.isHasBall()) {
 			System.out.println("checking for touchdown");
 			if ((pushedLocation[0] == 0 && p.getTeamIG() == team2)
-					|| pushedLocation[1] == 25 && p.getTeamIG() == team1) {
+					|| pushedLocation[0] == 25 && p.getTeamIG() == team1) {
 				touchdown(p);
 			}
 		}
@@ -2455,23 +2455,29 @@ public class GameService {
 				route.get(jsonMoved.size() - 1), target, rerollOptions, teamId, finalRoll, false);
 		if (rollResult.equals("success")) {
 			System.out.println("in roll result success");// no reroll needed so just continue route
+			if(rollType == "PICKUPBALL") {
+				if ((target[0] == 0 && p.getTeamIG() == team2) || target[0] == 25 && p.getTeamIG() == team1) {
+					touchdown(p);
+					return;
+				}
+			}
 			if (actionsNeeded > 0) {
 				continueAction(playerId, route, jsonMoved, teamId);
 			} else {
+				if (p.isHasBall()) {
+					System.out.println("checking for touchdown");
+					if ((target[0] == 0 && p.getTeamIG() == team2) || target[0] == 25 && p.getTeamIG() == team1) {
+						touchdown(p);
+						return;
+					}
+				}
 				awaitingReroll = null;
 				if (finalRoll == "N") {
 					carryOutRouteAction(playerId, remaining, teamId);
 					return;
 				} else if (blitz != null) {
 					blitz.run();
-				} else {
-					if (p.isHasBall()) {
-						System.out.println("checking for touchdown");
-						if ((target[0] == 0 && p.getTeamIG() == team2) || target[1] == 25 && p.getTeamIG() == team1) {
-							touchdown(p);
-						}
-					}
-				}
+				} 
 			}
 		} else if (rerollOptions.isEmpty()) {
 			System.out.println("end of the line");
@@ -2738,7 +2744,7 @@ public class GameService {
 					if (p.isHasBall()) {
 						System.out.println("checking for touchdown");
 						if ((runnableLocation[1][0] == 0 && p.getTeamIG() == team2)
-								|| runnableLocation[1][1] == 25 && p.getTeamIG() == team1) {
+								|| runnableLocation[1][0] == 25 && p.getTeamIG() == team1) {
 							touchdown(p);
 						}
 					}

@@ -91,15 +91,6 @@ function init() {
  };
  drawBoard();
  timeSinceClick = new Date();
-// var player = {id: 1, team: 1, name:"John", location: [0, 1]};
-// var player2 = {id: 2, team: 2, name:"Bobby", location: [7,5]};
-// var player3 = {id: 3, team: 2, name:"Sam", location: [7,7]};
-// var player4 = {id: 4, team: 1, name:"Sarah", location: [5,3]};
-// players.push(player);
-// players.push(player2);
-// players.push(player3);
-// players.push(player4);
-// drawPlayers();
 
 document.getElementById("modalCanvas").addEventListener('click', (e) => {
   var time = new Date();
@@ -1232,7 +1223,7 @@ function showBallScatter(message){
 	animating = true;
 	 // modal.style.display = "none";
 	  // document.getElementById("modal").style.display = "none";
-   if(message.target[0] < 0 || message.target[0]>=25 || message.target[1] <0 || message.target[1]>=15){
+   if(message.target[0] < 0 || message.target[0]>=26 || message.target[1] <0 || message.target[1]>=15){
     newRolls.innerHTML = "Ball scattered off pitch! </br>" + newRolls.innerHTML;
     if(phase != "kick" && phase != "touchBack"){
      document.getElementById("modalOptions").innerHTML = document.getElementById("modalOptions").innerHTML + "<p> Ball scattered off pitch!</p>";
