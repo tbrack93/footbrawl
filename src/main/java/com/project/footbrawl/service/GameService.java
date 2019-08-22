@@ -35,8 +35,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 1, 3, 1, 1, 1, 1, 1, 8, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = false;
+			Arrays.asList(new Integer[] { 1, 1, 1, 1, 1, 1, 1, 1, 8, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
+	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -519,11 +519,13 @@ public class GameService {
 			}
 			if (goal.containsPlayer()) {
 				if (goal.getPlayer().isHasTackleZones()) { // will need to make this more specific to catching
+					System.out.println("active in kick:" + activeTeam.getId());
 					catchBallAction(goal.getPlayer(), false);
+					return;
 				} else {
 					scatterBall(goal, 1); // if player can't catch, will scatter again
+					return;
 				}
-				return;
 //			} else {
 //				scatterBall(goal, 1); 
 			}
@@ -540,7 +542,7 @@ public class GameService {
 	public void checkForTouchBack() {
 		System.out.println("in touch back check");
 		Tile scatteredTo = ballLocationCheck();
-		if (activeTeam == team2 && scatteredTo.getLocation()[0] > 12
+		if (scatteredTo == null || activeTeam == team2 && scatteredTo.getLocation()[0] > 12
 				|| activeTeam == team1 && scatteredTo.getLocation()[0] < 13) {
 			System.out.println("Ball ended on kicking team's side, so receivers are given the ball");
 			getTouchBack(activeTeam == team1 ? team2 : team1);
@@ -593,6 +595,7 @@ public class GameService {
 	}
 
 	public void getTouchBack(TeamInGame team) {
+		System.out.println("active" + activeTeam.getId());
 		List<jsonTile> options = new ArrayList<>();
 		List<PlayerInGame> possibles = new ArrayList<>(team.getPlayersOnPitch());
 		for (PlayerInGame p : possibles) {
@@ -1764,9 +1767,7 @@ public class GameService {
 									// to
 									// rest
 					}
-				} else {
-					checkForTouchBack();
-				}
+				} 
 			}
 		}
 	}
@@ -2099,7 +2100,7 @@ public class GameService {
 		System.out.println("Ball went off pitch from " + origin.getLocation()[0] + " " + origin.getLocation()[1]);
 		// determine which side/ orientation
 		if (phase == "kick") {
-			getTouchBack(activeTeam);
+			getTouchBack(activeTeam == team1 ? team2 : team1);
 			return;
 		}
 		int[] position = origin.getLocation();
