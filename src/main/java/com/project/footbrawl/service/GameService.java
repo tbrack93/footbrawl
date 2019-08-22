@@ -35,8 +35,8 @@ public class GameService {
 	MessageSendingService sender;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 1, 1, 1, 1, 1, 1, 1, 8, 6, 6, 4, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6 }));
-	private static boolean testing = true;
+			Arrays.asList(new Integer[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
+	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -847,17 +847,19 @@ public class GameService {
 				for (Tile neighbour : neighbours) {
 					if (!neighbour.isVisited()) {
 
-						// manhattan distance
-						double predictedDistance = Math.abs((neighbour.getLocation()[0] - target.getLocation()[0]))
-								+ Math.abs((neighbour.getLocation()[1] - target.getLocation()[1]));
+						// Chebyshev distance
+						double predictedDistance;
+						double xDist = Math.abs((neighbour.getLocation()[0] - target.getLocation()[0]));
+						double yDist = Math.abs((neighbour.getLocation()[1] - target.getLocation()[1]));
+						predictedDistance = 0.99 * (xDist + yDist) + (1 - 2 * 0.99) * Math.min(xDist, yDist);						
 
 						// Penalties to prevent invalid moves and prefer not entering tackle zones or
 						// Going For It
 						int movementToReach = current.getMovementUsed() + 1;
 						int neighbourCost = neighbour.getPlayer() != null ? 10000 : 1;
 						int noMovementPenalty = movementToReach > MA + 2 ? 10000 : 0;
-						int goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 4 : 0;
-						int tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 4;
+						double goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 0.5 : 0;
+						double tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 0.5;
 
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
 								+ noMovementPenalty + tackleZonesPenalty + predictedDistance;
@@ -871,7 +873,6 @@ public class GameService {
 //						System.out.println("Predicted distance " + predictedDistance);
 //						System.out.println();
 						if (totalDistance < neighbour.getTotalDistance()) {
-
 							// update tile's distance
 							neighbour.setTotalDistance(totalDistance);
 							// used for PriorityQueue
@@ -881,6 +882,9 @@ public class GameService {
 							// set parent
 							neighbour.setParent(current);
 							// enqueue
+							if(priorityQueue.contains(neighbour)){
+								priorityQueue.remove(neighbour);
+							}
 							priorityQueue.add(neighbour);
 						}
 					}
