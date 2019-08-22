@@ -2969,6 +2969,9 @@ function requestTouchBack(message){
 	}
 	document.getElementById("modal").style.display = "block";
 	centreModal();
+	setTimeout(function(){
+		  animating = false;
+		 }, 500);
 }
 
 function showTouchBackChoice(message){
