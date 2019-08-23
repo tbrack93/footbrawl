@@ -1,28 +1,39 @@
 package com.project.footbrawl.entity;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="player")
 public class Player {
 	
-	public static int counter = 1;
-	
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(name="id")
 	private int id;
+	
+	@Column(name="name")
 	private String name;
-	private String type;
-	private int MA;
-	private int ST;
-	private int AG;
-	private int AV;
-	private int cost;
-	private List<Skill> skills;
-	private int team;
-	private String imgUrl;
+	
+	@ManyToOne(fetch = FetchType.EAGER, cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name="playertype_id")
+	private PlayerArchetype type;
+	
+	@ManyToOne(fetch = FetchType.EAGER, cascade= {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name="team_id")
+	private Team teamId;
 	
 	public Player() {
-		skills = new ArrayList<>();
-		id = counter;
-		counter++;
 	}
 
 	public int getId() {
@@ -42,75 +53,39 @@ public class Player {
 	}
 
 	public int getMA() {
-		return MA;
-	}
-
-	public void setMA(int mA) {
-		MA = mA;
+		return type.getMA();
 	}
 
 	public int getST() {
-		return ST;
-	}
-
-	public void setST(int sT) {
-		ST = sT;
+		return type.getST();
 	}
 
 	public int getAG() {
-		return AG;
-	}
-
-	public void setAG(int aG) {
-		AG = aG;
+		return type.getAG();
 	}
 
 	public int getAV() {
-		return AV;
-	}
-
-	public void setAV(int aV) {
-		AV = aV;
+		return type.getAV();
 	}
 
 	public int getCost() {
-		return cost;
-	}
-
-	public void setCost(int cost) {
-		this.cost = cost;
+		return type.getCost();
 	}
 
 	public List<Skill> getSkills() {
-		return skills;
-	}
-
-	public void setSkills(List<Skill> skills) {
-		this.skills = skills;
-	}
-	
-	public void addSkill(Skill skill) {
-		skills.add(skill);
+		return type.getSkills();
 	}
 
 	public int getTeam() {
-		return team;
-	}
-
-	public void setTeam(int team) {
-		this.team = team;
+		return teamId.getId();
 	}
 	
 	public String getImgUrl() {
-		return imgUrl;
+		return type.getImgUrl();
 	}
-
-	public void setImgUrl(String imgUrl) {
-		this.imgUrl = imgUrl;
-	}
-
+	
 	public boolean hasSkill(String name) {
-		for(Skill s : skills) {
+		for(Skill s : this.getSkills()) {
 			if(s.getName().equals(name)) {
 				return true;
 			}
@@ -122,12 +97,12 @@ public class Player {
 		return Integer.toString(id);
 	}
 
-	public String getType() {
+	public PlayerArchetype getArchetype() {
 		return type;
 	}
-
-	public void setType(String type) {
-		this.type = type;
+	
+	public String getType() {
+		return type.getType();
 	}
 
 }
