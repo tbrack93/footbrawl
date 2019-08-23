@@ -858,8 +858,8 @@ public class GameService {
 						int movementToReach = current.getMovementUsed() + 1;
 						int neighbourCost = neighbour.getPlayer() != null ? 10000 : 1;
 						int noMovementPenalty = movementToReach > MA + 2 ? 10000 : 0;
-						double goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 0.5 : 0;
-						double tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 0.5;
+						double goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 4 : 0;
+						double tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 4;
 
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
 								+ noMovementPenalty + tackleZonesPenalty + predictedDistance;
@@ -1471,8 +1471,8 @@ public class GameService {
 		}
 		if (p.isHasBall()) {
 			System.out.println("checking for touchdown");
-			if ((pushedLocation[0] == 0 && p.getTeamIG() == team2)
-					|| pushedLocation[0] == 25 && p.getTeamIG() == team1) {
+			if ((runnableLocation[0][0] == 0 && p.getTeamIG() == team2)
+					|| runnableLocation[0][0] == 25 && p.getTeamIG() == team1) {
 				touchdown(p);
 			}
 		}
