@@ -87,69 +87,67 @@ public class GameService {
 	private List<PlayerInGame> interceptors;
 	private Date created;
 
-	
-
 	public GameService() {
 		team1Assigned = false;
 		team2Assigned = false;
 		waitingForPlayers = true;
 		created = new Date();
 	}
-	
+
 	public Date getCreated() {
 		return created;
 	}
-	
+
 	public boolean isGameFinished() {
-	   return phase == "ended";
+		return phase == "ended";
 	}
-	
+
 	public int assignPlayer(int teamId) {
 		System.out.println(teamId);
-	if(teamId == 0) {
-		if(team1Assigned == false) {
+		if (teamId == 0) {
+			if (team1Assigned == false) {
+				team1Assigned = true;
+				if (team2Assigned == true) {
+					waitingForPlayers = false;
+				}
+				return 1;
+			} else if (team2Assigned == false) {
+				team2Assigned = true;
+				if (team1Assigned == true) {
+					waitingForPlayers = false;
+				}
+				return 2;
+			}
+		} else if (teamId == 1) {
+			if (team1Assigned == true) {
+				throw new IllegalArgumentException("already taken");
+			}
 			team1Assigned = true;
-			if(team2Assigned == true) {
+			if (team2Assigned == true) {
 				waitingForPlayers = false;
-			} 
+			}
 			return 1;
-		} else if(team2Assigned == false) {
+		} else {
+			if (team2Assigned == true) {
+				throw new IllegalArgumentException("already taken");
+			}
 			team2Assigned = true;
-			if(team1Assigned == true) {
+			if (team1Assigned == true) {
 				waitingForPlayers = false;
 			}
 			return 2;
 		}
-	} else if(teamId == 1) {
-		if(team1Assigned == true) {
-			throw new IllegalArgumentException("already taken");
-		}
-		team1Assigned = true;
-		if(team2Assigned == true) {
-			waitingForPlayers = false;
-		}
-		return 1;
-	} else {
-		if(team2Assigned == true) {
-			throw new IllegalArgumentException("already taken");
-		}
-		team2Assigned = true;
-		if(team1Assigned == true) {
-			waitingForPlayers = false;
-		}
-		return 2;
-	}
 		return -1;
 	}
-	
+
 	public boolean isTeam1Assigned() {
 		return team1Assigned;
 	}
-	
+
 	public boolean isTeam2Assigned() {
 		return team2Assigned;
 	}
-	
+
 	public boolean isWaitingForPlayers() {
 		return waitingForPlayers;
 	}
@@ -262,12 +260,12 @@ public class GameService {
 		team1.newKickOff();
 		team2.newKickOff();
 		Tile ball = ballLocationCheck();
-		if(ball != null) {
-		  if(ball.containsPlayer()) {
-			ball.getPlayer().setHasBall(false);
-		  } else {
-			ball.removeBall();
-		  }
+		if (ball != null) {
+			if (ball.containsPlayer()) {
+				ball.getPlayer().setHasBall(false);
+			} else {
+				ball.removeBall();
+			}
 		}
 		if (team1.getReserves().size() == 0 || team2.getReserves().size() == 0) {
 			TeamInGame emptyTeam;
@@ -451,12 +449,12 @@ public class GameService {
 		if (team1.getDugout().isEmpty()) {
 			System.out.println("Team 1 has no KO'd players");
 		} else {
-			for (PlayerInGame p : new ArrayList<PlayerInGame> (team1.getDugout())) {
+			for (PlayerInGame p : new ArrayList<PlayerInGame>(team1.getDugout())) {
 				String outcome;
 				rolled.clear();
 				int result = diceRoller(1, 6)[0];
 				rolled.add(result);
-				if ( result >= 4) {
+				if (result >= 4) {
 					p.setStatus("standing");
 					team1.addToReserves(p);
 					team1.removeFromDugout(p);
@@ -472,7 +470,7 @@ public class GameService {
 		if (team2.getDugout().isEmpty()) {
 			System.out.println("Team 2 has no KO'd players");
 		} else {
-			for (PlayerInGame p : new ArrayList<PlayerInGame> (team2.getDugout())) {
+			for (PlayerInGame p : new ArrayList<PlayerInGame>(team2.getDugout())) {
 				rolled.clear();
 				int result = diceRoller(1, 6)[0];
 				rolled.add(result);
@@ -560,12 +558,12 @@ public class GameService {
 			throw new IllegalArgumentException("Not yours to choose");
 		}
 		Tile location = ballLocationCheck();
-		if(location != null) {
-		  if(location.containsPlayer()) {
-			location.getPlayer().setHasBall(false);
-		  } else {
-			  location.removeBall();
-		  }
+		if (location != null) {
+			if (location.containsPlayer()) {
+				location.getPlayer().setHasBall(false);
+			} else {
+				location.removeBall();
+			}
 		}
 		p.setHasBall(true);
 		sender.sendTouchBackResult(game.getId(), playerId, p.getName());
@@ -624,9 +622,9 @@ public class GameService {
 		} else if (half == 4) {
 			if (game.getTeam1Score() == game.getTeam2Score()) {
 				penaltyShootOuts();
-		    } else {
-			  endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
-		    }
+			} else {
+				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+			}
 		}
 		// check if end of game & if winner
 		// if not start new half or extra time
@@ -635,7 +633,8 @@ public class GameService {
 
 	public void endGame(TeamInGame winners) {
 		System.out.println(winners.getName() + " won the match!");
-		sender.sendGameEnd(game.getId(), winners.getName(), winners.getId(), game.getTeam1Score(), game.getTeam2Score());
+		sender.sendGameEnd(game.getId(), winners.getName(), winners.getId(), game.getTeam1Score(),
+				game.getTeam2Score());
 		phase = "ended";
 		// with database, will save result
 		// in league will need to update league points
@@ -655,11 +654,11 @@ public class GameService {
 		team1.resetRerolls();
 		team2.resetRerolls();
 		String details = "";
-		if(half == 1) {
+		if (half == 1) {
 			details = "First half begins!";
-		} else if(half == 2) {
+		} else if (half == 2) {
 			details = "Second half begins!";
-		} else if(half == 3) {
+		} else if (half == 3) {
 			details = "Extra time begins!";
 		}
 		sender.sendNewHalf(game.getId(), details);
@@ -744,6 +743,7 @@ public class GameService {
 				if (p.getStatus().equals("prone")) {
 					p.setRemainingMA(p.getRemainingMA() - 3);
 				}
+				addTackleZones(p);
 				searchNeighbours(p, position, cost);
 				for (int i = 0; i < 26; i++) {
 					for (int j = 0; j < 15; j++) {
@@ -766,31 +766,42 @@ public class GameService {
 //		    }
 //		}
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
+		
 	}
 
-	// breadth first search to determine where can move
+	// Djisktra's to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		//System.out.println(p.getRemainingMA());
-		if (cost >= p.getRemainingMA() + 2) {
-			return;
-		}
-		addTackleZones(p);
-		for (Tile t : location.getNeighbours()) {
-			if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
-				int currentCost = t.getCostToReach();
-
-				// checking if visited (not default of 99) or visited and new has route better
-				// cost
-				if (currentCost == 99 || currentCost != 99 && currentCost > cost + 1) {
-					if (cost + 1 > p.getRemainingMA()) {
-						t.goForIt();
-					} else {
-						t.setCostToReach(cost + 1);
+		Comparator<Tile> comp = new Comparator<Tile>() {
+			@Override
+			public int compare(Tile t1, Tile t2) {
+				return Double.compare(t1.getCostToReach(), t2.getCostToReach());
+			}
+		};
+		// min queue
+		PriorityQueue<Tile> queue = new PriorityQueue<>(comp);
+		location.setCostToReach(cost);
+		queue.add(location);
+		// System.out.println(p.getRemainingMA());
+		while (!queue.isEmpty()) {
+			Tile temp = queue.poll();
+			cost = temp.getCostToReach();
+			if (temp.getCostToReach() < p.getRemainingMA() + 2) {
+				for (Tile t : temp.getNeighbours()) {
+					if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
+						int currentCost = t.getCostToReach();
+						// checking if visited (not default of 99) or visited and new has route with better cost
+						if (currentCost == 99 || currentCost != 99 && currentCost > cost + 1) {
+							t.setCostToReach(cost + 1);
+							if (cost + 1 > p.getRemainingMA()) {
+								t.goForIt();
+							} 
+							if (queue.contains(t)) {
+								queue.remove(t);
+							}
+							queue.add(t);
+						}
 					}
-					searchNeighbours(p, t, cost + 1);
 				}
-//			} else if (t.getLocation() == location.getLocation()) {
-//				t.setCostToReach(p.getStatus().equals("prone") ? 3 : 0);
 			}
 		}
 	}
@@ -803,7 +814,6 @@ public class GameService {
 		actionCheck(p);
 		addTackleZones(p);
 		Tile origin = pitch[from[0]][from[1]];
-		// Tile origin = selectedPlayer.getTile();
 		Tile target = pitch[goal[0]][goal[1]];
 		int MA = p.getRemainingMA();
 		System.out.println("optimised remaining MA " + MA);
@@ -838,7 +848,7 @@ public class GameService {
 
 			if (!current.isVisited()) {
 				current.setVisited(true);
-				// if last element in PQ reached
+				// if visiting target square
 				if (current.equals(target)) {
 					return getTravelPath(p, origin, target);
 				}
@@ -847,11 +857,11 @@ public class GameService {
 				for (Tile neighbour : neighbours) {
 					if (!neighbour.isVisited()) {
 
-						// Chebyshev distance
-						double predictedDistance;
+						// Chebyshev distance. Straight moves made slightly cheaper cost as otherwise
+						// creates diagonal move heavy routes, which to human looks odd
 						double xDist = Math.abs((neighbour.getLocation()[0] - target.getLocation()[0]));
 						double yDist = Math.abs((neighbour.getLocation()[1] - target.getLocation()[1]));
-						predictedDistance = 0.99 * (xDist + yDist) + (1 - 2 * 0.99) * Math.min(xDist, yDist);						
+						double predictedDistance = 0.99 * (xDist + yDist) + (1 - 2 * 0.99) * Math.min(xDist, yDist);
 
 						// Penalties to prevent invalid moves and prefer not entering tackle zones or
 						// Going For It
@@ -863,15 +873,6 @@ public class GameService {
 
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
 								+ noMovementPenalty + tackleZonesPenalty + predictedDistance;
-						// check if distance smaller
-//						System.out.println("Current " + current.getPosition()[0] + " " +current.getPosition()[1]);
-//						System.out.println("Neighbour " + neighbour.getPosition()[0] + " " + neighbour.getPosition()[1]);
-//						System.out.println("Total:" + totalDistance);
-//						System.out.println("Current:" + neighbour.getTotalDistance());
-//						System.out.println("No Movement penalty? " + noMovementPenalty);
-//						System.out.println(" Tacklezones penalty?" + tackleZonesPenalty);
-//						System.out.println("Predicted distance " + predictedDistance);
-//						System.out.println();
 						if (totalDistance < neighbour.getTotalDistance()) {
 							// update tile's distance
 							neighbour.setTotalDistance(totalDistance);
@@ -882,7 +883,7 @@ public class GameService {
 							// set parent
 							neighbour.setParent(current);
 							// enqueue
-							if(priorityQueue.contains(neighbour)){
+							if (priorityQueue.contains(neighbour)) {
 								priorityQueue.remove(neighbour);
 							}
 							priorityQueue.add(neighbour);
@@ -1015,8 +1016,10 @@ public class GameService {
 		} else {
 			routeMACost = jRoute.size() - 1 + (jRoute.get(0).getStandUpRoll() != null ? 3 : 0);
 		}
-		int[][] attLocations = getJsonFriendlyAssists(attacker, route.get(route.size()-1), opponent, opponent.getTile());
-		int[][] defLocations = getJsonFriendlyAssists(opponent, opponent.getTile(), attacker, route.get(route.size() -1));
+		int[][] attLocations = getJsonFriendlyAssists(attacker, route.get(route.size() - 1), opponent,
+				opponent.getTile());
+		int[][] defLocations = getJsonFriendlyAssists(opponent, opponent.getTile(), attacker,
+				route.get(route.size() - 1));
 		sender.sendBlitzDetails(game.getId(), attacker.getId(), opponent.getId(),
 				route.get(route.size() - 1).getLocation(), opponent.getLocation(), attLocations, defLocations, jRoute,
 				routeMACost, block, attacker.getTeam());
@@ -1133,7 +1136,7 @@ public class GameService {
 			p.setHasBall(false);
 			scatterBall(location, 1);
 		} else {
-		   turnover();
+			turnover();
 		}
 	}
 
@@ -1298,8 +1301,8 @@ public class GameService {
 			}
 			pushAction(attacker, defender, followUp);
 		}
-		if(blitz == null) {
-		  endOfAction(attacker);
+		if (blitz == null) {
+			endOfAction(attacker);
 		} else {
 			System.out.println("Blitzer is here:" + attacker.getTile());
 		}
@@ -1372,7 +1375,7 @@ public class GameService {
 		}
 		if (push.isEmpty()) {
 			pushOffPitch(attacker, defender);
-			
+
 		} else {
 			ArrayList<jsonTile> jPush = new ArrayList<>();
 			for (Tile t : push) {
@@ -1381,6 +1384,7 @@ public class GameService {
 				jPush.add(jt);
 			}
 			Runnable task = new Runnable() {
+
 				@Override
 				public void run() {
 					carryOutPush(attacker.getId(), defender.getId(), attacker.getLocation(), defender.getLocation(),
@@ -1388,6 +1392,7 @@ public class GameService {
 				}
 			};
 			taskQueue.addFirst(task);
+
 			int userToChoose = activeTeam.getId();
 			if (defender.hasSkill("Side Step") && defender.getTeam() != activeTeam.getId()) {
 				userToChoose = defender.getTeam();
@@ -1434,6 +1439,7 @@ public class GameService {
 		if (pushChoice.containsPlayer()) {
 			int[] target = runnableLocation[0];
 			Runnable task = new Runnable() {
+
 				@Override
 				public void run() {
 					origin.removePlayer();
@@ -1452,6 +1458,7 @@ public class GameService {
 					}
 				}
 			};
+
 			Runnable task2 = new Runnable() {
 				@Override
 				public void run() {
@@ -1509,8 +1516,9 @@ public class GameService {
 
 	public void pushOffPitch(PlayerInGame pusher, PlayerInGame pushed) {
 		System.out.println(pushed.getName() + " was pushed into the crowd and gets beaten!");
-		int [] direction = new int[] {pushed.getLocation()[0] - pusher.getLocation()[0], pushed.getLocation()[1] - pusher.getLocation()[1]};
-		int [] target = new int[] {pushed.getLocation()[0] + direction[0], pushed.getLocation()[1] + direction[1]};
+		int[] direction = new int[] { pushed.getLocation()[0] - pusher.getLocation()[0],
+				pushed.getLocation()[1] - pusher.getLocation()[1] };
+		int[] target = new int[] { pushed.getLocation()[0] + direction[0], pushed.getLocation()[1] + direction[1] };
 		sender.sendPushResult(game.getId(), pushed.getId(), pushed.getName(), pushed.getLocation(), target, "OFFPITCH");
 		Tile origin = pushed.getTile();
 		injuryRoll(pushed); // if KO'd or injured it will remove them from pitch
@@ -1681,22 +1689,22 @@ public class GameService {
 					scatterBall(target, 1); // if player can't catch, will scatter again
 				}
 			} else {
-				target.setContainsBall(true); 
+				target.setContainsBall(true);
 				if (inPassOrHandOff == true) {
 					System.out.println("bad throw onto empty square");
 					inPassOrHandOff = false;
 					turnover();
-				} else if(inTurnover == true) {
+				} else if (inTurnover == true) {
 					turnover();
 				}
-				if(phase == "kick") {
+				if (phase == "kick") {
 					checkForTouchBack();
 				}
-				
+
 			}
 		} else {
-			if(phase != "kick") {
-			  sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
+			if (phase != "kick") {
+				sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
 			}
 			ballOffPitch(origin);
 		}
@@ -1766,12 +1774,13 @@ public class GameService {
 				scatterBall(player.getTile(), 1);
 				if (phase != "kick") {
 					Tile scatteredTo = ballLocationCheck();
-					if (!scatteredTo.containsPlayer() && inPassOrHandOff == true || scatteredTo.containsPlayer() && scatteredTo.getPlayer().getTeamIG() != activeTeam) {
+					if (!scatteredTo.containsPlayer() && inPassOrHandOff == true
+							|| scatteredTo.containsPlayer() && scatteredTo.getPlayer().getTeamIG() != activeTeam) {
 						turnover(); // only a turnover if ball is not caught by player on active team before comes
 									// to
 									// rest
 					}
-				} 
+				}
 			}
 		}
 	}
@@ -1816,6 +1825,7 @@ public class GameService {
 			if (!options.isEmpty()) { // will automatically use reroll if available, as no reason not to (can only be
 										// a skill)
 				Runnable task2 = new Runnable() {
+
 					@Override
 					public void run() {
 						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed,
@@ -1824,6 +1834,7 @@ public class GameService {
 								options.get(0));
 						taskQueue.pop().run();
 					}
+
 				};
 				taskQueue.add(task2);
 				interceptBallAction(source, player, true);
@@ -1913,6 +1924,7 @@ public class GameService {
 			if (interceptor != null) {
 				rollType = "INTERCEPT";
 				Runnable task2 = new Runnable() {
+
 					@Override
 					public void run() {
 						sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled,
@@ -1921,6 +1933,7 @@ public class GameService {
 					}
 				};
 				taskQueue.add(task2);
+
 				Runnable task3 = new Runnable() {
 					@Override
 					public void run() {
@@ -2221,10 +2234,10 @@ public class GameService {
 	public List<PlayerInGame> getAssists(PlayerInGame p1, Tile p1Location, PlayerInGame p2, Tile p2Location) {
 		Tile p1Origin = p1.getTile();
 		Tile p2Origin = p2.getTile();
-		if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
+		if (!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
 			p1Location.addPlayer(p1);
 		}
-		if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
+		if (!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
 			p2Location.addPlayer(p2);
 		}
 		p1.setHasTackleZones(false);
@@ -2251,14 +2264,14 @@ public class GameService {
 		}
 		p1.setHasTackleZones(true);
 		p2.setHasTackleZones(true);
-		//if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
-			p1Location.removePlayer();
-			p1Origin.addPlayer(p1);
-	//	}
-	//	if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
-			p2Location.removePlayer();
-			p2Origin.addPlayer(p2);
-	//	}
+		// if(!Arrays.equals(p1Origin.getLocation(), p1Location.getLocation())) {
+		p1Location.removePlayer();
+		p1Origin.addPlayer(p1);
+		// }
+		// if(!Arrays.equals(p2Origin.getLocation(), p2Location.getLocation())) {
+		p2Location.removePlayer();
+		p2Origin.addPlayer(p2);
+		// }
 		return results;
 	}
 
@@ -2460,7 +2473,7 @@ public class GameService {
 				route.get(jsonMoved.size() - 1), target, rerollOptions, teamId, finalRoll, false);
 		if (rollResult.equals("success")) {
 			System.out.println("in roll result success");// no reroll needed so just continue route
-			if(rollType == "PICKUPBALL") {
+			if (rollType == "PICKUPBALL") {
 				if ((target[0] == 0 && p.getTeamIG() == team2) || target[0] == 25 && p.getTeamIG() == team1) {
 					touchdown(p);
 					return;
@@ -2482,7 +2495,7 @@ public class GameService {
 					return;
 				} else if (blitz != null) {
 					blitz.run();
-				} 
+				}
 			}
 		} else if (rerollOptions.isEmpty()) {
 			System.out.println("end of the line");
@@ -2661,14 +2674,14 @@ public class GameService {
 	public List<String> determineRerollOptions(String action, int playerId, int[][] location) {
 		System.out.println("in determine rerolls");
 		List<String> results = new ArrayList<>();
-		if (action != "BLOCK" && awaitingReroll != null && runnableLocation != null && Arrays.equals(location[0], runnableLocation[0])
-				&& Arrays.equals(location[1], runnableLocation[1]) && playerId == Integer.parseInt(awaitingReroll[2])
-				&& action == awaitingReroll[1]) { // means in a
-													// reroll -
-													// can't reroll
-													// something
-													// more than
-													// once
+		if (action != "BLOCK" && awaitingReroll != null && runnableLocation != null
+				&& Arrays.equals(location[0], runnableLocation[0]) && Arrays.equals(location[1], runnableLocation[1])
+				&& playerId == Integer.parseInt(awaitingReroll[2]) && action == awaitingReroll[1]) { // means in a
+																										// reroll -
+																										// can't reroll
+																										// something
+																										// more than
+																										// once
 			System.out.println("the same");
 			return results;
 		}
@@ -2791,7 +2804,8 @@ public class GameService {
 				defLocations, team);
 	}
 
-	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, Tile attackerLocation, PlayerInGame defender, Tile defenderLocation) {
+	public int[][] getJsonFriendlyAssists(PlayerInGame attacker, Tile attackerLocation, PlayerInGame defender,
+			Tile defenderLocation) {
 		List<PlayerInGame> support = getAssists(attacker, attackerLocation, defender, defenderLocation);
 		// just send assist locations to save amount of data sent
 		int[][] assistLocations = new int[support.size()][2];
@@ -2982,7 +2996,7 @@ public class GameService {
 		} else if (activePlayer.getActedThisTurn() == true && activePlayer != thrower) {
 			endOfAction(activePlayer);
 			activePlayer = thrower;
-		} 
+		}
 		actionCheck(thrower);
 		if (!thrower.isHasBall()) {
 			throw new IllegalArgumentException("Player doesn't have the ball");
@@ -3003,7 +3017,7 @@ public class GameService {
 			taskQueue.add(task);
 			ArrayList<Integer> interceptIds = new ArrayList<>();
 			ArrayList<jsonTile> interceptLocations = new ArrayList<>();
-			for(PlayerInGame p : interceptors) {
+			for (PlayerInGame p : interceptors) {
 				interceptIds.add(p.getId());
 				jsonTile jt = new jsonTile();
 				jt.setPosition(p.getLocation());
@@ -3072,37 +3086,38 @@ public class GameService {
 
 	public void actOnIntercept(int team, Integer player, int[] location) {
 		PlayerInGame p = getPlayerById(player);
-		if(!interceptors.contains(p)) {
+		if (!interceptors.contains(p)) {
 			throw new IllegalArgumentException("Not a valid interceptor");
 		}
-		if(!Arrays.equals(p.getLocation(), location)) {
+		if (!Arrays.equals(p.getLocation(), location)) {
 			throw new IllegalArgumentException("Interceptor not in that location");
 		}
 		interceptor = p;
 		taskQueue.pop().run();
 	}
-	
+
 	public void makeActivePlayer(PlayerInGame player) {
 		if (activePlayer == null) {
 			activePlayer = player;
-		} else if ((activePlayer.getActedThisTurn() == true || activePlayer.getTeam() != activeTeam.getId()) && activePlayer != player) {
+		} else if ((activePlayer.getActedThisTurn() == true || activePlayer.getTeam() != activeTeam.getId())
+				&& activePlayer != player) {
 			endOfAction(activePlayer);
 			activePlayer = player;
 		}
 	}
-	
+
 	public void autoSetupTeam(String type, int team) {
-		if(team != activeTeam.getId()) {
+		if (team != activeTeam.getId()) {
 			throw new IllegalArgumentException("Not you to choose");
 		}
-		if(activeTeam.getId() == team1.getId()) {
+		if (activeTeam.getId() == team1.getId()) {
 			System.out.println("in autosetup");
-			for(PlayerInGame p : team1.getPlayersOnPitch()) {
-				if(p.getTile() !=null) {
+			for (PlayerInGame p : team1.getPlayersOnPitch()) {
+				if (p.getTile() != null) {
 					p.getTile().removePlayer();
 				}
 			}
-			if(type.contains("offense")) {
+			if (type.contains("offense")) {
 				pitch[11][4].addPlayer(getPlayerById(1));
 				pitch[11][1].addPlayer(getPlayerById(4));
 				pitch[12][5].addPlayer(getPlayerById(11));
@@ -3113,8 +3128,8 @@ public class GameService {
 				pitch[12][9].addPlayer(getPlayerById(14));
 				pitch[12][6].addPlayer(getPlayerById(13));
 				pitch[11][13].addPlayer(getPlayerById(10));
-				pitch[9][3].addPlayer(getPlayerById(12));	
-			} else if(type.contains("defense")) {
+				pitch[9][3].addPlayer(getPlayerById(12));
+			} else if (type.contains("defense")) {
 				pitch[7][7].addPlayer(getPlayerById(7));
 				pitch[12][6].addPlayer(getPlayerById(13));
 				pitch[12][7].addPlayer(getPlayerById(9));
@@ -3128,22 +3143,22 @@ public class GameService {
 				pitch[12][13].addPlayer(getPlayerById(10));
 			}
 			List<PlayerInGame> copy = new ArrayList<>(team1.getReserves());
-			for(PlayerInGame p : copy) {
+			for (PlayerInGame p : copy) {
 				team1.addPlayerOnPitch(p);
 			}
-			for(PlayerInGame p : team1.getDugout()) {
+			for (PlayerInGame p : team1.getDugout()) {
 				p.getTile().removePlayer();
 			}
-			for(PlayerInGame p : team1.getInjured()) {
+			for (PlayerInGame p : team1.getInjured()) {
 				p.getTile().removePlayer();
 			}
 		} else {
-			for(PlayerInGame p : team2.getPlayersOnPitch()) {
-				if(p.getTile() !=null) {
+			for (PlayerInGame p : team2.getPlayersOnPitch()) {
+				if (p.getTile() != null) {
 					p.getTile().removePlayer();
 				}
 			}
-			if(type.contains("offense")) {
+			if (type.contains("offense")) {
 				pitch[14][4].addPlayer(getPlayerById(15));
 				pitch[14][2].addPlayer(getPlayerById(22));
 				pitch[23][9].addPlayer(getPlayerById(3));
@@ -3155,7 +3170,7 @@ public class GameService {
 				pitch[13][5].addPlayer(getPlayerById(19));
 				pitch[23][5].addPlayer(getPlayerById(16));
 				pitch[14][10].addPlayer(getPlayerById(6));
-			} else if(type.contains("defense")) {
+			} else if (type.contains("defense")) {
 				pitch[18][5].addPlayer(getPlayerById(22));
 				pitch[13][10].addPlayer(getPlayerById(6));
 				pitch[13][7].addPlayer(getPlayerById(20));
@@ -3169,24 +3184,24 @@ public class GameService {
 				pitch[13][6].addPlayer(getPlayerById(21));
 			}
 			List<PlayerInGame> copy = new ArrayList<>(team2.getReserves());
-			for(PlayerInGame p : copy) {
-				if(p.getId() != 23) {
-				  team2.addPlayerOnPitch(p);
+			for (PlayerInGame p : copy) {
+				if (p.getId() != 23) {
+					team2.addPlayerOnPitch(p);
 				}
 			}
-			for(PlayerInGame p : team2.getDugout()) {
+			for (PlayerInGame p : team2.getDugout()) {
 				p.getTile().removePlayer();
 			}
-			for(PlayerInGame p : team2.getInjured()) {
+			for (PlayerInGame p : team2.getInjured()) {
 				p.getTile().removePlayer();
 			}
 		}
 		sender.sendSetupUpdate(game.getId(), activeTeam, activeTeam == team1 ? 1 : 2);
 	}
-	
+
 	// just for testing
 	public void setPhase(String phase) {
 		this.phase = phase;
 	}
-	
+
 }
