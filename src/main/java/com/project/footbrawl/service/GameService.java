@@ -785,7 +785,7 @@ public class GameService {
 		while (!queue.isEmpty()) {
 			Tile temp = queue.poll();
 			cost = temp.getCostToReach();
-			if (temp.getCostToReach() < p.getRemainingMA() + 2) {
+			if (temp.getCostToReach() <= p.getRemainingMA() + 2) {
 				for (Tile t : temp.getNeighbours()) {
 					if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
 						int currentCost = t.getCostToReach();
