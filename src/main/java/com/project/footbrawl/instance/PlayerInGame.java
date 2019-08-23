@@ -69,10 +69,10 @@ public class PlayerInGame{
 		//actionOver = true;
 	}
 	
-	public void setMA(int MA) {
-		player.setMA(MA);;
-		this.remainingMA = MA;
-	}
+//	public void setMA(int MA) {
+//		player.setMA(MA);
+//		this.remainingMA = MA;
+//	}
 
 	public int getRemainingMA() {
 		return remainingMA;

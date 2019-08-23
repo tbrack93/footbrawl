@@ -1,25 +1,50 @@
 package com.project.footbrawl.entity;
 
-// just data that will be stored in database
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="game")
 public class Game {
 	
-	public static int idCounter; // id will be handled by database
-	
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="id")
 	private int id;
-	private Team team1;
-	private Team team2;
-	private int team1Score;
-	private int team2Score;
 	
+	@Column(name="game_status")
 	private String status;
 	
+	@Column(name="team1_score")
+	private int team1Score;
+	
+	@Column(name="team2_score")
+	private int team2Score;
+	
+	@ManyToOne(fetch = FetchType.EAGER, cascade= {CascadeType.MERGE})
+    @JoinColumn(name="team1_id")
+	private Team team1;
+	
+	@ManyToOne(fetch = FetchType.EAGER, cascade= {CascadeType.MERGE})
+    @JoinColumn(name="team2_id")
+	private Team team2; 
+	
 	public Game() {
-		idCounter++;
-		id = idCounter; 
+		status = "created";
+		team1Score = 0;
+		team2Score = 0;
 	}
 
 	public Game(Team team1, Team team2) {
-		this.id = ++idCounter; 
+		status = "created";
 		this.team1 = team1;
 		this.team2 = team2;
 		team1Score = 0;
