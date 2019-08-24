@@ -1,5 +1,6 @@
 package com.project.footbrawl.instance;
 
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +14,7 @@ public class Tile {
 	private boolean containsBall;
 	private boolean empty;
 	private boolean moveTo;
+	private boolean goForIt;
 	private int costToReach; // for if possible to move there (with shortest path)
 	Set<PlayerInGame> tacklers;
 
@@ -40,6 +42,7 @@ public class Tile {
 		costToReach = 99;
 		tacklers = new HashSet<>();
 		movementUsed = 0;
+		goForIt = false;
 	}
 
 	public void addPlayer(PlayerInGame p) {
@@ -95,7 +98,11 @@ public class Tile {
 	}
 
 	public void goForIt() {
-		costToReach = 77;
+		goForIt = true;
+	}
+	
+	public void setGoForIt(boolean gfi) {
+		goForIt = gfi;
 	}
 
 	public void moveTo() {
@@ -108,6 +115,7 @@ public class Tile {
 
 	public void resetMovement() {
 		moveTo = false;
+		goForIt = false;
 		costToReach = 99;
 		tacklers.clear();
 		if(player != null && player.getTile() != this) {
@@ -207,7 +215,7 @@ public class Tile {
 	}
 
 	public boolean getGoForIt() {
-		return costToReach == 77;
+		return goForIt;
 	}
 	
 	public void setContainsBall(boolean ball) {
