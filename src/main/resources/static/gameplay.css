@@ -319,3 +319,7 @@ a {
 #modalText{
 	word-wrap: break-word
 }
+
+#newGame{
+	margin-top: 10px;
+}

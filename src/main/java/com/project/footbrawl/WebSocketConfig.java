@@ -16,6 +16,6 @@ package com.project.footbrawl;
 	    }
 		
 	    public void registerStompEndpoints(StompEndpointRegistry registry) {
-	        registry.addEndpoint("/messages").withSockJS();
+	        registry.addEndpoint("/messages").setAllowedOrigins("*").withSockJS();;
 	    }
 	}
