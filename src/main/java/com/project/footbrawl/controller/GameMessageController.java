@@ -22,7 +22,6 @@ public class GameMessageController {
 	    
 		@MessageMapping("/game/gameplay/{game}/{team}")
 		public void specificTeam(@DestinationVariable int game, @DestinationVariable int team, MessageFromClient message) throws Exception {
-		  System.out.println(message);
 		  decoder.decode(message, game, team);
 		}
 		
@@ -32,14 +31,10 @@ public class GameMessageController {
 		}
 		
 		public void sendMessageToUser(int game, int team, MessageToClient message) {
-			System.out.println("Sending message");
-			System.out.println("game: " + game + " team: " + team);
 			sending.convertAndSend("/queue/game/" + game + "/" + team, message);
 		}
 		
 		public void sendMessageToBothUsers(int game, MessageToClient message) {
-			System.out.println("Sending message");
-			System.out.println("game: " + game);
 			sending.convertAndSend("/topic/game/" + game, message);
 		}
 		

@@ -833,7 +833,6 @@ public class GameService {
 		Tile origin = pitch[from[0]][from[1]];
 		Tile target = pitch[goal[0]][goal[1]];
 		int MA = p.getRemainingMA();
-		System.out.println("optimised remaining MA " + MA);
 
 		Comparator<Tile> comp = new Comparator<Tile>() {
 			@Override
@@ -943,7 +942,7 @@ public class GameService {
 		for (int i = 0; i < route.size(); i++) {
 			Tile t = route.get(i);
 			jsonTile jt = new jsonTile(t);
-			System.out.print("\n" + t.getLocation()[0] + " " + t.getLocation()[1]);
+			//System.out.print("\n" + t.getLocation()[0] + " " + t.getLocation()[1]);
 			if (i == 0 && standingCost > 0) {
 				// System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
 				jt.setStandUpRoll((p.getRemainingMA() < 3 ? 4 : 0));
@@ -978,7 +977,7 @@ public class GameService {
 				origin = totalRoute.get(totalRoute.size() - 1);
 				totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
 				p.setRemainingMA(startingMA - (totalRoute.size()));
-				System.out.println("remaining MA: " + p.getRemainingMA());
+			//	System.out.println("remaining MA: " + p.getRemainingMA());
 			}
 			totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), goal, true));
 		} catch (Exception e) {

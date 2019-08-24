@@ -114,7 +114,7 @@ public class GameLobbyService {
 			Map.Entry<Integer, GameService> game = games.next();
 			GameService gs = game.getValue();
 			if(gs.isGameFinished() || new Date().getTime() - gs.getCreated().getTime() > 9000000) {
-				System.out.println("Removing game: " + gs.getGameId());
+				//System.out.println("Removing game: " + gs.getGameId());
 				gs = null; 
 				games.remove();
 			}
