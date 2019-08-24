@@ -29,11 +29,11 @@ public class Game {
 	@Column(name="team2_score")
 	private int team2Score;
 	
-	@ManyToOne(fetch = FetchType.EAGER, cascade= {CascadeType.MERGE})
+	@ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="team1_id")
 	private Team team1;
 	
-	@ManyToOne(fetch = FetchType.EAGER, cascade= {CascadeType.MERGE})
+	@ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="team2_id")
 	private Team team2; 
 	

@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.project.footbrawl.DAO.GameRepository;
 import com.project.footbrawl.entity.Game;
 import com.project.footbrawl.instance.PlayerInGame;
 import com.project.footbrawl.instance.TeamInGame;
@@ -33,6 +34,9 @@ public class GameService {
 
 	@Autowired
 	MessageSendingService sender;
+	
+	@Autowired
+	GameRepository gameRepo;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
 			Arrays.asList(new Integer[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
@@ -224,6 +228,8 @@ public class GameService {
 
 	public void startGame() {
 		half = 1;
+		game.setStatus("started");
+		gameRepo.save(game);
 		coinToss();
 	}
 
@@ -605,6 +611,8 @@ public class GameService {
 		Tile locate = ballLocationCheck();
 		if (locate == null) {
 			description = "Ball went off pitch";
+		} else {
+			locate.removeBall();
 		}
 		sender.sendTouchBackRequest(game.getId(), options, team.getId(), description);
 	}
@@ -636,6 +644,8 @@ public class GameService {
 		sender.sendGameEnd(game.getId(), winners.getName(), winners.getId(), game.getTeam1Score(),
 				game.getTeam2Score());
 		phase = "ended";
+		game.setStatus("ended");
+		gameRepo.save(game);
 		// with database, will save result
 		// in league will need to update league points
 	}
@@ -750,7 +760,7 @@ public class GameService {
 						Tile t = pitch[i][j];
 						if (t.getCostToReach() != 99) {
 							jsonTile jTile = new jsonTile(t);
-							if (t.getCostToReach() == 77 && t != position) {
+							if (t.getGoForIt() == true && t != position) {
 								jTile.setGoingForItRoll(2); // if blizzard this will be 3
 							}
 							squares.add(jTile);
@@ -765,6 +775,9 @@ public class GameService {
 //				System.out.println(t.getCostToReach());
 //		    }
 //		}
+		if(squares.size() == 1) {
+			squares.clear();
+		}
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 		
 	}
@@ -785,7 +798,7 @@ public class GameService {
 		while (!queue.isEmpty()) {
 			Tile temp = queue.poll();
 			cost = temp.getCostToReach();
-			if (temp.getCostToReach() <= p.getRemainingMA() + 2) {
+			if (temp.getCostToReach() < p.getRemainingMA() + 2) {
 				for (Tile t : temp.getNeighbours()) {
 					if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
 						int currentCost = t.getCostToReach();
@@ -794,7 +807,9 @@ public class GameService {
 							t.setCostToReach(cost + 1);
 							if (cost + 1 > p.getRemainingMA()) {
 								t.goForIt();
-							} 
+							} else {
+								t.setGoForIt(false);
+							}
 							if (queue.contains(t)) {
 								queue.remove(t);
 							}
@@ -1579,6 +1594,7 @@ public class GameService {
 		} else {
 			kickOff(tg);
 		}
+		gameRepo.save(game);
 	}
 
 	public void knockDown(PlayerInGame p) {

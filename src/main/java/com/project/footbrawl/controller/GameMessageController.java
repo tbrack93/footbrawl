@@ -5,6 +5,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
 import com.project.footbrawl.instance.MessageFromClient;
 import com.project.footbrawl.instance.MessageToClient;
@@ -18,7 +19,7 @@ public class GameMessageController {
 	    
 	    @Autowired	    
 		private SimpMessageSendingOperations sending;
-
+	    
 		@MessageMapping("/game/gameplay/{game}/{team}")
 		public void specificTeam(@DestinationVariable int game, @DestinationVariable int team, MessageFromClient message) throws Exception {
 		  System.out.println(message);

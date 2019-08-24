@@ -14,7 +14,7 @@
 <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
 <script th:src="@{/webjars/sockjs-client/sockjs.min.js}"></script>
 <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
-<script th:src="@{/app.js}"></script>
+<script th:src="@{/game.js}"></script>
 <script th:src="@{/dragModal.js}"></script>
 </head>
 <body onresize="resizeActions()">
@@ -137,7 +137,7 @@
 
 						<button id="closeModal" class="btn btn-warning"
 							onclick="closeModal()" style="display: none">Close</button>
-						<a href="/game/join"><button id="newGame"
+						<a th:href="@{/game/join(team=${team},invite=0)}"><button id="newGame"
 								class="btn btn-success" style="display: none">Play
 								Again</button></a>
 					</div>
