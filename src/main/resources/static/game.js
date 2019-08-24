@@ -1654,6 +1654,7 @@ if(team2Reserves == null || message.team2FullDetails.reserves.length != team2Res
 document.getElementById('team1Rerolls').innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
 document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
 canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 drawPlayers();
 drawBall();
 setTimeout(function(){

@@ -823,7 +823,9 @@ public class GameService {
 
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
-	public List<Tile> getOptimisedRoute(int playerId, int[] from, int[] goal) {
+	// Penalties mean no longer gauranteed to find a route if involves many penalties, so if fails to find one
+	// repeats without penalties. If still fails, exception thrown
+	public List<Tile> getOptimisedRoute(int playerId, int[] from, int[] goal, boolean withPenalties) {
 		PlayerInGame p = getPlayerById(playerId);
 		makeActivePlayer(p);
 		actionCheck(p);
@@ -844,8 +846,8 @@ public class GameService {
 
 		for (Tile array[] : pitch) {
 			for (Tile t : array) {
-				t.setWeightedDistance(1000);
-				t.setTotalDistance(1000.0);
+				t.setWeightedDistance(10000);
+				t.setTotalDistance(10000.0);
 				t.setHeuristicDistance(0.0);
 				t.setMovementUsed(0);
 				t.setParent(null);
@@ -883,8 +885,12 @@ public class GameService {
 						int movementToReach = current.getMovementUsed() + 1;
 						int neighbourCost = neighbour.getPlayer() != null ? 10000 : 1;
 						int noMovementPenalty = movementToReach > MA + 2 ? 10000 : 0;
-						double goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 4 : 0;
-						double tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 4;
+						double goForItPenalty = 0;
+						double tackleZonesPenalty = 0;
+						if(withPenalties == true) {
+						  goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 4 : 0;
+						  tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 4;
+						}
 
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
 								+ noMovementPenalty + tackleZonesPenalty + predictedDistance;
@@ -899,13 +905,15 @@ public class GameService {
 							neighbour.setParent(current);
 							// enqueue
 							if (priorityQueue.contains(neighbour)) {
-								priorityQueue.remove(neighbour);
-							}
+								priorityQueue.remove(neighbour);							}
 							priorityQueue.add(neighbour);
 						}
 					}
 				}
 			}
+		}
+		if(withPenalties == true) {
+			return getOptimisedRoute(playerId, from, goal, false);
 		}
 		throw new IllegalArgumentException("Selected player cannot reach that point");
 	}
@@ -966,13 +974,13 @@ public class GameService {
 		Tile origin = p.getTile();
 		try {
 			for (int[] i : waypoints) {
-				totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), i));
+				totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), i, true));
 				origin = totalRoute.get(totalRoute.size() - 1);
 				totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
 				p.setRemainingMA(startingMA - (totalRoute.size()));
 				System.out.println("remaining MA: " + p.getRemainingMA());
 			}
-			totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), goal));
+			totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), goal, true));
 		} catch (Exception e) {
 			System.out.println("Can't reach here");
 			return new ArrayList<Tile>();
@@ -1054,7 +1062,7 @@ public class GameService {
 		if (waypoints != null) {
 			route = getRouteWithWaypoints(attacker.getId(), waypoints, goal);
 		} else {
-			route = getOptimisedRoute(attacker.getId(), attacker.getLocation(), goal);
+			route = getOptimisedRoute(attacker.getId(), attacker.getLocation(), goal, true);
 		}
 		target = pitch[goal[0]][goal[1]];
 		if (route.isEmpty()) {
@@ -2366,7 +2374,7 @@ public class GameService {
 
 	public void sendRoute(int playerId, int[] from, int[] target, int teamId) {
 		makeActivePlayer(getPlayerById(playerId));
-		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target), getPlayerById(playerId));
+		List<jsonTile> route = jsonRoute(getOptimisedRoute(playerId, from, target, true), getPlayerById(playerId));
 		int routeMACost;
 		if (route.isEmpty()) {
 			routeMACost = 0;
