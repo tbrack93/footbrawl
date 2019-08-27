@@ -19,85 +19,85 @@ public class MessageDecoderService {
 		String action = message.getAction();
 		if (type.equals("INFO")) {
 			if (action.equals("ACTIONS")) {
-				lobby.getGameService(gameId).showPossibleActions(message.getPlayer(), team);
+				lobby.getGamePlayService(gameId).showPossibleActions(message.getPlayer(), team);
 			} else if (action.equals("MOVEMENT")) {
-				lobby.getGameService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(),
+				lobby.getGamePlayService(gameId).showPossibleMovement(message.getPlayer(), message.getLocation(),
 						message.getRouteMACost(), team);
 			} else if (action.equals("TEAMS")) {
-				lobby.getGameService(gameId).sendTeamsInfo(team);
+				lobby.getGamePlayService(gameId).sendTeamsInfo(team);
 			} else if (action.equals("ROUTE")) {
 				if (message.getWaypoints().size() != 0) {
-					lobby.getGameService(gameId).sendWaypointRoute(message.getPlayer(), message.getTarget(),
+					lobby.getGamePlayService(gameId).sendWaypointRoute(message.getPlayer(), message.getTarget(),
 							message.getWaypoints(), team);
 				} else {
-					lobby.getGameService(gameId).sendRoute(message.getPlayer(), message.getLocation(),
+					lobby.getGamePlayService(gameId).sendRoute(message.getPlayer(), message.getLocation(),
 							message.getTarget(), team);
 				}
 				return;
 			} else if (action.equals("BLOCK")) {
-				lobby.getGameService(gameId).sendBlockDetails(message.getPlayer(), message.getOpponent(),
+				lobby.getGamePlayService(gameId).sendBlockDetails(message.getPlayer(), message.getOpponent(),
 						message.getLocation(), team);
 			} else if (action.equals("BLITZ")) {
-				lobby.getGameService(gameId).sendBlitzDetails(message.getPlayer(), message.getOpponent(),
+				lobby.getGamePlayService(gameId).sendBlitzDetails(message.getPlayer(), message.getOpponent(),
 						message.getWaypoints(), message.getTarget(), team);
 			} else if (action.equals("THROWRANGES")) {
-				lobby.getGameService(gameId).sendThrowRange(message.getPlayer(), message.getLocation(), team);
+				lobby.getGamePlayService(gameId).sendThrowRange(message.getPlayer(), message.getLocation(), team);
 			} else if (action.equals("THROW")) {
-				lobby.getGameService(gameId).sendThrowDetails(message.getPlayer(), message.getTarget(), team);
+				lobby.getGamePlayService(gameId).sendThrowDetails(message.getPlayer(), message.getTarget(), team);
 			} else if (action.equals("HANDOFF")) {
-				lobby.getGameService(gameId).sendHandOffDetails(message.getPlayer(), message.getTarget(),
+				lobby.getGamePlayService(gameId).sendHandOffDetails(message.getPlayer(), message.getTarget(),
 						message.getOpponent(), team);
 			}
 		} else if (type.equals("ACTION")) {
 			if (action.equals("ROUTE")) {
-				lobby.getGameService(gameId).carryOutRouteAction(message.getPlayer(), message.getRoute(), team);
+				lobby.getGamePlayService(gameId).carryOutRouteAction(message.getPlayer(), message.getRoute(), team);
 				return;
 			} else if (action.equals("REROLL")) {
-				lobby.getGameService(gameId).carryOutReroll(message.getPlayer(), team, message.getRerollChoice());
+				lobby.getGamePlayService(gameId).carryOutReroll(message.getPlayer(), team, message.getRerollChoice());
 			} else if (action.equals("ENDTURN")) {
-				lobby.getGameService(gameId).endTurn(team);
+				lobby.getGamePlayService(gameId).endTurn(team);
 			} else if (action.equals("BLOCK")) {
-				lobby.getGameService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(),
+				lobby.getGamePlayService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(),
 						message.getLocation(), message.isFollowUp(), false, team);
 			} else if (action.equals("BLITZ")) {
-				lobby.getGameService(gameId).carryOutBlitz(message.getPlayer(), message.getOpponent(),
+				lobby.getGamePlayService(gameId).carryOutBlitz(message.getPlayer(), message.getOpponent(),
 						message.getRoute(), message.getTarget(), message.isFollowUp(), team);
 			} else if (action.equals("BLOCKDICECHOICE")) {
-				lobby.getGameService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(),
+				lobby.getGamePlayService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(),
 						message.getOpponent(), team);
 			} else if (action.equals("PUSHCHOICE")) {
-				lobby.getGameService(gameId).carryOutPushChoice(message.getTarget());
+				lobby.getGamePlayService(gameId).carryOutPushChoice(message.getTarget());
 			} else if (action.equals("THROW")) {
-				lobby.getGameService(gameId).carryOutThrow(message.getPlayer(), message.getLocation(),
+				lobby.getGamePlayService(gameId).carryOutThrow(message.getPlayer(), message.getLocation(),
 						message.getTarget(), team);
 			} else if (action.equals("HANDOFF")) {
-				lobby.getGameService(gameId).carryOutHandOff(message.getPlayer(), message.getTarget(),
+				lobby.getGamePlayService(gameId).carryOutHandOff(message.getPlayer(), message.getTarget(),
 						message.getOpponent(), team);
 			} else if (action.equals("STANDUP")) {
-				lobby.getGameService(gameId).carryOutStandUp(message.getPlayer());
+				lobby.getGamePlayService(gameId).carryOutStandUp(message.getPlayer());
 			} else if (action.equals("PLACEMENT")) {
-				lobby.getGameService(gameId).carryOutPlacement(message.getPlayer(), message.getTarget());
+				lobby.getGamePlayService(gameId).carryOutPlacement(message.getPlayer(), message.getTarget());
 			} else if (action.equals("BENCH")) {
-				lobby.getGameService(gameId).benchPlayer(message.getPlayer());
+				lobby.getGamePlayService(gameId).benchPlayer(message.getPlayer());
 			} else if (action.equals("ENDSETUP")) {
-				lobby.getGameService(gameId).endSetup(team);
+				lobby.getGamePlayService(gameId).endSetup(team);
 			} else if (action.equals("KICK")) {
-				lobby.getGameService(gameId).kickBall(message.getTarget());
+				lobby.getGamePlayService(gameId).kickBall(message.getTarget());
 			} else if (action.equals("KICKCHOICE")) {
-				lobby.getGameService(gameId).chooseKickOff(team, message.getDescription());
+				lobby.getGamePlayService(gameId).chooseKickOff(team, message.getDescription());
 			} else if (action.equals("JOINGAME")) {
 				System.out.println(lobby);
 				System.out.println(gameId);
 				System.out.println(team);
-				lobby.getGameService(gameId).joinGame(team);
+				lobby.getGamePlayService(gameId).joinGame(team);
 			} else if (action.equals("TOUCHBACKCHOICE")){
-				lobby.getGameService(gameId).actOnTouchBack(message.getPlayer(), team);
+				lobby.getGamePlayService(gameId).actOnTouchBack(message.getPlayer(), team);
 			} else if(action.equals("RESETGAME")){
-				lobby.getGameService(gameId).resetGame();
+				lobby.getGamePlayService(gameId).resetGame();
 			} else if(action.equals("INTERCEPTCHOICE")) {
-				lobby.getGameService(gameId).actOnIntercept(team, message.getPlayer(), message.getLocation());
+				lobby.getGamePlayService(gameId).actOnIntercept(team, message.getPlayer(), message.getLocation());
 			} else if(action.equals("AUTOSETUP")) {
-				lobby.getGameService(gameId).autoSetupTeam(message.getDescription(), team);
+				lobby.getGamePlayService(gameId).autoSetupTeam(message.getDescription(), team);
 			}
 		}
 
