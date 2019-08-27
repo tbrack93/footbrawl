@@ -28,7 +28,7 @@ public class GameLobbyService {
 
 	private Game defaultGame;
 
-	private Map<Integer, GameService> activeGames; // game id and gameservice
+	private Map<Integer, GamePlayService> activeGames; // game id and gameservice
 
 	public GameLobbyService(AutowireCapableBeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
@@ -41,33 +41,33 @@ public class GameLobbyService {
 			g.setTeam2(teamRepo.findById(2).get());
 			gameRepo.save(g);
 			defaultGame = g;
-			GameService gs = new GameService();
+			GamePlayService gs = new GamePlayService();
 			beanFactory.autowireBean(gs);
 			gs.setGame(g);
 			//gs.setPhase("ended");
-			addGameService(gs);
+			addGamePlayService(gs);
 			//System.out.println("My Size: " + ObjectSizeCalculator.getObjectSize(this));
 		}
 	}
 
-	public GameService getGameService(int id) {
+	public GamePlayService getGamePlayService(int id) {
 		return activeGames.get(id);
 	}
 
-	public void addGameService(GameService gs) {
+	public void addGamePlayService(GamePlayService gs) {
 		activeGames.put(gs.getGameId(), gs);
 	}
 
-	public void removeGameService(int id) {
+	public void removeGamePlayService(int id) {
 		activeGames.remove(id);
 	}
 
-	public List<GameService> getActiveGames() {
-		return new ArrayList<GameService>(activeGames.values());
+	public List<GamePlayService> getActiveGames() {
+		return new ArrayList<GamePlayService>(activeGames.values());
 	}
 
 	public void createNewGameAndService() {
-		GameService gs = new GameService();
+		GamePlayService gs = new GamePlayService();
 		beanFactory.autowireBean(gs);
 		Game g = new Game();
 		g.duplicateGame(defaultGame);
@@ -87,7 +87,7 @@ public class GameLobbyService {
 		int team;
 		ArrayList<Integer> active = new ArrayList<>(activeGames.keySet());
 		for (Integer i : active) {
-			GameService gs = activeGames.get(i);
+			GamePlayService gs = activeGames.get(i);
 
 			if (gs.isWaitingForPlayers() == true) {
 				if(invite == false && (teamId == 0 || teamId == 1 && !gs.isTeam1Assigned() || teamId == 2 && !gs.isTeam2Assigned())) {
@@ -109,10 +109,10 @@ public class GameLobbyService {
 	}
 
 	public void cleanUpGameServices() {
-		Iterator<Map.Entry<Integer, GameService>> games = activeGames.entrySet().iterator();
+		Iterator<Map.Entry<Integer, GamePlayService>> games = activeGames.entrySet().iterator();
 		while(games.hasNext()) {
-			Map.Entry<Integer, GameService> game = games.next();
-			GameService gs = game.getValue();
+			Map.Entry<Integer, GamePlayService> game = games.next();
+			GamePlayService gs = game.getValue();
 			if(gs.isGameFinished() || new Date().getTime() - gs.getCreated().getTime() > 9000000) {
 				//System.out.println("Removing game: " + gs.getGameId());
 				gs = null; 

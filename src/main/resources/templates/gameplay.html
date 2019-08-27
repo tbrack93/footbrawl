@@ -16,6 +16,15 @@
 <script th:src="@{/webjars/stomp-websocket/stomp.min.js}"></script>
 <script th:src="@{/game.js}"></script>
 <script th:src="@{/dragModal.js}"></script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-120719965-2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-120719965-2');
+</script>
 </head>
 <body onresize="resizeActions()">
 	<input type="hidden" id="gameId" th:value="${gameId}">

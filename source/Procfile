@@ -1,0 +1,1 @@
+web: java -jar  -Xss512k footbrawl-0.0.1-SNAPSHOT.jar
