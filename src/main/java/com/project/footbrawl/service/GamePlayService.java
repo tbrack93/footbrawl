@@ -953,7 +953,7 @@ public class GamePlayService {
 			if (i > 0) {
 				if (route.get(i - 1).getTackleZones() != 0) {
 					// System.out.print(" Dodge: " + calculateDodge(p, route.get(i - 1)) + "+");
-					jt.setDodgeRoll(calculateDodge(p, route.get(i - 1)));
+					jt.setDodgeRoll(calculateDodge(p, route.get(i)));
 				}
 			}
 			if (t.containsBall()) {
@@ -1208,7 +1208,7 @@ public class GamePlayService {
 	}
 
 	public boolean dodgeAction(PlayerInGame p, Tile from, Tile to) {
-		int roll = calculateDodge(p, from);
+		int roll = calculateDodge(p, to);
 		int result = diceRoller(1, 6)[0];
 		System.out.println("Needed " + roll + "+" + " Rolled: " + result);
 		rollType = "DODGE";
@@ -1231,10 +1231,10 @@ public class GamePlayService {
 		}
 	}
 
-	public int calculateDodge(PlayerInGame p, Tile from) {
+	public int calculateDodge(PlayerInGame p, Tile to) {
 		addTackleZones(p);
 		int AG = p.getAG();
-		int modifier = from.getTackleZones();
+		int modifier = to.getTackleZones();
 		int result = 7 - AG - 1 - modifier;
 		if (result <= 1)
 			result = 2; // roll of 1 always fails, no matter what
