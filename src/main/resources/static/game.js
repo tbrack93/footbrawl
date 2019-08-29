@@ -1367,7 +1367,8 @@ function showFailedAction(message){
   if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
     centreModal();
   }
-  var effect = " fell down.";
+  var effect = " fell down."; 
+  var additional = "";
   if(message.rollType == "PICKUPBALL" || message.rollType == "CATCH"){
     effect = " dropped the ball";
   }
@@ -1376,13 +1377,14 @@ function showFailedAction(message){
       effect = " fumbled the throw";
 	} else if(message.rollOutcome == "badly"){
 	  effect = " threw badly";
+	  additional = " accurately";
 	}
   }
   if(message.rollType == "INTERCEPT"){
    effect = " failed to intercept";
  }
  document.getElementById("modalTitle").innerHTML = message.playerName + effect;
- document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + "</br></br>" +
+ document.getElementById("modalText").innerHTML = message.playerName + " failed to " + message.rollType + additional + "</br></br>" +
  "Needed: " + message.rollNeeded + "  Rolled: " + message.rolled;
  if(message.rerollOptions == null || message.rerollOptions.length == 0){
    document.getElementById("modalOptions").innerHTML = "<p> No possible rerolls </p>";
