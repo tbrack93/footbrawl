@@ -1,5 +1,7 @@
 package com.project.footbrawl.entity;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,6 +11,11 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name="game")
@@ -35,6 +42,16 @@ public class Game {
 	@ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name="team2_id")
 	private Team team2; 
+	
+	@CreationTimestamp
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "create_date")
+	private Date createDate;
+	
+	@UpdateTimestamp
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "modify_date")
+	private Date modifyDate;
 	
 	public Game() {
 		status = "created";
