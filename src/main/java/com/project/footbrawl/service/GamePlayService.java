@@ -34,12 +34,12 @@ public class GamePlayService {
 
 	@Autowired
 	MessageEncoderService sender;
-	
+
 	@Autowired
 	GameRepository gameRepo;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
 	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
@@ -775,11 +775,11 @@ public class GamePlayService {
 //				System.out.println(t.getCostToReach());
 //		    }
 //		}
-		if(squares.size() == 1) {
+		if (squares.size() == 1) {
 			squares.clear();
 		}
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
-		
+
 	}
 
 	// Djisktra's to determine where can move
@@ -802,7 +802,8 @@ public class GamePlayService {
 				for (Tile t : temp.getNeighbours()) {
 					if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
 						int currentCost = t.getCostToReach();
-						// checking if visited (not default of 99) or visited and new has route with better cost
+						// checking if visited (not default of 99) or visited and new has route with
+						// better cost
 						if (currentCost == 99 || currentCost != 99 && currentCost > cost + 1) {
 							t.setCostToReach(cost + 1);
 							if (cost + 1 > p.getRemainingMA()) {
@@ -823,7 +824,8 @@ public class GamePlayService {
 
 	// An A star algorithm for Player to get from a to b, favouring avoiding tackle
 	// zones and going for it
-	// Penalties mean no longer gauranteed to find a route if involves many penalties, so if fails to find one
+	// Penalties mean no longer gauranteed to find a route if involves many
+	// penalties, so if fails to find one
 	// repeats without penalties. If still fails, exception thrown
 	public List<Tile> getOptimisedRoute(int playerId, int[] from, int[] goal, boolean withPenalties) {
 		PlayerInGame p = getPlayerById(playerId);
@@ -886,9 +888,9 @@ public class GamePlayService {
 						int noMovementPenalty = movementToReach > MA + 2 ? 10000 : 0;
 						double goForItPenalty = 0;
 						double tackleZonesPenalty = 0;
-						if(withPenalties == true) {
-						  goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 4 : 0;
-						  tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 4;
+						if (withPenalties == true) {
+							goForItPenalty = movementToReach > MA ? (movementToReach - MA) * 4 : 0;
+							tackleZonesPenalty = Math.abs(neighbour.getTackleZones()) * 4;
 						}
 
 						double totalDistance = current.getWeightedDistance() + neighbourCost + goForItPenalty
@@ -904,14 +906,15 @@ public class GamePlayService {
 							neighbour.setParent(current);
 							// enqueue
 							if (priorityQueue.contains(neighbour)) {
-								priorityQueue.remove(neighbour);							}
+								priorityQueue.remove(neighbour);
+							}
 							priorityQueue.add(neighbour);
 						}
 					}
 				}
 			}
 		}
-		if(withPenalties == true) {
+		if (withPenalties == true) {
 			return getOptimisedRoute(playerId, from, goal, false);
 		}
 		throw new IllegalArgumentException("Selected player cannot reach that point");
@@ -942,7 +945,7 @@ public class GamePlayService {
 		for (int i = 0; i < route.size(); i++) {
 			Tile t = route.get(i);
 			jsonTile jt = new jsonTile(t);
-			//System.out.print("\n" + t.getLocation()[0] + " " + t.getLocation()[1]);
+			// System.out.print("\n" + t.getLocation()[0] + " " + t.getLocation()[1]);
 			if (i == 0 && standingCost > 0) {
 				// System.out.print(" Stand Up" + (p.getRemainingMA() < 3 ? " 4+" : ""));
 				jt.setStandUpRoll((p.getRemainingMA() < 3 ? 4 : 0));
@@ -977,7 +980,7 @@ public class GamePlayService {
 				origin = totalRoute.get(totalRoute.size() - 1);
 				totalRoute.remove(totalRoute.size() - 1); // removes duplicate tiles
 				p.setRemainingMA(startingMA - (totalRoute.size()));
-			//	System.out.println("remaining MA: " + p.getRemainingMA());
+				// System.out.println("remaining MA: " + p.getRemainingMA());
 			}
 			totalRoute.addAll(getOptimisedRoute(p.getId(), origin.getLocation(), goal, true));
 		} catch (Exception e) {
@@ -1416,7 +1419,7 @@ public class GamePlayService {
 			taskQueue.addFirst(task);
 
 			int userToChoose = activeTeam.getId();
-			if (defender.hasSkill("Side Step") && defender.getTeam() != activeTeam.getId()) {
+			if (defender.hasSkill("Side Step") && defender.getTeam() != activeTeam.getId() && !push.get(0).containsPlayer()) {
 				userToChoose = defender.getTeam();
 				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(),
 						"Side Step");
@@ -1521,16 +1524,19 @@ public class GamePlayService {
 			int tx = t.getLocation()[0];
 			int ty = t.getLocation()[1];
 			if (Math.abs(tx - xOrigin) + // corner push
-					Math.abs(ty - yOrigin) > 2 || Math.abs(tx - xOrigin) == 2 && // push from above or below
-							Math.abs(xOrigin - defender.getTile().getLocation()[0]) == 1
-							&& Math.abs(yOrigin - defender.getTile().getLocation()[1]) == 0
-					|| Math.abs(ty - yOrigin) == 2 && // push from left or right
-							Math.abs(yOrigin - defender.getTile().getLocation()[1]) == 1
-							&& Math.abs(xOrigin - defender.getTile().getLocation()[0]) == 0) {
+				Math.abs(ty - yOrigin) > 2 || Math.abs(tx - xOrigin) == 2 && // push from above or below
+				Math.abs(xOrigin - defender.getTile().getLocation()[0]) == 1
+				&& Math.abs(yOrigin - defender.getTile().getLocation()[1]) == 0
+			    || Math.abs(ty - yOrigin) == 2 && // push from left or right
+				Math.abs(yOrigin - defender.getTile().getLocation()[1]) == 1
+				&& Math.abs(xOrigin - defender.getTile().getLocation()[0]) == 0) {
 				noEmptyOptions.add(t);
-				if (!t.containsPlayer()) {
+				if (!defender.hasSkill("Side Step") && !t.containsPlayer()) {
 					options.add(t);
 				}
+			}
+			if(defender.hasSkill("Side Step") && !t.containsPlayer()) {
+				options.add(t);
 			}
 		}
 		return options.size() > 0 ? options : noEmptyOptions;
@@ -1905,8 +1911,13 @@ public class GamePlayService {
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		thrower.setHasBall(false);
 		sender.sendHasThrown(game.getId(), activeTeam.getId());
-		if (roll == 1 || roll + modifier <= 1) { // on a natural 1 or 1 after modifiers
-			System.out.println(thrower.getName() + " fumbled the ball!");
+		String type = "";
+		if (roll < needed) {
+			if (roll == 1 || roll + modifier <= 1) {
+				type = "failed";
+			} else {
+				type = "badly";
+			}
 			rerollOptions = determineRerollOptions("THROW", thrower.getId(),
 					new int[][] { thrower.getLocation(), target.getLocation() });
 			if (reroll == true) {
@@ -1925,29 +1936,56 @@ public class GamePlayService {
 					}
 				};
 				taskQueue.add(task);
-				Runnable task2 = new Runnable() { // for if choose not to reroll
-					@Override
-					public void run() {
-						System.out.println("in no reroll");
-						inPassOrHandOff = false;
-						inTurnover = true;
-						scatterBall(thrower.getTile(), 1);
-					}
-				};
+				Runnable task2;
+				if (roll == 1 || roll + modifier <= 1) { // on a natural 1 or 1 after modifiers
+					type = "failed";
+					task2 = new Runnable() { // for if choose not to reroll
+						@Override
+						public void run() {
+							System.out.println("in fumble no reroll");
+							inPassOrHandOff = false;
+							inTurnover = true;
+							scatterBall(thrower.getTile(), 1);
+						}
+					};
+				} else {
+					type = "badly";
+					task2 = new Runnable() { // for if choose not to reroll
+						@Override
+						public void run() {
+							System.out.println("in bad throw no reroll");
+							System.out.println(thrower.getName() + " threw the ball badly");
+							sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed,
+									rolled, "badly", thrower.getLocation(), target.getLocation(), null,
+									thrower.getTeam(), "Y", false);
+							if (taskQueue.size() > 0) {
+								taskQueue.pop().run(); // send intercept failure if happened
+							}
+							scatterBall(target, 3);
+						}
+					};
+				}
 				taskQueue.add(task2);
 			}
-			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "failed",
+			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, type,
 					thrower.getLocation(), target.getLocation(), rerollOptions, thrower.getTeam(), finalRoll, reroll);
 			if (rerollOptions.isEmpty()) {
-				inPassOrHandOff = false;
-				inTurnover = true;
-				scatterBall(thrower.getTile(), 1);
+				if(type == "failed") {
+				  inPassOrHandOff = false;
+				  inTurnover = true;
+				  scatterBall(thrower.getTile(), 1);
+			    } else if(type == "badly") {
+			    	if (taskQueue.size() > 0) {
+						taskQueue.pop().run(); // send intercept failure if happened
+					}
+					scatterBall(target, 3);
+			    }
 			}
-		} else {
+		}
+		if (!(roll == 1 || roll + modifier <= 1)) {
 			if (interceptor != null) {
 				rollType = "INTERCEPT";
 				Runnable task2 = new Runnable() {
-
 					@Override
 					public void run() {
 						sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled,
@@ -1965,10 +2003,11 @@ public class GamePlayService {
 				};
 				taskQueue.add(task3);
 				interceptBallAction(thrower.getLocation(), interceptor, false);
-			} else {
+			} else if (roll >= needed) {
 				continuePass(roll, needed, thrower, target);
 			}
 		}
+		
 	}
 
 	public void continuePass(int roll, int needed, PlayerInGame thrower, Tile target) {
@@ -1992,14 +2031,6 @@ public class GamePlayService {
 				target.setContainsBall(true);
 				turnover();
 			}
-		} else {
-			System.out.println(thrower.getName() + " threw the ball badly");
-			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "badly",
-					thrower.getLocation(), target.getLocation(), null, thrower.getTeam(), "N", false);
-			if (taskQueue.size() > 0) {
-				taskQueue.pop().run(); // send intercept failure if happened
-			}
-			scatterBall(target, 3);
 		}
 		thrower.getTeamIG().setPassed(true);
 		endOfAction(thrower);

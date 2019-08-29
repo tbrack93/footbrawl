@@ -1045,7 +1045,7 @@ function getPlayerById(id){
 }
 
 function showRoll(message){
-	if(message.rollOutcome == "failed"){
+	if(message.rollOutcome == "failed" || message.rollType == "THROW" && message.rollOutcome == "badly"){
 		if(animating = true){
 			if(!(message.rollType == "INTERCEPT" && (message.rerollOptions == null || messsage.rerollOptions.length > 0))){
         var task = function(m){
@@ -1071,11 +1071,13 @@ function showRoll(message){
     showPickUpResult(message);
   }
   if(message.rollType == "THROW"){
-    if(message.rollOutcome == "failed"){
+    if(message.rollOutcome == "failed" || message.rollOutcome == "badly" && message.end == "N"){
       (taskQueue.shift())();
       return;
     }
+    if(message.rollOutcome == "success" || message.rollOutcome == "badly" && message.end == "Y"){
     showThrowResult(message);
+  }
   }
   if(message.rollType == "INTERCEPT"){
 	  phase = "main game";
@@ -1368,7 +1370,11 @@ function showFailedAction(message){
     effect = " dropped the ball";
   }
   if(message.rollType == "THROW"){
-    effect = " fumbled the throw";
+	if(message.rollOutcome == "failed"){
+      effect = " fumbled the throw";
+	} else if(message.rollOutcome == "badly"){
+	  effect = " threw badly";
+	}
   }
   if(message.rollType == "INTERCEPT"){
    effect = " failed to intercept";
@@ -1999,7 +2005,7 @@ function showSideStepSkill(message){
 	if(message.userToChoose == team){
 		chooser = "you choose ";
 	}
-	modalText.innerHTML += "<br>" +message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>";
+	modalText.innerHTML += "<br>" +message.playerName + " used the Side Step skill, so " + chooser +  "push, in any direction<br>";
   newRolls.innerHTML =  message.playerName + " used the Side Step skill, so " + chooser +  "push direction<br>" + newRolls.innerHTML;
 }
 
