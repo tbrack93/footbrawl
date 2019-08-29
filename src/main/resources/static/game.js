@@ -1072,7 +1072,9 @@ function showRoll(message){
   }
   if(message.rollType == "THROW"){
     if(message.rollOutcome == "failed" || message.rollOutcome == "badly" && message.end == "N"){
-      (taskQueue.shift())();
+    	setTimeout(function(){
+    		(taskQueue.shift())();
+          }, 100);
       return;
     }
     if(message.rollOutcome == "success" || message.rollOutcome == "badly" && message.end == "Y"){
@@ -1081,9 +1083,9 @@ function showRoll(message){
   }
   if(message.rollType == "INTERCEPT"){
 	  phase = "main game";
-    if(message.rollOutcome == "failed"){
+      if(message.rollOutcome == "failed"){
     	animating = false;
-      setTimeout(function(){
+        setTimeout(function(){
         if(taskQueue.length != 0){
           if(message.end == "N"){
         	  (taskQueue.shift())();
@@ -1360,8 +1362,8 @@ function showFailedAction(message){
   display.style.display = "block";
   squareH = canvas.clientHeight/15;
   display.style.transform = "";
-  display.style.left = ""+ (column +3) * squareH-5 + "px";
-  display.style.top = "" + (row) * squareH-5 + "px";
+  display.style.left = ""+ (column +3) * squareH-2 + "px";
+  display.style.top = "" + (row) * squareH-2 + "px";
   if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
     centreModal();
   }
@@ -1755,8 +1757,8 @@ modalOptions.appendChild(button2);
 squareH = modal.clientHeight/15;
 var display = document.getElementById("modal");
 display.style.display = "block";
-display.style.left = ""+ (message.location[0] +3) * squareH-5 + "px";
-display.style.top = "" + ((14- message.location[1])-5) * squareH-5 + "px";
+display.style.left = ""+ (message.location[0] +3) * squareH-2 + "px";
+display.style.top = "" + ((14- message.location[1])-5) * squareH-2 + "px";
 if(message.location[1] > 11 || display.getBoundingClientRect().bottom > canvas.clientHeight){
   centreModal();
 }
@@ -2290,8 +2292,8 @@ modalOptions.appendChild(button2);
 squareH = modal.clientHeight/15;
 var display = document.getElementById("modal");
 display.style.display = "block";
-display.style.left = ""+ (message.target[0] +3) * squareH-5 + "px";
-display.style.top = "" + ((14- message.target[1])-5) * squareH-5 + "px";
+display.style.left = ""+ (message.target[0] +3) * squareH-3 + "px";
+display.style.top = "" + ((14- message.target[1])-5) * squareH-3 + "px";
 if(message.target[1] > 11 || display.getBoundingClientRect().bottom > canvas.clientHeight){
  centreModal();
 }
@@ -2409,8 +2411,8 @@ function showIntercept(message){
     squareH = modal.clientHeight/15;
     var display = document.getElementById("modal");
     display.style.display = "block";
-    display.style.left = ""+ (message.target[0] +3) * squareH-5 + "px";
-    display.style.top = "" + ((14- message.target[1])-5) * squareH-5 + "px";
+    display.style.left = ""+ (message.target[0] +3) * squareH-3 + "px";
+    display.style.top = "" + ((14- message.target[1])-5) * squareH-3 + "px";
     if(display.style.top <0 || display.getBoundingClientRect().bottom > canvas.clientHeight){
       centreModal();
     }
