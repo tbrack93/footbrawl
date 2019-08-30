@@ -164,7 +164,6 @@ public class GamePlayService {
 		rolled = new ArrayList<>();
 		runnableResults = new LinkedBlockingQueue<>();
 		actionsNeeded = 0;
-		half = 0;
 		activePlayer = null;
 		ballToScatter = null;
 		inPassOrHandOff = false;
@@ -622,17 +621,26 @@ public class GamePlayService {
 		if (half == 2) {
 			newHalf();
 		} else if (half == 3) {
-			if (game.getTeam1Score() == game.getTeam2Score()) {
-				extraTime();
+//			if (game.getTeam1Score() == game.getTeam2Score()) {
+//				extraTime();
+//			} else {
+//				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+//			}
+//		} else if (half == 4) {
+//			if (game.getTeam1Score() == game.getTeam2Score()) {
+//				penaltyShootOuts();
+//			} else {
+//				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+//			}
+			TeamInGame winners;
+			if(game.getTeam1Score() == game.getTeam2Score()) {
+				winners = null;
+			} else if(game.getTeam1Score() > game.getTeam2Score()) {
+				winners = team1;
 			} else {
-				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
+				winners = team2;
 			}
-		} else if (half == 4) {
-			if (game.getTeam1Score() == game.getTeam2Score()) {
-				penaltyShootOuts();
-			} else {
-				endGame(game.getTeam1Score() > game.getTeam2Score() ? team1 : team2);
-			}
+			endGame(winners);
 		}
 		// check if end of game & if winner
 		// if not start new half or extra time
@@ -640,9 +648,15 @@ public class GamePlayService {
 	}
 
 	public void endGame(TeamInGame winners) {
+		if(winners == null) {
+			System.out.println("It's a draw!");
+			sender.sendGameEnd(game.getId(), "Draw", 0, game.getTeam1Score(),
+					game.getTeam2Score());
+		} else {
 		System.out.println(winners.getName() + " won the match!");
 		sender.sendGameEnd(game.getId(), winners.getName(), winners.getId(), game.getTeam1Score(),
 				game.getTeam2Score());
+		}
 		phase = "ended";
 		game.setStatus("ended");
 		gameRepo.save(game);

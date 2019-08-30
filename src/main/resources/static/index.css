@@ -121,6 +121,11 @@ h1 {
 	margin-left: 20px;
 }
 
+#feedback {
+	float:left;
+	margin-left:20px;
+}
+
 #kings {
 	border-top-left-radius: 6px;
 	border-top-right-radius: 6px;
