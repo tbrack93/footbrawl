@@ -42,7 +42,6 @@ public class GameLobbyService {
 			gameRepo.save(g);
 			defaultGame = g;
 			GamePlayService gs = new GamePlayService();
-			
 			beanFactory.autowireBean(gs);
 			gs.setGame(g);
 			//gs.setPhase("ended");
