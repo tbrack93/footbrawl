@@ -2795,7 +2795,7 @@ function requestKickOff(message){
 	if(message.userToChoose == team){
 		yourTurn = true;
 		document.getElementById("modalTitle").innerHTML = "Your Kick Off";
-		document.getElementById("modalText").innerHTML = "Please select a square to kick to. <br><br>The ball will land up to 6 squares from this point.";
+		document.getElementById("modalText").innerHTML = "Please select a square to kick to. <br><br>The ball will land up to 6 squares from the chosen target.";
 		infoModal.style.display = "block";
 		document.getElementById("closeModal").style.display = "block";
 		var possible = squares.getContext("2d");
@@ -2818,7 +2818,7 @@ function requestKickOff(message){
 			teamName += "'s Kick Off";
 		}
 		document.getElementById("modalTitle").innerHTML = teamName;
-		document.getElementById("modalText").innerHTML = "Awaiting opponent's choice where to kick. <br><br>The ball will scatter up to 6 squares from the target";
+		document.getElementById("modalText").innerHTML = "Awaiting opponent's choice where to kick. <br><br>The ball will land up to 6 squares from the chosen target";
 		infoModal.style.display = "block";
 	}
 	squareH = canvas.clientHeight/15;
