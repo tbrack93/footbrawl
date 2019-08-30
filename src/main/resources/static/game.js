@@ -2795,7 +2795,7 @@ function requestKickOff(message){
 	if(message.userToChoose == team){
 		yourTurn = true;
 		document.getElementById("modalTitle").innerHTML = "Your Kick Off";
-		document.getElementById("modalText").innerHTML = "Please select a square to kick to. <br><br>The ball will scatter up to 6 squares from this point.";
+		document.getElementById("modalText").innerHTML = "Please select a square to kick to. <br><br>The ball will land up to 6 squares from this point.";
 		infoModal.style.display = "block";
 		document.getElementById("closeModal").style.display = "block";
 		var possible = squares.getContext("2d");

@@ -504,12 +504,12 @@ public class GamePlayService {
 			throw new IllegalArgumentException("Must kick to opponent's half of the pitch");
 		}
 		PlayerInGame kicker = getKicker(); // use furthest back player
-		sender.sendKickTarget(game.getId(), kicker.getId(), kicker.getName(), kicker.getLocation(), target);
 		int value = diceRoller(1, 8)[0];
 		int[] direction = ADJACENT[value - 1];
 		int distance = diceRoller(1, 6)[0];
 		int[] position = new int[] { target[0] + direction[0] * distance, target[1] + direction[1] * distance };
-		sender.sendBallScatterResult(game.getId(), target, position);
+		sender.sendKickTarget(game.getId(), kicker.getId(), kicker.getName(), kicker.getLocation(), position);
+	//	sender.sendBallScatterResult(game.getId(), target, position);
 		if (position[0] >= 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			goal = pitch[position[0]][position[1]];
 			goal.setContainsBall(true);
@@ -529,8 +529,8 @@ public class GamePlayService {
 					scatterBall(goal, 1); // if player can't catch, will scatter again
 					return;
 				}
-//			} else {
-//				scatterBall(goal, 1); 
+			} else {
+				scatterBall(goal, 1); 
 			}
 		} else {
 			getTouchBack(activeTeam == team1 ? team2 : team1);
@@ -739,6 +739,7 @@ public class GamePlayService {
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
+	//	long time = System.nanoTime();
 		if (phase != "main game") {
 			return;
 		}
@@ -792,6 +793,7 @@ public class GamePlayService {
 		if (squares.size() == 1) {
 			squares.clear();
 		}
+		//System.out.println(System.nanoTime() - time);
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 
 	}
