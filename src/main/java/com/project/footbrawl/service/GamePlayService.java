@@ -1436,7 +1436,7 @@ public class GamePlayService {
 			taskQueue.addFirst(task);
 
 			int userToChoose = activeTeam.getId();
-			if (defender.hasSkill("Side Step") && defender.getTeam() != activeTeam.getId()
+			if (defender.hasSkill("Side Step") && defender.getStatus() == "standing" && defender.getTeam() != activeTeam.getId()
 					&& !push.get(0).containsPlayer()) {
 				userToChoose = defender.getTeam();
 				sender.sendSkillUsed(game.getId(), defender.getId(), defender.getName(), defender.getTeam(),
@@ -1553,7 +1553,7 @@ public class GamePlayService {
 					options.add(t);
 				}
 			}
-			if (defender.hasSkill("Side Step") && !t.containsPlayer()) {
+			if (defender.hasSkill("Side Step") && defender.getStatus() == "standing" && !t.containsPlayer()) {
 				options.add(t);
 			}
 		}
