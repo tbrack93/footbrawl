@@ -222,20 +222,11 @@ function drawPlayer(player) {
  img.src = player.imgUrl;
 }
 img.onload = function() {
-		  if(player.hasBall == false && !this.src.includes(player.imgUrl)){ // in
-																			// case
-																			// lost
-																			// ball
-																			// since
-																			// request
-																			// to
-																			// draw
-																			// made
+		  if(player.hasBall == false && !this.src.includes(player.imgUrl)){ // in case lost ball  since request to draw made
                                      drawPlayer(player);
                                      return;
                                    }
-		  if(getPlayerById(player.id) == null){ // in case taken off pitch in
-												// meantime
+		  if(getPlayerById(player.id) == null){ // in case taken off pitch inmeantime
                        return;
                      }
                      context.save();
@@ -958,10 +949,10 @@ function showMoved(message, type){
    if(type == "BALL"){
     drawBall();
   }else if(type == "PUSH"){
-    setTimeout(function(){
-     drawPlayers();
-     drawBall();
-   }, 300);
+//    setTimeout(function(){
+//     drawPlayers();
+//     drawBall();
+//   }, 300);
   } else if(end == "Y" || activePlayer.status == "prone"){
     setTimeout(function(){
       drawPlayer(activePlayer);
@@ -1646,7 +1637,7 @@ document.getElementById("team2HandOff").style.opacity = 0.7;
 document.getElementById("team2HandOff").title = "Not Handed Off This Turn";
 animation.getContext("2d").clearRect(0,0, animation.width, animation.height);
 ballLocation = message.ballLocation;
-selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
+//selection.getContext("2d").clearRect(0, 0, selection.width, selection.height);
 team1 = message.team1FullDetails;
 team2 = message.team2FullDetails;
 players.length = 0;
@@ -1664,10 +1655,10 @@ if(team2Reserves == null || message.team2FullDetails.reserves.length != team2Res
 }
 document.getElementById('team1Rerolls').innerHTML = "Team Rerolls: " + team1.remainingTeamRerolls;
 document.getElementById('team2Rerolls').innerHTML = "Team Rerolls: " + team2.remainingTeamRerolls;
-canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+//canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
-drawPlayers();
-drawBall();
+//drawPlayers();
+//drawBall();
 setTimeout(function(){
  if(taskQueue.length != 0){
    (taskQueue.shift())();
@@ -2787,6 +2778,8 @@ centreModal();
 canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 animation.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
 drawPlayers();
+drawBall();
+drawPlayerBorders();
 document.getElementById("endTurn").style.display = "none";
 }
 
