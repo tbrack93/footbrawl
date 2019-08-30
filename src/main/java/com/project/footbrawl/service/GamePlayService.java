@@ -529,17 +529,12 @@ public class GamePlayService {
 					scatterBall(goal, 1); // if player can't catch, will scatter again
 					return;
 				}
-			} else {
-				scatterBall(goal, 1); 
-			}
+			} 
 		} else {
 			getTouchBack(activeTeam == team1 ? team2 : team1);
 			return;
 		}
-		phase = "main game";
-		activeTeam = (activeTeam == team1 ? team2 : team1);
-		activeTeam.incrementTurn();
-		newTurn();
+		scatterBall(goal, 1); 
 	}
 
 	public void checkForTouchBack() {
