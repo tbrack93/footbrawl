@@ -1229,6 +1229,9 @@ public class GamePlayService {
 		rollNeeded = roll;
 		rolled.clear();
 		rolled.add(result);
+        if(p.hasSkill("Stunty")) {
+          sender.sendSkillUsed(game.getId(), p.getId(), p.getName(), p.getTeam(), "Stunty Dodge");
+        }
 		if (result >= roll) {
 			System.out.println(p.getName() + " dodged from " + from.getLocation()[0] + " " + from.getLocation()[1]
 					+ " to " + to.getLocation()[0] + " " + to.getLocation()[1] + " with a roll of " + result);
@@ -1248,7 +1251,10 @@ public class GamePlayService {
 	public int calculateDodge(PlayerInGame p, Tile to) {
 		addTackleZones(p);
 		int AG = p.getAG();
-		int modifier = to.getTackleZones();
+		int modifier = 0;
+		if(!p.hasSkill("Stunty")) {
+		  modifier = to.getTackleZones();
+		}
 		int result = 7 - AG - 1 - modifier;
 		if (result <= 1)
 			result = 2; // roll of 1 always fails, no matter what
@@ -1649,6 +1655,10 @@ public class GamePlayService {
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
 		String outcome = "stunned";
+		if(p.hasSkill("Stunty")) {
+			total += 1;
+			sender.sendSkillUsed(game.getId(), p.getId(), p.getName(), p.getTeam(), "Stunty Injury");
+		}
 		if (total <= 7) {
 			System.out.println(p.getName() + " is stunned");
 			p.setStatus("stunned");
@@ -1922,6 +1932,9 @@ public class GamePlayService {
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		thrower.setHasBall(false);
 		sender.sendHasThrown(game.getId(), activeTeam.getId());
+		if(thrower.hasSkill("Stunty")){
+			sender.sendSkillUsed(game.getId(), thrower.getId(), thrower.getName(), thrower.getTeam(), "Stunty Pass");
+		}
 		if (roll < needed) {
 			String outcome = "failed";
 			System.out.println(thrower.getName() + " fumbled the ball!");
@@ -2108,6 +2121,9 @@ public class GamePlayService {
 		}
 		addTackleZones(thrower);
 		modifier += from.getTackleZones();
+		if(thrower.hasSkill("Stunty")) {
+			modifier -= 1;
+		}
 		return new int[] { calculateAgilityRoll(thrower, from, modifier), modifier };
 	}
 

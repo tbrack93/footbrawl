@@ -1893,8 +1893,23 @@ function showSkillUsed(message){
 	} else if(message.description == "Dodge In Block"){
 		showDodgeInBlock(message);
 	} else if(message.description == "Catch"){
-   showCatchSkill(message);
- }
+      showCatchSkill(message);
+    } else if(message.description == "Stunty Dodge"){
+    	if(animating == true){
+    		var task = function(m){
+    			showStuntyDodge(message);
+    	       };
+    	       var t = animateWrapFunction(task, this, [message]);
+    	       taskQueue.push(t);
+    	     } else{
+    	      showStuntyDodge(message);
+    	}
+    } else if(message.description == "Stunty Pass"){
+    	showStuntyPass(message);
+    } else if(message.description == "Stunty Injury"){
+    	console.log("to injury");
+    	showStuntyInjury(message);
+    }
 }
 
 
@@ -2025,6 +2040,26 @@ function showCatchSkill(message){
   }
 }
 }
+
+function showStuntyDodge(message){
+	document.getElementById("newRolls").innerHTML =  message.playerName + " has the Stunty skill, so ignores tacklezones when dodging<br>" + newRolls.innerHTML;
+	if(taskQueue.length != 0){
+	      (taskQueue.shift())();
+  } 
+}
+
+function showStuntyPass(message){
+	document.getElementById("newRolls").innerHTML =  message.playerName + " has the Stunty skill, suffering -1 on his pass<br>" + newRolls.innerHTML;
+}
+
+function showStuntyInjury(message){
+	console.log("in stunty injury");
+	document.getElementById("newRolls").innerHTML =  message.playerName + " has the Stunty skill, so +1 is added to the injury roll<br>" + newRolls.innerHTML;
+	if(taskQueue.length != 0){
+	      (taskQueue.shift())();
+    } 
+}
+
 
 function removeBallFromPlayer(){
 	//console.log("go away ball");
@@ -2986,6 +3021,9 @@ function requestTouchBack(message){
 
 function showTouchBackChoice(message){
 	document.getElementById("newRolls").innerHTML =  "Touch back: ball given to " + message.playerName + "</br>" + newRolls.innerHTML;
+	var p = getPlayerById(message.player);
+    p.hasBall = true;
+    drawPlayer(p);
 	phase = "main game";
 }
 
