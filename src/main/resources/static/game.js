@@ -3053,12 +3053,17 @@ function showNewHalf(message){
 }
 
 function showEndOfGame(message){
-	if(message.userToChoose == team){
+	if(message.description == "Draw"){
+		document.getElementById("modalTitle").innerHTML = "Good Game";
+		document.getElementById("modalText").innerHTML = "It's a draw!"
+	} else{
+	  if(message.userToChoose == team){
 		document.getElementById("modalTitle").innerHTML = "Congratulations!";
 		document.getElementById("modalText").innerHTML = "Your team won the match"
-	} else {
+	  } else {
 		document.getElementById("modalTitle").innerHTML = "Good Game";
 		document.getElementById("modalText").innerHTML = message.description;
+	  }
 	}
 	yourTurn = false;
 	inModal = true;
@@ -3068,6 +3073,8 @@ function showEndOfGame(message){
 	document.getElementById("modalOptions").innerHTML = "Final Score: <br> Bobcats: " + message.team1Score +
   "<br> Murderers: " + message.team2Score;
   document.getElementById("newGame").style.display = "block";
+  document.getElementById("feedback").style.display = "block";
+  document.getElementById("closeModal").style.display = "none";
   document.getElementById("modal").style.display = "block";
 }
 

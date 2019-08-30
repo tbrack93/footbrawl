@@ -533,7 +533,11 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		MessageToClient message = new MessageToClient();
 		message.setType("INFO");
 		message.setAction("ENDOFGAME");
-		message.setDescription(winners + "won the match!");
+		if(winners == "Draw") {
+			message.setDescription(winners);
+		} else {
+		  message.setDescription(winners + " won the match!");
+		}
 		message.setTeam1Score(team1Score);
 		message.setTeam2Score(team2Score);
 		message.setUserToChoose(winnerId);
