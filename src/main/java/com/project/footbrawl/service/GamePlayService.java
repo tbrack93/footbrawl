@@ -2010,7 +2010,7 @@ public class GamePlayService {
 			System.out.println(thrower.getName() + " threw the ball accurately!");
 			thrower.setHasBall(false);
 			String end = "Y";
-			if (target.containsPlayer()) {
+			if (target.containsPlayer() && target.getPlayer().isHasTackleZones()) {
 				end = "N";
 			}
 			sender.sendRollResult(game.getId(), thrower.getId(), thrower.getName(), "THROW", needed, rolled, "success",
@@ -2019,7 +2019,11 @@ public class GamePlayService {
 				taskQueue.pop().run(); // send intercept failure if happened
 			}
 			if (target.containsPlayer()) {
-				catchBallAction(target.getPlayer(), true);
+				if(target.getPlayer().isHasTackleZones()) {
+				  catchBallAction(target.getPlayer(), true);
+				} else {
+				  scatterBall(target, 1);
+				}
 			} else {
 				target.setContainsBall(true);
 				turnover();
@@ -3003,7 +3007,7 @@ public class GamePlayService {
 		}
 		int catchRoll = 0;
 		String targetName = null;
-		if (goal.containsPlayer()) {
+		if (goal.containsPlayer() && goal.getPlayer().isHasTackleZones()) {
 			catchRoll = calculateCatch(goal.getPlayer(), true);
 			targetName = goal.getPlayer().getName();
 		}
