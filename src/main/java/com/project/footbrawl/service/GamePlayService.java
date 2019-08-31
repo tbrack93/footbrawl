@@ -1735,7 +1735,7 @@ public class GamePlayService {
 		int[] direction = ADJACENT[value - 1];
 		System.out.println("Scatter direction: " + direction[0] + direction[1]);
 		int[] position = new int[] { origin.getLocation()[0] + direction[0], origin.getLocation()[1] + direction[1] };
-		if (position[0] > 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
+		if (position[0] >= 0 && position[0] < 26 && position[1] >= 0 && position[1] < 15) {
 			Tile target = pitch[position[0]][position[1]];
 			System.out.println("Ball scattered to: " + position[0] + " " + position[1]);
 			sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
@@ -1764,9 +1764,7 @@ public class GamePlayService {
 
 			}
 		} else {
-			if (phase != "kick") {
-				sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
-			}
+			sender.sendBallScatterResult(game.getId(), origin.getLocation(), position);
 			ballOffPitch(origin);
 		}
 	}
