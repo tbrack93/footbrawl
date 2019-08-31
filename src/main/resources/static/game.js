@@ -42,7 +42,6 @@ var inBlock;
 var inThrow;
 var lastRollLocation;
 var pushOptions;
-var followUp;
 var actionChoice;
 var phase;
 var interceptors;
@@ -463,6 +462,8 @@ function decodeMessage(message){
  }
 }else if(message.action == "REROLLCHOICE"){
  showRerollUsed(message);
+} else if(message.action == "FOLLOWUPCHOICE"){
+	showFollowUpChoice(message)
 } else if(message.action == "BLOCKOVER"){
  if(animating == true){
   var task = function(m){
@@ -670,7 +671,18 @@ if(message.action == "TEAMSETUP"){
 } else{
   requestBlockDiceChoice(message);
 }
-} else if(message.action == "INTERCEPTORCHOICE"){
+} else if (message.action == "FOLLOWUPCHOICE"){
+	if(animating == true){
+		   var task = function(m){
+		    requestFollowUpChoice(message);
+		  };
+		  var t = animateWrapFunction(task, this, [message]);
+		  taskQueue.push(t);
+		} else{
+		  requestFollowUpChoice(message);
+		}
+}
+else if(message.action == "INTERCEPTORCHOICE"){
   requestInterceptor(message);
 } else if(message.action == "PUSHCHOICE"){
   requestPushChoice(message);
@@ -1203,7 +1215,7 @@ drawBall();
 if(message.rollOutcome == "success"){
  activePlayer.hasBall = true;
  ballLocation = null;
- if(message.end == "Y" && taskQueue.length == 0 && p.team == team){
+ if(message.end == "Y" && taskQueue.length == 0 && activePlayer.team == team){
      //drawBall();
      drawPlayer(activePlayer);
      stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
@@ -1728,12 +1740,8 @@ if(message.userToChoose == team){
 } else{
   toChoose = "Your opponent chooses 1 outcome dice.";
 }
-document.getElementById("modalOptions").innerHTML = "<p style='font-color:" + style +"'>"+ toChoose +"</p>Follow Up? ";
-var follow = document.createElement("input");
-follow.type = "checkbox";
-follow.id = "follow";
-modalOptions.appendChild(follow);
-document.getElementById("modalOptions").innerHTML += "<br><hr>";
+document.getElementById("modalOptions").innerHTML = "<p style='font-color:" + style +"'>"+ toChoose +"</p>";
+document.getElementById("modalOptions").innerHTML += "<hr>";
 var button = document.createElement("BUTTON")
 button.innerHTML = "Cancel";
 button.onclick = function() {cancelBlock(message.player)};
@@ -1741,19 +1749,17 @@ modalOptions.appendChild(button);
 var button2 = document.createElement("BUTTON")
 button2.innerHTML = "Block";
 if(blitz == true){
-  button2.innerHTML = "Blitz";
-  button2.onclick = function() {
-    followUp = document.getElementById("follow").checked;
-    sendCarryOutBlitz(message, followUp, route);
-    document.getElementById("modal").style.display = "none";
-    modalMain.innerHTML = "";
-  };
-} else{
- button2.onclick = function() {
-  followUp = document.getElementById("follow").checked;
-  sendCarryOutBlock(message, followUp)
-};
-}
+	  button2.innerHTML = "Blitz";
+	  button2.onclick = function() {
+	    sendCarryOutBlitz(message, route);
+	    document.getElementById("modal").style.display = "none";
+	    modalMain.innerHTML = "";
+	  };
+	} else{
+	 button2.onclick = function() {
+	  sendCarryOutBlock(message);
+	};
+	}
 modalOptions.appendChild(button2);
 squareH = modal.clientHeight/15;
 var display = document.getElementById("modal");
@@ -1787,13 +1793,13 @@ function showBlockAssists(message){
  });
 }
 
-function sendCarryOutBlock(message, follow){
+function sendCarryOutBlock(message){
   stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
     JSON.stringify({"type": "ACTION", "action": "BLOCK", "player": message.player,
-      "location": message.location, "opponent": message.opponent, "followUp": follow}));
+      "location": message.location, "opponent": message.opponent}));
 }
 
-function sendCarryOutBlitz(message, follow, route){
+function sendCarryOutBlitz(message, route){
   var messageRoute = new Array();
   route.forEach(tile => {
     var t = tile.position;
@@ -1801,7 +1807,7 @@ function sendCarryOutBlitz(message, follow, route){
   });
   stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
     JSON.stringify({"type": "ACTION", "action": "BLITZ", "player": message.player,
-      "location": message.location, "opponent": message.opponent, "followUp": follow,
+      "location": message.location, "opponent": message.opponent,
       "route": messageRoute}));
 }
 
@@ -1883,6 +1889,7 @@ function showBlockDiceChoice(message){
 function cancelBlock(player){
   document.getElementById("modal").style.display = "none";
   document.getElementById("modalImages").innerHTML = "";
+  document.getElementById("modalOptions").innerHTML = "";
   inModal = false;
   inBlock = false;
   if(actionChoice != "block"){
@@ -1928,7 +1935,6 @@ function showBlockEnd(message){
   inModal = false;
   inBlock = false;
   inPush = false;
-  followUp = false;
   drawPlayers();
   // drawPlayerBorders();
 // drawBall();
@@ -3237,4 +3243,38 @@ function showWokeUp(message){
 //  if(taskQueue.length != 0){
 //       (taskQueue.shift())();
 //  }
+}
+
+function requestFollowUpChoice(message){
+	 var modalOptions = document.getElementById("modalOptions");
+	 squares.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+	if(message.userToChoose == team){
+	  modalOptions.innerHTML = "Follow Up? </br> </br>";
+	  var button = document.createElement("BUTTON");
+	  button.innerHTML = "Stay";
+	  button.onclick = function() {sendFollowUpChoice("false")};
+	  modalOptions.appendChild(button);
+	  var button = document.createElement("BUTTON")
+	  button.innerHTML = "Follow";
+	  button.onclick = function() {sendFollowUpChoice("true")};
+	  modalOptions.appendChild(button);
+	} else{
+	  modalOptions.innerHTML = "Awaiting opponent's follow up choice";	
+	}
+}
+
+function showFollowUpChoice(message){
+	var choice = "chose to follow up";
+	if(message.description == "not"){
+		choice = "chose not to follow up";
+	}
+	newRolls.innerHTML =  message.teamName + " " + choice +"</br>" + newRolls.innerHTML;
+	if(taskQueue.length != 0){
+	 (taskQueue.shift())();
+	}
+}
+
+function sendFollowUpChoice(followUp){
+	 stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
+			    JSON.stringify({"type": "ACTION", "action": "FOLLOWUPCHOICE", "followUp": followUp}));
 }

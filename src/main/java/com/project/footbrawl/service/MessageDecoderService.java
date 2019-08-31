@@ -58,10 +58,10 @@ public class MessageDecoderService {
 				lobby.getGamePlayService(gameId).endTurn(team);
 			} else if (action.equals("BLOCK")) {
 				lobby.getGamePlayService(gameId).carryOutBlock(message.getPlayer(), message.getOpponent(),
-						message.getLocation(), message.isFollowUp(), false, team);
+						message.getLocation(), false, team);
 			} else if (action.equals("BLITZ")) {
 				lobby.getGamePlayService(gameId).carryOutBlitz(message.getPlayer(), message.getOpponent(),
-						message.getRoute(), message.getTarget(), message.isFollowUp(), team);
+						message.getRoute(), message.getTarget(), team);
 			} else if (action.equals("BLOCKDICECHOICE")) {
 				lobby.getGamePlayService(gameId).carryOutBlockChoice(message.getDiceChoice(), message.getPlayer(),
 						message.getOpponent(), team);
@@ -86,9 +86,6 @@ public class MessageDecoderService {
 			} else if (action.equals("KICKCHOICE")) {
 				lobby.getGamePlayService(gameId).chooseKickOff(team, message.getDescription());
 			} else if (action.equals("JOINGAME")) {
-				System.out.println(lobby);
-				System.out.println(gameId);
-				System.out.println(team);
 				lobby.getGamePlayService(gameId).joinGame(team);
 			} else if (action.equals("TOUCHBACKCHOICE")){
 				lobby.getGamePlayService(gameId).actOnTouchBack(message.getPlayer(), team);
@@ -98,6 +95,8 @@ public class MessageDecoderService {
 				lobby.getGamePlayService(gameId).actOnIntercept(team, message.getPlayer(), message.getLocation());
 			} else if(action.equals("AUTOSETUP")) {
 				lobby.getGamePlayService(gameId).autoSetupTeam(message.getDescription(), team);
+			} else if(action.equals("FOLLOWUPCHOICE")){
+				lobby.getGamePlayService(gameId).followUpChoice(message.isFollowUp());
 			}
 		}
 

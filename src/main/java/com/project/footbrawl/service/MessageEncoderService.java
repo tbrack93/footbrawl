@@ -588,4 +588,27 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setPlayerName(playerName);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	public void requestFollowUp(int gameId, int pusher, int pushed, int[] pusherLocation, int[] pushedLocation, String type, int team) {
+		MessageToClient message = new MessageToClient();
+		message.setType("ACTION");
+		message.setAction("FOLLOWUPCHOICE");
+		message.setLocation(pusherLocation);
+		message.setTarget(pushedLocation);
+		message.setPlayer(pusher);
+		message.setOpponent(pushed);
+		message.setDescription(type);
+		message.setUserToChoose(team);
+		controller.sendMessageToBothUsers(gameId, message);
+		
+	}
+
+	public void sendFollowUpChoice(int gameId, String teamName, String choice) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("FOLLOWUPCHOICE");
+		message.setTeamName(teamName);
+		message.setDescription(choice);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 }
