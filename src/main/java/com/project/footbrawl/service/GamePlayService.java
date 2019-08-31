@@ -1498,7 +1498,8 @@ public class GamePlayService {
 				}
 			};
 			taskQueue.add(scatter); // scatter needs to happen after follow up and knockdown
-		} else if (pushChoice.containsPlayer()) {
+		} 
+		if (pushChoice.containsPlayer()) {
 			int[] target = runnableLocation[0];
 			Runnable task = new Runnable() {
 
