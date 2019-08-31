@@ -39,7 +39,7 @@ public class GamePlayService {
 	GameRepository gameRepo;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
+			Arrays.asList(new Integer[] { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
 	private static boolean testing = false;
 
 	// needed for finding neighbouring tiles
@@ -705,6 +705,16 @@ public class GamePlayService {
 		activePlayer = null;
 		team1.endTurn();
 		team2.endTurn();
+		for(PlayerInGame p : team1.getAwoken()) {
+			p.wakeUp();
+			sender.sendPlayerWokeUp(game.getId(), p.getId(), p.getName());
+		}
+		team1.resetAwoken();
+		for(PlayerInGame p : team1.getAwoken()) {
+			p.wakeUp();
+			sender.sendPlayerWokeUp(game.getId(), p.getId(), p.getName());
+		}
+		team2.resetAwoken();
 		blitz = null;
 		activeTeam = (activeTeam == team1 ? team2 : team1);
 		if (activeTeam.getTurn() == 8 && half == 1 || activeTeam.getTurn() == 16 && half == 2) {
@@ -1635,7 +1645,7 @@ public class GamePlayService {
 		int[] rolls = diceRoller(2, 6);
 		int total = rolls[0] + rolls[1];
 		sender.sendArmourRoll(game.getId(), p.getId(), p.getName(), armour, rolls,
-				total > armour ? "armour was broken" : "armour held");
+				total > armour ? "armour was broken" : "armour held so is just knocked down");
 		if (total > armour) {
 			System.out.println(p.getName() + "'s armour was broken.");
 			injuryRoll(p);
@@ -1839,9 +1849,9 @@ public class GamePlayService {
 	public void interceptBallAction(int[] source, PlayerInGame player, boolean reroll) {
 		int needed = calculateInterception(player);
 		int roll = diceRoller(1, 6)[0];
-		rolled.clear();
-		rolled.add(roll);
 		rollType = "CATCH";
+		ArrayList<Integer> rolledLocal = new ArrayList<>();
+		rolledLocal.add(roll); // local rather than directly access global variable, due to sending intercept result after throw (despite intercept happening first)
 		System.out.println(player.getName() + " tries to intercept the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		if (roll >= needed) {
@@ -1851,7 +1861,7 @@ public class GamePlayService {
 //			if(reroll == true) {
 //				taskQueue.pop().run();
 //			}
-			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolled,
+			sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed, rolledLocal,
 					"success", source, player.getLocation(), rerollOptions, player.getTeam(), "Y", reroll);
 			turnover();
 			return;
@@ -1867,7 +1877,7 @@ public class GamePlayService {
 					@Override
 					public void run() {
 						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed,
-								rolled, "failed", source, player.getLocation(), null, player.getTeam(), "Y", reroll);
+								rolledLocal, "failed", source, player.getLocation(), null, player.getTeam(), "Y", reroll);
 					}
 				};
 				taskQueue.add(task);
@@ -1880,7 +1890,7 @@ public class GamePlayService {
 					@Override
 					public void run() {
 						sender.sendRollResult(game.getId(), player.getId(), player.getName(), "INTERCEPT", needed,
-								rolled, "failed", source, player.getLocation(), null, player.getTeam(), "N", reroll);
+								rolledLocal, "failed", source, player.getLocation(), null, player.getTeam(), "N", reroll);
 						sender.sendSkillUsed(game.getId(), player.getId(), player.getName(), player.getTeam(), "Catch");
 						taskQueue.pop().run();
 					}

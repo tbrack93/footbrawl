@@ -489,6 +489,16 @@ img.onload = function() {
  //console.log("showing skill use immediately");
  showSkillUsed(message);
 }
+}else if(message.action == "WOKEUP"){
+	 if(animating == true){
+	  var task = function(m){
+	   showWokeUp(message);
+	 };
+	 var t = animateWrapFunction(task, this, [message]);
+	 taskQueue.push(t);
+	} else{
+	 showWokeUp(message);
+	}
 }else{ if(message.action == "ARMOURROLL"){
  if(animating == true){
   var task = function(m){
@@ -621,7 +631,9 @@ if(message.action == "TEAMSETUP"){
 } else if(message.action == "STANDUP"){
  showStandUp(message);
 }  else if(message.action == "ROLL"){
-  activePlayer = getPlayerById(message.player);
+  if(message.rollType != "INTERCEPT"){
+    activePlayer = getPlayerById(message.player);
+  }
   if(animating == true){
    var task = function(m){
      showRoll(m);
@@ -948,6 +960,9 @@ function showMoved(message, type){
    route.length = 0;
    if(type == "BALL"){
     drawBall();
+    if(activePlayer != null){
+    	drawPlayer(activePlayer);
+    }
   }else if(type == "PUSH"){
 //    setTimeout(function(){
 //     drawPlayers();
@@ -1187,26 +1202,22 @@ function showPickUpResult(message){
  showMoved(message, "normal");
  lastRollLocation = [message.location, message.target];
 }
-var p = getPlayerById(message.player);
-p.location = message.target;
+activePlayer.location = message.target;
 drawBall();
 if(message.rollOutcome == "success"){
- p.hasBall = true;
+ activePlayer.hasBall = true;
  ballLocation = null;
+ if(message.end == "Y" && taskQueue.length == 0 && p.team == team){
+	   //drawBall();
+	   drawPlayer(activePlayer);
+	   stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
+			     JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
+			       "location": message.target, "routeMACost": 0}));
+	   inPickup = false;
+	   animating = false;	  
+	 }
 }
-if(message.end == "Y"){
- if(taskQueue.length == 0 && message.rollOutcome != "failed"){
-   drawPlayer(p);
-   drawBall();
- }
- if(message.rollOutcome == "success"){
-   stompClient.send("/app/game/gameplay/" + game + "/" + team, {},
-     JSON.stringify({"type": "INFO", "action": "MOVEMENT", "player": message.player,
-       "location": message.target, "routeMACost": 0}));
-   inPickup = false;
-   animating = false;
- }
-} if(taskQueue.length > 0 && (animating == false || message.rollOutcome == "failed")){
+if(taskQueue.length > 0 && (animating == false || message.rollOutcome == "failed")){
   (taskQueue.shift())();
 }
 
@@ -1266,11 +1277,11 @@ function showThrowResult(message){
 	document.getElementById("modalImages").innerHTML = "";
 	inThrow = true;
 	if(message.rollOutcome == "intercepted"){
-   setTimeout(function(){
-    if(taskQueue.length != 0){
-      (taskQueue.shift())();
-    }
-  }, 100);
+      setTimeout(function(){
+      if(taskQueue.length != 0){
+        (taskQueue.shift())();
+       }
+    }, 150);
    return;
  }
  animating = true;
@@ -2383,11 +2394,9 @@ function showIntercept(message){
    var startingX = message.location[0] * squareH + squareH/3;
    var startingY = (14 - message.location[1]) * squareH + squareH/3;
    context.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
-   if(p != null){
-     //console.log(p.name);
-     p.hasBall = false;
-     drawPlayer(p);
-   }
+   console.log(activePlayer.name);
+   activePlayer.hasBall = false;
+   drawPlayer(activePlayer);
        // drawPlayers();
        var targetX = message.target[0] * squareH + squareH/3;
        var targetY = (14 - message.target[1]) * squareH + squareH/3;
@@ -2397,6 +2406,8 @@ function showIntercept(message){
        var throwRoute = [message.target];
        //console.log("route created: " + throwRoute);
        ballLocation = message.target;
+       activePlayer = getPlayerById(message.player);
+       activePlayer.hasBall = true;
        animationContext.clearRect(message.location[0] * squareH, (14 - message.location[1]) * squareH, squareH, squareH);
        animateMovement(throwRoute, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "N", "BALL");
      }
@@ -3222,4 +3233,15 @@ function showThrowIn(message){
 	    animateMovement(route, 0, ballImg, startingX, startingY, targetX, targetY, squareH, "Y", "BALL");
 	    canvas.getContext("2d").clearRect(0, 0, startingX - squareH/3, startingY - squareH/3);
 	}
+}
+
+function showWokeUp(message){
+  var p = getPlayerById(message.player);
+  p.status = "prone";
+  drawPlayer(p);
+  var newRolls = document.getElementById("newRolls");
+  newRolls.innerHTML =  message.playerName + " woke up from being stunned</br>" + newRolls.innerHTML;
+//  if(taskQueue.length != 0){
+//	     (taskQueue.shift())();
+//  }  
 }
