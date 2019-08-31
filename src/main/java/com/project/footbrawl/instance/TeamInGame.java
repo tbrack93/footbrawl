@@ -17,6 +17,8 @@ public class TeamInGame {
 	private Team team; // related entity
 	@JsonIgnore
 	private List<PlayerInGame> allPlayers;
+	@JsonIgnore
+	private List<PlayerInGame> awoken;
 	private List<PlayerInGame> reserves;
 	private Set<PlayerInGame> playersOnPitch;
 	private List<PlayerInGame> dugout; // KO'd
@@ -42,6 +44,7 @@ public class TeamInGame {
 		injured = new ArrayList<>();
 		dugout = new ArrayList<>();
 		dungeon = new ArrayList<>();
+		awoken = new ArrayList<>();
 	    for(Player p : team.getPlayers()) {
 	    	PlayerInGame pg = new PlayerInGame(p, this);
 	    	allPlayers.add(pg);
@@ -93,6 +96,9 @@ public class TeamInGame {
 	public void endTurn() {
 		for(PlayerInGame p : playersOnPitch) {
 			p.endTurn();
+			if(p.getStunnedCounter()>=1) {
+				awoken.add(p);
+			}
 		}
 	}
 	
@@ -253,5 +259,13 @@ public class TeamInGame {
 		}
 		reserves.addAll(playersOnPitch);
 		playersOnPitch.clear();
+	}
+	
+	public List<PlayerInGame> getAwoken(){
+		return awoken;
+	}
+	
+	public void resetAwoken() {
+		awoken = new ArrayList<>();
 	}
 }

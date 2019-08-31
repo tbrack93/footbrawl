@@ -579,4 +579,13 @@ public void sendBlitzDetails(int gameId, int player, int opponent, int[] blitzLo
 		message.setTarget(target);
 		controller.sendMessageToBothUsers(gameId, message);
 	}
+
+	public void sendPlayerWokeUp(int gameId, int playerId, String playerName) {
+		MessageToClient message = new MessageToClient();
+		message.setType("INFO");
+		message.setAction("WOKEUP");
+		message.setPlayer(playerId);
+		message.setPlayerName(playerName);
+		controller.sendMessageToBothUsers(gameId, message);
+	}
 }

@@ -59,13 +59,14 @@ public class PlayerInGame{
 		}
 	}
 	
+	public void wakeUp() {
+		setStatus("prone");
+		stunnedCounter = 0;
+	}
+	
 	public void endTurn() {
-		if(status.equals("stunned")) {
-			if(stunnedCounter >= 1) {
-				setStatus("prone");
-			}
-		}
 		remainingMA = player.getMA(); // here so users can see opponent players' full movement range in their turn
+		actionOver = false;
 		//actionOver = true;
 	}
 	
@@ -231,6 +232,10 @@ public class PlayerInGame{
 	
 	public String getType(){
 		return player.getType();
+	}
+
+	public int getStunnedCounter() {
+		return stunnedCounter;
 	}
 	
 	
