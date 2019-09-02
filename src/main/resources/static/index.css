@@ -144,10 +144,29 @@ h1 {
 	.summary-title {
 		font-size: 20px;
 		padding-top: 5px;
+		width: 403px;
 	}
 	#summary-content{
 	  font-size: 15px;
 	  }
+	  
+	#bloodbowl {
+	  height: 250px;
+	}
+	
+	#kings {
+	  width: 403px;
+	}
+	
+	#summary-content {
+	  width: 403px;
+	}
+	
+	#actions {
+	  width: 403px;
+	}
+	
+	
 }
 
 #modal {
