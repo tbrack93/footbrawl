@@ -3015,7 +3015,15 @@ public class GamePlayService {
 				actions.add("throw");
 			}
 			if (!activeTeam.hasHandedOff()) {
-				actions.add("handOff");
+				boolean target = false;
+				for(Tile t : player.getTile().getNeighbours()) {
+					if(t.containsPlayer()) {
+						target = true;
+					}
+				}
+				if(target == true) {
+				  actions.add("handOff");
+				}
 			}
 		}
 		addTackleZones(player);
