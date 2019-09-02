@@ -743,7 +743,6 @@ public class GamePlayService {
 	}
 
 	public void showPossibleMovement(int playerId, int[] location, int maUsed, int requester) {
-		// long time = System.nanoTime();
 		if (phase != "main game") {
 			return;
 		}
@@ -774,6 +773,7 @@ public class GamePlayService {
 				}
 				addTackleZones(p);
 				searchNeighbours(p, position, cost);
+
 				for (int i = 0; i < 26; i++) {
 					for (int j = 0; j < 15; j++) {
 						Tile t = pitch[i][j];
@@ -797,21 +797,14 @@ public class GamePlayService {
 		if (squares.size() == 1) {
 			squares.clear();
 		}
-		// System.out.println(System.nanoTime() - time);
+
 		sender.sendMovementInfoMessage(game.getId(), requester, playerId, squares);
 
 	}
 
-	// Djisktra's to determine where can move
+	// Breadth first to determine where can move
 	public void searchNeighbours(PlayerInGame p, Tile location, int cost) {
-		Comparator<Tile> comp = new Comparator<Tile>() {
-			@Override
-			public int compare(Tile t1, Tile t2) {
-				return Double.compare(t1.getCostToReach(), t2.getCostToReach());
-			}
-		};
-		// min queue
-		PriorityQueue<Tile> queue = new PriorityQueue<>(comp);
+		LinkedList<Tile> queue = new LinkedList<>();
 		location.setCostToReach(cost);
 		queue.add(location);
 		// System.out.println(p.getRemainingMA());
@@ -822,17 +815,13 @@ public class GamePlayService {
 				for (Tile t : temp.getNeighbours()) {
 					if (!t.containsPlayer() || t.containsPlayer() && t.getPlayer() == p) {
 						int currentCost = t.getCostToReach();
-						// checking if visited (not default of 99) or visited and new has route with
-						// better cost
-						if (currentCost == 99 || currentCost != 99 && currentCost > cost + 1) {
+						// checking if visited (not default of 99)
+						if (currentCost == 99) {
 							t.setCostToReach(cost + 1);
 							if (cost + 1 > p.getRemainingMA()) {
 								t.goForIt();
 							} else {
 								t.setGoForIt(false);
-							}
-							if (queue.contains(t)) {
-								queue.remove(t);
 							}
 							queue.add(t);
 						}
@@ -1498,7 +1487,7 @@ public class GamePlayService {
 				}
 			};
 			taskQueue.add(scatter); // scatter needs to happen after follow up and knockdown
-		} 
+		}
 		if (pushChoice.containsPlayer()) {
 			int[] target = runnableLocation[0];
 			Runnable task = new Runnable() {
@@ -3016,13 +3005,13 @@ public class GamePlayService {
 			}
 			if (!activeTeam.hasHandedOff()) {
 				boolean target = false;
-				for(Tile t : player.getTile().getNeighbours()) {
-					if(t.containsPlayer()) {
+				for (Tile t : player.getTile().getNeighbours()) {
+					if (t.containsPlayer()) {
 						target = true;
 					}
 				}
-				if(target == true) {
-				  actions.add("handOff");
+				if (target == true) {
+					actions.add("handOff");
 				}
 			}
 		}
