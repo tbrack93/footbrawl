@@ -3033,7 +3033,7 @@ function showTouchBackChoice(message){
   document.getElementById("newRolls").innerHTML =  "Touch back: ball given to " + message.playerName + "</br>" + newRolls.innerHTML;
   var p = getPlayerById(message.player);
   p.hasBall = true;
-  drawPlayer(p);
+  drawPlayers();
   phase = "main game";
 }
 
