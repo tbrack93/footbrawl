@@ -39,8 +39,8 @@ public class GamePlayService {
 	GameRepository gameRepo;
 
 	private static List<Integer> diceRolls = new ArrayList<>(
-			Arrays.asList(new Integer[] { 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
-	private static boolean testing = false;
+			Arrays.asList(new Integer[] { 1, 1, 1, 1, 1, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 6, 6, 6, 6 }));
+	private static boolean testing = true;
 
 	// needed for finding neighbouring tiles
 	private static final int[][] ADJACENT = { { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 },
@@ -709,7 +709,7 @@ public class GamePlayService {
 			sender.sendPlayerWokeUp(game.getId(), p.getId(), p.getName());
 		}
 		team1.resetAwoken();
-		for (PlayerInGame p : team1.getAwoken()) {
+		for (PlayerInGame p : team2.getAwoken()) {
 			p.wakeUp();
 			sender.sendPlayerWokeUp(game.getId(), p.getId(), p.getName());
 		}
@@ -2169,14 +2169,13 @@ public class GamePlayService {
 		int y = from.getLocation()[1];
 		int xDistance = Math.abs(x - target.getLocation()[0]);
 		int yDistance = Math.abs(y - target.getLocation()[1]);
-		int n = 1 + xDistance + yDistance;
 		int xIncline = (target.getLocation()[0] > x) ? 1 : -1;
 		int yIncline = (target.getLocation()[1] > y) ? 1 : -1;
 		int error = xDistance - yDistance;
 		xDistance *= 2;
 		yDistance *= 2;
 
-		for (; n > 0; --n) {
+		for (int n = 1 + xDistance + yDistance; n > 0; n--) {
 			squares.add(pitch[x][y]);
 			if (error > 0) {
 				x += xIncline;
