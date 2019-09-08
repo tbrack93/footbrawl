@@ -1,4 +1,4 @@
-package com.project.footbrawl;
+package com.project.footbrawl.tools;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;

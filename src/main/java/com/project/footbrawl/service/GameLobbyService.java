@@ -113,7 +113,7 @@ public class GameLobbyService {
 		while(games.hasNext()) {
 			Map.Entry<Integer, GamePlayService> game = games.next();
 			GamePlayService gs = game.getValue();
-			if(gs.isGameFinished() || new Date().getTime() - gs.getCreated().getTime() > 43200000) {
+			if(gs.isGameFinished() || new Date().getTime() - gs.getCreated().getTime() > 9000000) {
 				//System.out.println("Removing game: " + gs.getGameId());
 				gs = null; 
 				games.remove();

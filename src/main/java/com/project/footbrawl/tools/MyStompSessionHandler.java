@@ -1,4 +1,4 @@
-package com.project.footbrawl;
+package com.project.footbrawl.tools;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.messaging.simp.stomp.StompCommand;
