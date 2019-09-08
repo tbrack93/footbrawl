@@ -1,4 +1,4 @@
-package com.project.footbrawl;
+package com.project.footbrawl.tools;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;

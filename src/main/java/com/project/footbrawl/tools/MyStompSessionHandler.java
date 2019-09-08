@@ -1,4 +1,4 @@
-package com.project.footbrawl;
+package com.project.footbrawl.tools;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -20,7 +20,7 @@ import java.util.TimerTask;
 public class MyStompSessionHandler extends StompSessionHandlerAdapter {
 	
 	private static Calendar now = Calendar.getInstance();
-	private static Date time = new Date(now.getTimeInMillis() + 300000);
+	private static Date time = new Date(now.getTimeInMillis() + 100000);
 
     private Logger logger = LogManager.getLogger(MyStompSessionHandler.class);
     
@@ -29,13 +29,13 @@ public class MyStompSessionHandler extends StompSessionHandlerAdapter {
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
     	Timer timer = new Timer();
         logger.info("New session established : " + session.getSessionId());
-        session.subscribe("/topic/game/226", this);
-        session.subscribe("/queue/game/226/1", this); 
+        session.subscribe("/topic/game/744", this);
+        session.subscribe("/queue/game/744/1", this); 
         TimerTask t = new TimerTask() {
         	public void run() {
-        		for(int i = 0; i < 10; i++) {
+        		for(int i = 0; i < 100; i++) {
         		  logger.info("sending");
-        		   session.send("/app/game/gameplay/226/1", getMovementRequest());
+        		   session.send("/app/game/gameplay/744/1", getMovementRequest());
         		}
         	}
         };

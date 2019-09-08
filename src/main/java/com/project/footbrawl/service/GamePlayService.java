@@ -2169,13 +2169,14 @@ public class GamePlayService {
 		int y = from.getLocation()[1];
 		int xDistance = Math.abs(x - target.getLocation()[0]);
 		int yDistance = Math.abs(y - target.getLocation()[1]);
+		int n = 1 + xDistance + yDistance;
 		int xIncline = (target.getLocation()[0] > x) ? 1 : -1;
 		int yIncline = (target.getLocation()[1] > y) ? 1 : -1;
 		int error = xDistance - yDistance;
 		xDistance *= 2;
 		yDistance *= 2;
 
-		for (int n = 1 + xDistance + yDistance; n > 0; n--) {
+		for (; n > 0; n--) {
 			squares.add(pitch[x][y]);
 			if (error > 0) {
 				x += xIncline;
@@ -2504,9 +2505,10 @@ public class GamePlayService {
 					return;
 				}
 			}
-			if (taskQueue.size() > 0) {
-				taskQueue.pop().run();
-			} else if (blitz != null) {
+//			if (taskQueue.size() > 0) {
+//				taskQueue.pop().run();
+			//} else 
+				if (blitz != null) {
 				blitz.run();
 			}
 		}
@@ -2515,7 +2517,7 @@ public class GamePlayService {
 	public void continueAction(int playerId, List<int[]> route, List<jsonTile> jsonMoved, int teamId) {
 		boolean result;
 		System.out.println("in continue Action");
-		List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist is exclusive of final
+		List<int[]> remaining = route.subList(jsonMoved.size(), route.size()); // sublist method is exclusive of final index so must be size not size -1
 		if (actionsNeeded > 0) {
 			actionsNeeded--;
 			System.out.println("popping roll");
