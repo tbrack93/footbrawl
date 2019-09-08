@@ -2137,11 +2137,12 @@ public class GamePlayService {
 		} else if (distance > 11) { // bomb
 			modifier = -2;
 		}
-		addTackleZones(thrower);
-		modifier += from.getTackleZones();
+//		addTackleZones(thrower);  this is handled within agility calculation
+//		modifier += from.getTackleZones();
 		if (thrower.hasSkill("Stunty")) {
 			modifier -= 1;
 		}
+		System.out.println(modifier);
 		return new int[] { calculateAgilityRoll(thrower, from, modifier), modifier };
 	}
 
