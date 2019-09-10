@@ -1946,6 +1946,7 @@ public class GamePlayService {
 		rollType = "THROW";
 		rolled.clear();
 		rolled.add(roll);
+		String outcome = "";
 		System.out.println(thrower.getName() + " tries to throw the ball");
 		System.out.println("Needs a roll of " + needed + "+. Rolled " + roll);
 		thrower.setHasBall(false);
@@ -1954,8 +1955,7 @@ public class GamePlayService {
 			sender.sendSkillUsed(game.getId(), thrower.getId(), thrower.getName(), thrower.getTeam(), "Stunty Pass");
 		}
 		if (roll < needed) {
-			String outcome = "failed";
-			System.out.println(thrower.getName() + " fumbled the ball!");
+			//System.out.println(thrower.getName() + " fumbled the ball!");
 			rerollOptions = determineRerollOptions("THROW", thrower.getId(),
 					new int[][] { thrower.getLocation(), target.getLocation() });
 			if (reroll == true) {
@@ -1964,6 +1964,11 @@ public class GamePlayService {
 			String finalRoll = "N";
 			if (rerollOptions.isEmpty()) {
 				finalRoll = "Y";
+				if(roll == 1 || (roll + modifier) <= 1) {
+					outcome = "failed";
+				} else {
+					outcome = "badly";
+				}
 			} else {
 				runnableLocation = new int[][] { thrower.getLocation(), target.getLocation() };
 				awaitingReroll = new String[] { "Y", "THROW", "" + thrower.getId() };
@@ -1975,7 +1980,8 @@ public class GamePlayService {
 				};
 				taskQueue.add(task);
 				Runnable task2;
-				if (roll == 1 || roll + modifier <= 1) {// on a natural 1 or 1 after modifiers
+				if (roll == 1 || (roll + modifier) <= 1) {// on a natural 1 or 1 after modifiers
+					outcome = "failed";
 					task2 = new Runnable() { // for if choose not to reroll
 						@Override
 						public void run() {
