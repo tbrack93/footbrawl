@@ -2,6 +2,8 @@
 
 A turn based strategy game, based on the table top game Blood Bowl. Built as an independent University project, using a Java Spring Boot back end, HTML, CSS and JavaScript front end, WebSockets for real time communication and a MySQL database.
 
+Originally version controlled using a private University GitLab account, so commit/ branch data not complete here.
+
 # How to Use
 The application can be used by visiting the web address www.fantasyfootbrawl.co.uk The system has been developed only for laptop or desktop computers and only tested on Chrome and Firefox.
 
