@@ -1,6 +1,6 @@
 # footbrawl
 
-A turn based strategy game, based on the table top game Blood Bowl. Built as an independent University project, using a Java Spring Boot back end, HTML, CSS and JavaScript front end, WebSockets for real time communication and a MySQL database.
+A turn based sports strategy game, based on the table top game Blood Bowl. Built as an independent University project, using a Java Spring Boot back end, HTML, CSS and JavaScript front end, WebSockets for real time communication and a MySQL database.
 
 Originally version controlled using a private University GitLab account, so commit/ branch data not complete here.
 
